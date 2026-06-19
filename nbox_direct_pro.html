@@ -322,6 +322,34 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .vid-ov.on{display:flex}
 .vid-canvas{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;color:var(--mu)}
 .vid-canvas.on{display:flex}
+/* ── CONSTRUCTION TIMELINE ── */
+.tl-canvas{display:none;flex:1;flex-direction:column;overflow:hidden}
+.tl-canvas.on{display:flex}
+.tl-topbar{padding:11px 16px;background:var(--bg2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.tl-phases{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;align-content:start}
+.tl-card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;transition:.15s}
+.tl-card.tl-done{border-color:var(--gr)}
+.tl-card.tl-active{border-color:var(--ac);box-shadow:0 0 10px var(--ac-g)}
+.tl-img{width:100%;aspect-ratio:16/9;background:var(--bg4);position:relative;overflow:hidden;cursor:pointer}
+.tl-img img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.tl-img:hover img{transform:scale(1.03)}
+.tl-img-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--mu)}
+.tl-img-ph-icon{font-size:28px;opacity:.3}
+.tl-card-body{padding:9px 11px}
+.tl-card-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px}
+.tl-card-acts{display:flex;gap:4px;flex-wrap:wrap}
+.tl-btn{padding:4px 8px;border-radius:5px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:.12s;white-space:nowrap}
+.tl-btn:hover{border-color:var(--ac);color:var(--ac)}
+.tl-btn:disabled{opacity:.4;cursor:not-allowed}
+.tl-btn.tl-primary{background:var(--ac);border-color:var(--ac);color:#fff}
+.tl-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;margin-bottom:5px}
+.tl-badge.pending{background:rgba(107,109,138,.2);color:var(--mu)}
+.tl-badge.generating{background:rgba(255,107,43,.2);color:var(--ac);animation:pulse .8s infinite alternate}
+.tl-badge.done{background:rgba(61,220,151,.2);color:var(--gr)}
+.tl-foot{padding:9px 16px;background:var(--bg2);border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tl-prog{flex:1;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.tl-prog-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;transition:width .4s}
+@keyframes pulse{from{opacity:.6}to{opacity:1}}
 .sv-lbl-b{position:absolute;top:8px;right:10px;background:rgba(255,107,43,.85);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;z-index:6}
 </style>
 </head>
@@ -377,6 +405,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <button class="mchip" data-mode="furniture">🪑 Nội thất</button>
     <button class="mchip" data-mode="char_sync">👤 Nhân vật</button>
     <button class="mchip" data-mode="video">🎬 Video</button>
+    <button class="mchip" data-mode="timeline">🏗 Tiến độ</button>
     <button class="mchip pl-chip" data-mode="pipeline">⚡ Pipeline</button>
   </div>
 
@@ -953,6 +982,40 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     </div>
   </div>
 
+  <!-- CONSTRUCTION TIMELINE (Tiến độ xây dựng) -->
+  <div class="acc hidden" id="accTimeline">
+    <div class="acc-head" onclick="toggleAcc('accTimeline')"><span class="acc-title">🏗 Tiến độ Xây dựng</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Bản vẽ thiết kế (ControlNet reference)</span>
+      <div class="uslot" id="tlDrawSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Upload mặt bằng / mặt đứng / mặt cắt</span></div></div>
+      <input type="file" id="tlDrawInp" accept="image/*" class="hidden"/>
+
+      <span class="flbl">Render hoàn thiện (Phase cuối)</span>
+      <div class="uslot" id="tlFinalSlot"><div class="uslot-ph"><span class="uslot-ph-icon">✨</span><span>Upload ảnh render hoàn thiện</span></div></div>
+      <input type="file" id="tlFinalInp" accept="image/*" class="hidden"/>
+
+      <span class="flbl">Mô tả công trình</span>
+      <input type="text" class="finp" id="tlStyle" placeholder="VD: Biệt thự 3 tầng, mặt tiền kính, phong cách hiện đại..."/>
+
+      <span class="flbl">Model AI</span>
+      <select class="fsel" id="tlModel">
+        <option value="pollinations-flux">🆓 Pollinations (Free · không cần key)</option>
+        <option value="fal-flux-ctrl" selected>🔬 ControlNet — bám bản vẽ ($0.04/ảnh)</option>
+        <option value="google-imagen3">🤖 Google Imagen 3 (AI Studio key)</option>
+        <option value="flux-pro">Flux 1.1 Pro ($0.04/ảnh)</option>
+        <option value="fal-flux-dev">Fal Flux Dev ($0.025/ảnh)</option>
+      </select>
+
+      <button class="gen-btn" id="btnTlGenAll" style="width:100%;font-size:11px;padding:9px;margin-top:6px">🚀 Generate tất cả 8 phases</button>
+
+      <div style="font-size:9px;color:var(--mu);line-height:1.7;padding:7px 8px;background:var(--bg4);border-radius:6px;margin-top:8px">
+        📐 Upload bản vẽ → AI bám cấu trúc chính xác hơn<br/>
+        ✨ Upload render hoàn thiện → dùng thẳng cho phase cuối<br/>
+        🎬 Export timelapse video MP4 — không cần API thêm
+      </div>
+    </div>
+  </div>
+
 </div></div><!-- end sidebar -->
 
 <!-- ── CANVAS ── -->
@@ -1022,6 +1085,32 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div style="font-size:56px;margin-bottom:16px;line-height:1">🎬</div>
       <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Video Walkthrough</div>
       <div style="font-size:12px;color:var(--mu);line-height:1.8">Chọn ảnh nguồn + Camera Motion bên trái<br/>Bấm <b>RENDER VIDEO</b> để tạo clip MP4<br/><span style="color:var(--ac2)">Cần Fal.ai API key · Kling ~60–120s/clip</span></div>
+    </div>
+  </div>
+
+  <!-- CONSTRUCTION TIMELINE CANVAS -->
+  <div class="tl-canvas" id="tlCanvas">
+    <div class="tl-topbar">
+      <span style="font-size:13px;font-weight:700;color:var(--text)">🏗 Construction Timeline</span>
+      <span style="font-size:10px;color:var(--mu);flex:1;margin-left:6px">Tiến trình xây dựng từ bản vẽ → hoàn công</span>
+      <select class="psel" id="tlPhaseDur">
+        <option value="3">3s/phase</option>
+        <option value="4" selected>4s/phase</option>
+        <option value="5">5s/phase</option>
+        <option value="6">6s/phase</option>
+      </select>
+      <select class="psel" id="tlTransition">
+        <option value="crossfade" selected>✦ Crossfade</option>
+        <option value="wipe">→ Wipe</option>
+        <option value="zoom">⊕ Zoom-in</option>
+      </select>
+      <button class="gen-btn" id="btnTlExport" style="font-size:11px;padding:8px 14px" disabled>🎬 Export Timelapse</button>
+    </div>
+    <div class="tl-phases" id="tlPhases"></div>
+    <div class="tl-foot">
+      <div class="tl-prog"><div class="tl-prog-fill" id="tlProgFill" style="width:0%"></div></div>
+      <span style="font-size:10px;color:var(--mu)" id="tlProgLbl">0 / 8 phases sẵn sàng</span>
+      <span style="font-size:10px;color:var(--ac2);font-weight:600" id="tlStatusMsg"></span>
     </div>
   </div>
 
@@ -1350,6 +1439,8 @@ let charViews=[{id:1,b64:null,label:"View 1"},{id:2,b64:null,label:"View 2"}];
 let cvIdCnt=3;
 let pipeline=[], plActive=false, plPaused=false, plIdCnt=1;
 let vidSrcB64=null;
+let tlDrawB64=null, tlFinalB64=null, tlGenerating=false;
+let tlPhaseData=[];
 let viewerImgs=[], viewerIdx=0, viewerZoom=1;
 let dnaB64=null, dnaActiveColors=[];
 let snapshots=[], snapIdCnt=1;
@@ -1388,6 +1479,25 @@ const VIDEO_MOTIONS=[
   {id:"pullback",      l:"Pull-back",       e:"↩️", v:"dramatic camera pull-back reveal starting close on architectural detail then widening to full building view"},
   {id:"interior_pan",  l:"Interior pan",    e:"🛋", v:"smooth interior camera pan left to right exploring the space, warm ambient lighting, furnished interior"},
   {id:"rain_fx",       l:"Rain FX",         e:"🌧️", v:"architectural visualization with gentle rain, wet reflective surfaces, moody cinematic atmosphere, puddle ripples"},
+];
+
+const TL_PHASES=[
+  {id:"drawings",   icon:"📐", name:"Bản vẽ thiết kế",
+   prompt:"architectural design blueprint, technical floor plan and elevation drawing, precise 2D drafting line work, clean white background, professional architectural drawing, construction document"},
+  {id:"clearing",   icon:"🌱", name:"San lấp mặt bằng",
+   prompt:"construction site clearing and land grading, empty plot preparation, yellow bulldozers and excavators, marked foundation grid lines on raw earth, site survey stakes, aerial view"},
+  {id:"foundation", icon:"🏗",  name:"Thi công móng",
+   prompt:"building foundation construction in progress, deep concrete footings, rebar steel reinforcement cage in trenches, concrete mixer trucks, workers in hard hats and safety vests, early excavation stage"},
+  {id:"structure",  icon:"🧱", name:"Phần thô — Kết cấu",
+   prompt:"structural frame under construction, reinforced concrete columns and beams, brick masonry walls being laid, bamboo scaffolding, construction workers, building skeleton taking shape, concrete curing"},
+  {id:"roofing",    icon:"🔧", name:"Mái + MEP thô",
+   prompt:"roofing structure installation, roof trusses and waterproof membrane, MEP rough-in works, electrical conduit runs, plumbing pipes, wall plastering in progress, building shell nearly complete"},
+  {id:"exterior",   icon:"🏠", name:"Hoàn thiện ngoại thất",
+   prompt:"building exterior finishing, facade plastering complete and fresh paint, windows and doors fully installed, tile cladding and coping works, polished clean exterior, walkway paving beginning"},
+  {id:"interior",   icon:"🛋", name:"Hoàn thiện nội thất",
+   prompt:"interior finishing works complete, polished flooring, suspended ceiling, LED lighting fixtures installed, built-in cabinetry, modern furnished living spaces, clean contemporary interior design"},
+  {id:"complete",   icon:"✨", name:"Hoàn công — Bàn giao",
+   prompt:"completed architectural project exterior and interior, fully finished building, mature landscaping trees and plants, people enjoying the outdoor terrace, golden hour warm lighting, professional architectural photography"},
 ];
 
 /* ═══════════════════════════════
@@ -1546,17 +1656,19 @@ function switchMode(mode){
   document.querySelectorAll(".mchip").forEach(c=>c.classList.toggle("on",c.dataset.mode===mode));
   const isPL=mode==="pipeline";
   const isVid=mode==="video";
-  document.getElementById("promptBar").style.display=(isPL||isVid)?"none":"";
-  document.getElementById("imgsArea").style.display=(isPL||isVid)?"none":"";
+  const isTL=mode==="timeline";
+  document.getElementById("promptBar").style.display=(isPL||isVid||isTL)?"none":"";
+  document.getElementById("imgsArea").style.display=(isPL||isVid||isTL)?"none":"";
   document.getElementById("plCanvas").classList.toggle("on",isPL);
   document.getElementById("vidCanvas")?.classList.toggle("on",isVid);
+  document.getElementById("tlCanvas")?.classList.toggle("on",isTL);
   document.getElementById("accFloorplan").classList.toggle("hidden", mode!=="floorplan");
   document.getElementById("accMasterplan").classList.toggle("hidden", mode!=="masterplan");
   document.getElementById("accBeforeAfter").classList.toggle("hidden", mode!=="before_after");
   document.getElementById("accFurn").classList.toggle("hidden",mode!=="furniture");
   document.getElementById("accChar").classList.toggle("hidden",mode!=="char_sync");
   document.getElementById("accInt").classList.toggle("hidden",!["interior"].includes(mode));
-  const noDedicated=["furniture","char_sync","material_swap","sky_replace","artistic"];
+  const noDedicated=["furniture","char_sync","material_swap","sky_replace","artistic","timeline"];
   document.getElementById("accBatch").classList.toggle("hidden",isPL||noDedicated.includes(mode));
   // 6 new mode accordions
   document.getElementById("accLandscape").classList.toggle("hidden",mode!=="landscape");
@@ -1566,6 +1678,7 @@ function switchMode(mode){
   document.getElementById("accSection").classList.toggle("hidden",mode!=="section_persp");
   document.getElementById("accUrban").classList.toggle("hidden",mode!=="urban_context");
   document.getElementById("accVideo")?.classList.toggle("hidden",!isVid);
+  document.getElementById("accTimeline")?.classList.toggle("hidden",!isTL);
 
   // Reference image accordion: show for text-based modes that benefit from img2img
   const refModes=["exterior","interior","seasonal","char_sync"];
@@ -3062,6 +3175,297 @@ async function doVideoGen(){
 }
 
 /* ═══════════════════════════════
+   CONSTRUCTION TIMELINE
+═══════════════════════════════ */
+async function tlCallAPI(prompt,modelKey,key,refB64=null){
+  const cfg=MODEL_MAP[modelKey]||MODEL_MAP["pollinations-flux"];
+  const w=1280,h=720,seed=Math.floor(Math.random()*2147483647);
+  if(cfg.prov==="pollinations"){
+    const params=new URLSearchParams({width:w,height:h,seed,model:cfg.model,nologo:"true",enhance:"false",safe:"false"});
+    const r=await fetchTimeout(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`,{},50000);
+    if(!r.ok)throw new Error("Pollinations error "+r.status);
+    const blob=await r.blob();
+    if(!blob.type.startsWith("image/"))throw new Error("Pollinations: phản hồi không phải ảnh");
+    return await new Promise((res,rej)=>{const rd=new FileReader();rd.onload=e=>res(e.target.result);rd.onerror=rej;rd.readAsDataURL(blob);});
+  }
+  if(cfg.prov==="together"){
+    const body={model:cfg.model,prompt,width:w,height:h,steps:cfg.steps||28,n:1,response_format:"b64_json",seed};
+    const r=await fetchTimeout("https://api.together.xyz/v1/images/generations",
+      {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body)},60000);
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||"Together error "+r.status);}
+    const d=await r.json();
+    const b=d.data?.[0]?.b64_json;
+    if(!b)throw new Error("Together: không có dữ liệu ảnh");
+    return "data:image/jpeg;base64,"+b;
+  }
+  if(cfg.prov==="fal"||cfg.prov==="fal-ctrl"){
+    const body={prompt,image_size:{width:w,height:h},num_images:1,num_inference_steps:cfg.steps||28,seed,enable_safety_checker:false};
+    if(refB64&&cfg.prov==="fal-ctrl"){
+      body.controlnets=[{path:"InstantX/FLUX.1-dev-Controlnet-Canny",image_url:refB64,conditioning_scale:0.5}];
+    }else if(refB64&&cfg.i2i){body.image_url=refB64;body.strength=0.75;}
+    const endpoint=cfg.prov==="fal-ctrl"?"https://fal.run/fal-ai/flux-general":"https://fal.run/"+cfg.model;
+    const r=await fetchTimeout(endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(body)},90000);
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.detail||e?.error||"Fal error "+r.status);}
+    const d=await r.json();
+    const imgUrl=d.images?.[0]?.url||d.image?.url;
+    if(!imgUrl)throw new Error("Fal: không nhận được URL ảnh");
+    const ir=await fetchTimeout(imgUrl,{},30000);
+    if(!ir.ok)throw new Error("Fal: tải ảnh thất bại");
+    const blob=await ir.blob();
+    return await new Promise((res,rej)=>{const rd=new FileReader();rd.onload=e=>res(e.target.result);rd.onerror=rej;rd.readAsDataURL(blob);});
+  }
+  if(cfg.prov==="google"){
+    const gbody={instances:[{prompt}],parameters:{sampleCount:1,aspectRatio:"16:9",safetyFilterLevel:"BLOCK_ONLY_HIGH",personGeneration:"allow_all"}};
+    const r=await fetchTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:predict?key=${encodeURIComponent(key)}`,
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(gbody)},60000);
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||"Google AI error "+r.status);}
+    const d=await r.json();
+    const b=d.predictions?.[0]?.bytesBase64Encoded;
+    const mt=d.predictions?.[0]?.mimeType||"image/png";
+    if(!b)throw new Error("Google AI: không nhận được dữ liệu ảnh");
+    return `data:${mt};base64,`+b;
+  }
+  throw new Error("Model không được hỗ trợ cho Timeline: "+modelKey);
+}
+
+function buildTlPhaseGrid(){
+  const container=document.getElementById("tlPhases");
+  if(!container||!tlPhaseData.length)return;
+  container.innerHTML="";
+  tlPhaseData.forEach((phase,idx)=>{
+    const badgeTxt={pending:"⬜ Chưa có",generating:"⏳ Đang generate...",done:"✅ Xong"};
+    const card=document.createElement("div");
+    card.className="tl-card"+(phase.status==="done"?" tl-done":phase.status==="generating"?" tl-active":"");
+    card.id="tlCard_"+phase.id;
+    card.innerHTML=`
+      <div class="tl-img" id="tlImg_${phase.id}" onclick="tlPhaseData[${idx}].img&&openViewer(tlPhaseData[${idx}].img,[tlPhaseData[${idx}].img])">
+        ${phase.img
+          ?`<img src="${phase.img}" alt="${phase.name}"/>`
+          :`<div class="tl-img-ph"><div class="tl-img-ph-icon">${phase.icon}</div><div style="font-size:10px">${idx+1}. ${phase.name}</div></div>`}
+      </div>
+      <div class="tl-card-body">
+        <div class="tl-badge ${phase.status||"pending"}">${badgeTxt[phase.status]||"⬜ Chưa có"}</div>
+        <div class="tl-card-name">${phase.icon} ${idx+1}. ${phase.name}</div>
+        <div class="tl-card-acts">
+          <button class="tl-btn tl-primary" onclick="tlGenPhase(${idx})" ${phase.status==="generating"?"disabled":""}>🎨 AI</button>
+          <button class="tl-btn" onclick="document.getElementById('tlUpInp_${idx}').click()">📁 Upload</button>
+          <input type="file" id="tlUpInp_${idx}" accept="image/*" class="hidden" onchange="tlHandleUpload(${idx},this)"/>
+          ${phase.img?`<button class="tl-btn" onclick="tlClearPhase(${idx})">✕</button>`:""}
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+  tlUpdateProgress();
+}
+
+function tlUpdateProgress(){
+  const done=tlPhaseData.filter(p=>p.status==="done").length;
+  const total=tlPhaseData.length;
+  const pct=total?Math.round(done/total*100):0;
+  const fill=document.getElementById("tlProgFill");
+  const lbl=document.getElementById("tlProgLbl");
+  const msg=document.getElementById("tlStatusMsg");
+  if(fill)fill.style.width=pct+"%";
+  if(lbl)lbl.textContent=done+" / "+total+" phases sẵn sàng";
+  if(msg)msg.textContent=done===total&&total>0?"🎬 Sẵn sàng export!":done>0?pct+"% hoàn thành":"Chưa generate";
+  const btn=document.getElementById("btnTlExport");
+  if(btn)btn.disabled=done<2;
+}
+
+function tlHandleUpload(idx,inp){
+  const f=inp?.files?.[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    tlPhaseData[idx].img=e.target.result;
+    tlPhaseData[idx].status="done";
+    buildTlPhaseGrid();
+    showToast("✅ Upload: "+tlPhaseData[idx].name);
+  };
+  r.readAsDataURL(f);
+  inp.value="";
+}
+
+function tlClearPhase(idx){
+  tlPhaseData[idx].img=null;
+  tlPhaseData[idx].status="pending";
+  buildTlPhaseGrid();
+}
+
+async function tlGenPhase(idx){
+  if(tlGenerating){showToast("Đang generate phase khác, vui lòng đợi...");return;}
+  const phase=tlPhaseData[idx];if(!phase)return;
+  // Shortcut: use uploaded assets for bookend phases
+  if(phase.id==="drawings"&&tlDrawB64){
+    tlPhaseData[idx].img=tlDrawB64;tlPhaseData[idx].status="done";
+    buildTlPhaseGrid();showToast("✅ Phase 1: Dùng bản vẽ đã upload!");return;
+  }
+  if(phase.id==="complete"&&tlFinalB64){
+    tlPhaseData[idx].img=tlFinalB64;tlPhaseData[idx].status="done";
+    buildTlPhaseGrid();showToast("✅ Phase 8: Dùng render hoàn thiện đã upload!");return;
+  }
+  const modelKey=document.getElementById("tlModel")?.value||"pollinations-flux";
+  const cfg=MODEL_MAP[modelKey];
+  const key=(document.getElementById("apiKey")?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
+  if(cfg.prov!=="pollinations"&&!key){showToast("❌ Cần nhập API key cho model này!");return;}
+  const styleNote=document.getElementById("tlStyle")?.value?.trim()||"";
+  const prompt=[
+    phase.prompt,
+    styleNote?"architecture style: "+styleNote:"",
+    "ultra sharp detail, professional architectural CGI, photorealistic render, masterpiece quality, 8K resolution"
+  ].filter(Boolean).join(", ");
+  const useRef=(modelKey==="fal-flux-ctrl"&&tlDrawB64)?tlDrawB64:null;
+  tlGenerating=true;
+  tlPhaseData[idx].status="generating";
+  buildTlPhaseGrid();
+  showToast("⏳ Generating: "+phase.name+"...");
+  try{
+    const imgSrc=await tlCallAPI(prompt,modelKey,key,useRef);
+    tlPhaseData[idx].img=imgSrc;
+    tlPhaseData[idx].status="done";
+    showToast("✅ "+phase.name+" xong!");
+  }catch(e){
+    tlPhaseData[idx].status="pending";
+    showToast("❌ "+phase.name+" lỗi: "+e.message);
+  }
+  tlGenerating=false;
+  buildTlPhaseGrid();
+}
+
+async function doTlGenAll(){
+  if(tlGenerating){showToast("Đang chạy, vui lòng đợi...");return;}
+  const btn=document.getElementById("btnTlGenAll");
+  if(btn)btn.disabled=true;
+  cancelFlag=false;
+  showToast("🚀 Bắt đầu generate 8 phases...");
+  for(let i=0;i<tlPhaseData.length;i++){
+    if(cancelFlag)break;
+    if(tlPhaseData[i].status==="done")continue;
+    await tlGenPhase(i);
+    if(i<tlPhaseData.length-1)await sleep(400);
+  }
+  if(btn)btn.disabled=false;
+  const done=tlPhaseData.filter(p=>p.status==="done").length;
+  showToast(done===tlPhaseData.length?"🎬 Hoàn tất! Nhấn Export Timelapse!":"✅ "+done+"/"+tlPhaseData.length+" phases xong.");
+}
+
+async function exportTlVideo(){
+  const donePhases=tlPhaseData.filter(p=>p.status==="done"&&p.img);
+  if(donePhases.length<2){showToast("❌ Cần ít nhất 2 phases có ảnh để export!");return;}
+  const phaseDur=parseInt(document.getElementById("tlPhaseDur")?.value||"4");
+  const transition=document.getElementById("tlTransition")?.value||"crossfade";
+  const FPS=30, transFrames=FPS; // 1s transition
+  const phaseFrames=phaseDur*FPS;
+  const exportBtn=document.getElementById("btnTlExport");
+  if(exportBtn){exportBtn.disabled=true;exportBtn.textContent="⏳ Rendering...";}
+  showToast("🎬 Đang render timelapse video...");
+  const canvas=document.createElement("canvas");
+  canvas.width=1280;canvas.height=720;
+  const ctx=canvas.getContext("2d");
+  const mimeType=MediaRecorder.isTypeSupported("video/webm;codecs=vp9")?"video/webm;codecs=vp9":
+                  MediaRecorder.isTypeSupported("video/webm")?"video/webm":"video/mp4";
+  const stream=canvas.captureStream(FPS);
+  const recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:4000000});
+  const chunks=[];
+  recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
+  const loadImg=src=>new Promise((res,rej)=>{
+    const img=new Image();img.crossOrigin="anonymous";
+    img.onload=()=>res(img);img.onerror=rej;img.src=src;
+  });
+  let imgs;
+  try{imgs=await Promise.all(donePhases.map(p=>loadImg(p.img)));}
+  catch(e){
+    showToast("❌ Không tải được ảnh: "+e.message);
+    if(exportBtn){exportBtn.disabled=false;exportBtn.textContent="🎬 Export Timelapse";}return;
+  }
+  const CW=canvas.width,CH=canvas.height;
+  const drawKB=(img,frame,total)=>{
+    const progress=frame/Math.max(total,1);
+    const scale=1.05-0.05*progress; // slow pull-back
+    const sw=CW*scale,sh=CH*scale;
+    ctx.clearRect(0,0,CW,CH);
+    ctx.drawImage(img,-(sw-CW)/2,-(sh-CH)/2,sw,sh);
+  };
+  recorder.start();
+  await new Promise(done=>{
+    let pi=0,fi=0,inTrans=false,tf=0;
+    const tick=()=>{
+      if(pi>=imgs.length){done();return;}
+      if(!inTrans){
+        drawKB(imgs[pi],fi,phaseFrames);fi++;
+        if(fi>=phaseFrames){
+          if(pi<imgs.length-1){inTrans=true;tf=0;}
+          else pi++;
+        }
+      }else{
+        const alpha=tf/transFrames;
+        if(transition==="wipe"){
+          ctx.drawImage(imgs[pi],0,0,CW,CH);
+          const wx=Math.round(CW*alpha);
+          ctx.drawImage(imgs[pi+1],0,0,wx,CH,0,0,wx,CH);
+        }else if(transition==="zoom"){
+          const sc=1+0.25*alpha;
+          ctx.clearRect(0,0,CW,CH);
+          ctx.save();ctx.translate(CW/2,CH/2);ctx.scale(sc,sc);
+          ctx.drawImage(imgs[pi],-CW/2,-CH/2,CW,CH);ctx.restore();
+          ctx.globalAlpha=alpha;ctx.drawImage(imgs[pi+1],0,0,CW,CH);ctx.globalAlpha=1;
+        }else{
+          ctx.drawImage(imgs[pi],0,0,CW,CH);
+          ctx.globalAlpha=alpha;ctx.drawImage(imgs[pi+1],0,0,CW,CH);ctx.globalAlpha=1;
+        }
+        tf++;
+        if(tf>=transFrames){inTrans=false;pi++;fi=0;}
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  recorder.stop();
+  recorder.onstop=()=>{
+    const blob=new Blob(chunks,{type:mimeType});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;
+    a.download="construction_timeline_"+Date.now()+".webm";
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),8000);
+    showToast("✅ Timelapse video đã tải về!");
+    if(exportBtn){exportBtn.disabled=false;exportBtn.textContent="🎬 Export Timelapse";}
+  };
+}
+
+function tlInitUpload(slotId,inputId,onLoad,onClear){
+  const slot=document.getElementById(slotId);
+  const inp=document.getElementById(inputId);
+  if(!slot||!inp)return;
+  const ph=slot.innerHTML;
+  const load=file=>{
+    if(!file?.type.startsWith("image/"))return;
+    const r=new FileReader();
+    r.onload=e=>{
+      const b64=e.target.result;onLoad(b64);
+      slot.innerHTML=`<img src="${b64}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;
+      slot.classList.add("has");
+      slot.querySelector(".uclear")?.addEventListener("click",ev=>{ev.stopPropagation();onClear();slot.innerHTML=ph;slot.classList.remove("has");});
+    };
+    r.readAsDataURL(file);
+  };
+  slot.addEventListener("click",()=>inp.click());
+  slot.addEventListener("dragover",e=>{e.preventDefault();slot.style.borderColor="var(--ac)";});
+  slot.addEventListener("dragleave",()=>slot.style.borderColor="");
+  slot.addEventListener("drop",e=>{e.preventDefault();slot.style.borderColor="";load(e.dataTransfer.files?.[0]);});
+  inp.addEventListener("change",e=>{load(e.target.files?.[0]);e.target.value="";});
+}
+
+function initTimeline(){
+  tlPhaseData=TL_PHASES.map(p=>({...p,img:null,status:"pending"}));
+  buildTlPhaseGrid();
+  tlInitUpload("tlDrawSlot","tlDrawInp",b64=>{tlDrawB64=b64;showToast("✅ Bản vẽ đã upload!");},()=>{tlDrawB64=null;});
+  tlInitUpload("tlFinalSlot","tlFinalInp",b64=>{tlFinalB64=b64;showToast("✅ Render hoàn thiện đã upload!");},()=>{tlFinalB64=null;});
+  document.getElementById("btnTlGenAll")?.addEventListener("click",doTlGenAll);
+  document.getElementById("btnTlExport")?.addEventListener("click",exportTlVideo);
+}
+
+/* ═══════════════════════════════
    WHITE MODEL
 ═══════════════════════════════ */
 function toggleWhiteModel(){
@@ -3605,6 +4009,8 @@ function bindAll(){
   // Video generation
   initUploadSlot("vidSrcSlot","vidSrcInp","vidSrc");
   document.getElementById("btnVideoGen")?.addEventListener("click",doVideoGen);
+  // Construction Timeline
+  initTimeline();
   document.getElementById("btnVidFromLast")?.addEventListener("click",()=>{
     const src=getLastRenderedSrc();
     if(!src){showToast("Chưa có ảnh render — tạo ảnh trước!");return;}
