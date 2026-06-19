@@ -349,6 +349,34 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     </div>
   </div>
 
+  <!-- ẢNH THAM CHIẾU (hiện cho tất cả mode cần ref) -->
+  <div class="acc open hidden" id="accRef">
+    <div class="acc-head" onclick="toggleAcc('accRef')"><span class="acc-title">📎 Ảnh Tham Chiếu (img2img)</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <div id="refModelWarn" class="hidden" style="padding:6px 8px;border-radius:6px;background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);color:var(--ac2);font-size:10px;margin-bottom:8px;line-height:1.5">⚠️ Model <b>Free/Schnell</b> không hỗ trợ img2img. Chuyển sang <b>Flux Dev</b> hoặc cao hơn để dùng ảnh tham chiếu.</div>
+      <div id="refHintExt" class="hidden" style="font-size:9px;color:var(--mu);line-height:1.5;margin-bottom:6px;padding:5px 7px;background:var(--bg4);border-radius:5px">📐 <b>Ngoại thất:</b> Export 3D viewport (SketchUp/Revit/Lumion) dạng gray/wireframe → AI tô màu & vật liệu</div>
+      <div id="refHintInt" class="hidden" style="font-size:9px;color:var(--mu);line-height:1.5;margin-bottom:6px;padding:5px 7px;background:var(--bg4);border-radius:5px">🛋 <b>Nội thất:</b> Ảnh chụp phòng thực / 3D không gian trắng → AI thêm vật liệu, ánh sáng, nội thất</div>
+      <div id="refHintSea" class="hidden" style="font-size:9px;color:var(--mu);line-height:1.5;margin-bottom:6px;padding:5px 7px;background:var(--bg4);border-radius:5px">🌦 <b>Seasonal:</b> Ảnh ngoại thất gốc → AI render nhiều thời tiết/mùa khác nhau</div>
+      <span class="flbl" id="refLbl">Upload ảnh tham chiếu (tùy chọn)</span>
+      <div class="uslot" id="refSlot">
+        <div class="uslot-ph"><span class="uslot-ph-icon">📎</span><span>3D view · Sketch · Ảnh hiện trạng</span></div>
+      </div>
+      <input type="file" id="refInp" accept="image/*" class="hidden"/>
+      <div style="margin-top:7px">
+        <span class="flbl">Strength (ảnh hưởng reference): <span id="refStrengthVal" style="color:var(--ac)">55%</span></span>
+        <input type="range" id="refStrength" min="15" max="95" value="55" style="width:100%;accent-color:var(--ac);margin-bottom:3px"/>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-bottom:7px"><span>← Sáng tạo</span><span>Chính xác →</span></div>
+      </div>
+      <div style="font-size:9px;color:var(--mu);line-height:1.6;border-left:2px solid var(--bd2);padding-left:7px">
+        💡 <b>Gợi ý strength:</b><br/>
+        • Wireframe 3D / gray render → <b>35–50%</b><br/>
+        • Sketch / phác thảo tay → <b>40–55%</b><br/>
+        • Ảnh hiện trạng → <b>50–70%</b><br/>
+        • Ảnh photo gần hoàn thiện → <b>65–80%</b>
+      </div>
+    </div>
+  </div>
+
   <!-- NỘI THẤT chi tiết -->
   <div class="acc" id="accInt">
     <div class="acc-head" onclick="toggleAcc('accInt')"><span class="acc-title">🛋 Nội thất chi tiết</span><span class="acc-arr">▾</span></div>
@@ -621,7 +649,12 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <option value="1024x1024">1:1 · 1024px</option>
         <option value="720x1280">9:16 · 720×1280</option>
         <option value="1216x832">3:2 · 1216×832</option>
-        <option value="1536x640">Cinematic</option>
+        <option value="1536x640">Cinematic · 1536×640</option>
+        <option value="1920x1080">Full HD · 1920×1080 ★</option>
+        <option value="2048x1152">2K 16:9 · 2048×1152 ★★</option>
+        <option value="2048x2048">2K Square · 2048×2048 ★★</option>
+        <option value="1536x2048">Portrait HD · 1536×2048 ★★</option>
+        <option value="2048x1536">Landscape HD · 2048×1536 ★★</option>
       </select>
       <select class="psel" id="pCount">
         <option value="1">×1</option>
@@ -881,7 +914,7 @@ const S={
 let history=[], projects=[], sheetImgs=[], activeProj=null;
 let cancelFlag=false;
 let furnSpaceB64=null, furnObjB64=null, charRefB64=null;
-let fpB64=null, mpB64=null, baB64=null;
+let fpB64=null, mpB64=null, baB64=null, refB64=null;
 let charViews=[{id:1,b64:null,label:"View 1"},{id:2,b64:null,label:"View 2"}];
 let cvIdCnt=3;
 let pipeline=[], plRunning=false, plPaused=false, plIdCnt=1;
@@ -904,6 +937,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   bindAll();
   switchMode(S.mode||"exterior");
   updatePrompt();
+  updateRefModelWarn();
   document.addEventListener("keydown",handleKeyboard);
 });
 
@@ -1017,7 +1051,33 @@ function switchMode(mode){
   document.getElementById("accChar").classList.toggle("hidden",mode!=="char_sync");
   document.getElementById("accInt").classList.toggle("hidden",!["interior"].includes(mode));
   document.getElementById("accBatch").classList.toggle("hidden",isPL||["furniture","char_sync"].includes(mode));
+
+  // Reference image accordion: show for text-based modes that benefit from img2img
+  const refModes=["exterior","interior","seasonal","char_sync"];
+  const accRef=document.getElementById("accRef");
+  if(accRef){
+    accRef.classList.toggle("hidden",!refModes.includes(mode)||isPL);
+    // Swap hints
+    ["refHintExt","refHintInt","refHintSea"].forEach(id=>document.getElementById(id)?.classList.add("hidden"));
+    if(mode==="exterior")document.getElementById("refHintExt")?.classList.remove("hidden");
+    else if(mode==="interior")document.getElementById("refHintInt")?.classList.remove("hidden");
+    else if(mode==="seasonal")document.getElementById("refHintSea")?.classList.remove("hidden");
+    // Update label
+    const lbl=document.getElementById("refLbl");
+    if(lbl){
+      const lblMap={exterior:"Ảnh 3D/sketch ngoại thất (tùy chọn)",interior:"Ảnh 3D/ảnh phòng thực (tùy chọn)",seasonal:"Ảnh ngoại thất gốc (tùy chọn)",char_sync:"Ảnh nền không gian (tùy chọn)"};
+      lbl.textContent=lblMap[mode]||"Ảnh tham chiếu (tùy chọn)";
+    }
+  }
+  updateRefModelWarn();
   updatePrompt();
+}
+
+function updateRefModelWarn(){
+  const model=document.getElementById("pModel")?.value||"flux-free";
+  const cfg=MODEL_MAP[model]||MODEL_MAP["flux-free"];
+  const warn=document.getElementById("refModelWarn");
+  if(warn)warn.classList.toggle("hidden",cfg.i2i!==false||!["exterior","interior","seasonal","char_sync"].includes(S.mode));
 }
 
 /* ═══════════════════════════════
@@ -1094,12 +1154,24 @@ function buildPrompt(){
 
   switch(S.mode){
     case"exterior":
-      parts.push("photorealistic architectural photograph");
+      if(refB64){
+        parts.push("photorealistic architectural render based on provided 3D reference view");
+        parts.push("maintain exact architectural massing, geometry and structure from reference");
+        parts.push("transform to fully photorealistic with real materials and lighting");
+      }else{
+        parts.push("photorealistic architectural photograph");
+      }
       if(S.archStyle)parts.push(S.archStyle+" architecture style");
       if(S.camera)parts.push(S.camera);
       break;
     case"interior":
-      parts.push("photorealistic interior design photograph");
+      if(refB64){
+        parts.push("photorealistic interior design render based on provided reference space");
+        parts.push("preserve exact room layout, proportions and spatial structure from reference");
+        parts.push("add photorealistic materials, furnishings and lighting");
+      }else{
+        parts.push("photorealistic interior design photograph");
+      }
       if(S.intRoom)parts.push(S.intRoom);
       if(S.intStyle)parts.push(S.intStyle+" style");
       break;
@@ -1277,11 +1349,18 @@ async function doGenerate(){
   const model=document.getElementById("pModel")?.value||"flux-free";
   const size=document.getElementById("pSize")?.value||"1280x720";
   const quality=document.getElementById("pQuality")?.value||"30";
-  // Use uploaded plan as source image for img2img (floorplan/masterplan/before_after)
+  // img2img source image based on mode
   let srcB64=null, srcStrength=0.55;
+  const refStrPct=parseInt(document.getElementById("refStrength")?.value||55)/100;
   if(S.mode==="floorplan"&&fpB64){srcB64=fpB64;srcStrength=0.5;}
   else if(S.mode==="masterplan"&&mpB64){srcB64=mpB64;srcStrength=0.45;}
   else if(S.mode==="before_after"&&baB64){srcB64=baB64;srcStrength=0.6;}
+  else if((S.mode==="exterior"||S.mode==="interior"||S.mode==="seasonal"||S.mode==="char_sync")&&refB64){
+    srcB64=refB64;srcStrength=refStrPct;
+    // Warn if model doesn't support img2img
+    const m=document.getElementById("pModel")?.value||"flux-free";
+    if(!MODEL_MAP[m]?.i2i){showToast("⚠️ Model này không hỗ trợ img2img. Ảnh ref bị bỏ qua.");srcB64=null;}
+  }
   cancelFlag=false;
   const gid="rg_"+Date.now();
   showGenOv();renderSkeletons(gid,count);
@@ -1700,6 +1779,7 @@ function initUploadSlot(slotId,inputId,stateKey){
       else if(stateKey==="fp"){fpB64=b64;updatePrompt();}
       else if(stateKey==="mp"){mpB64=b64;updatePrompt();}
       else if(stateKey==="ba"){baB64=b64;updatePrompt();}
+      else if(stateKey==="ref"){refB64=b64;updatePrompt();}
       slot.innerHTML=`<img src="${b64}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;
       slot.classList.add("has");
       slot.querySelector(".uclear").addEventListener("click",e=>{
@@ -1710,6 +1790,7 @@ function initUploadSlot(slotId,inputId,stateKey){
         else if(stateKey==="fp"){fpB64=null;updatePrompt();}
         else if(stateKey==="mp"){mpB64=null;updatePrompt();}
         else if(stateKey==="ba"){baB64=null;updatePrompt();}
+        else if(stateKey==="ref"){refB64=null;updatePrompt();}
         slot.innerHTML=ph;slot.classList.remove("has");
       });
       showToast("✅ Đã upload ảnh!");
@@ -2078,6 +2159,29 @@ function bindAll(){
   document.getElementById("btnCharSync")?.addEventListener("click",doCharSync);
   document.getElementById("btnAddCv")?.addEventListener("click",()=>{charViews.push({id:cvIdCnt++,b64:null,label:"View "+(charViews.length+1)});renderCharViewList();});
   document.getElementById("charDesc")?.addEventListener("input",updatePrompt);
+  // reference image upload (exterior/interior/seasonal/char_sync)
+  initUploadSlot("refSlot","refInp","ref");
+  document.getElementById("refStrength")?.addEventListener("input",e=>{
+    const v=document.getElementById("refStrengthVal");if(v)v.textContent=e.target.value+"%";
+  });
+  // model change → update ref warning + HD resolution hint
+  document.getElementById("pModel")?.addEventListener("change",e=>{
+    updateRefModelWarn();
+    updateResInfo();
+    // Mark HD options that need Pro/Ultra
+    const m=e.target.value;
+    const needsHD=["flux-pro","flux-ultra","fal-flux-dev"].includes(m);
+    document.querySelectorAll("#pSize option").forEach(o=>{
+      if(o.value&&(parseInt(o.value.split("x")[0])>=1920)){
+        o.disabled=!needsHD;
+        if(!needsHD&&["1920x1080","2048x1152","2048x2048","1536x2048","2048x1536"].includes(o.value)){
+          o.text=o.text.replace(" (cần Pro+)","")+" (cần Pro+)";
+        }else{
+          o.text=o.text.replace(" (cần Pro+)","");
+        }
+      }
+    });
+  });
   // floorplan / masterplan / before-after uploads
   initUploadSlot("fpSlot","fpInp","fp");
   initUploadSlot("mpSlot","mpInp","mp");
