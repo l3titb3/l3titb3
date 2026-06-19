@@ -409,10 +409,16 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <div class="uslot-ph"><span class="uslot-ph-icon">📎</span><span>3D view · Sketch · Ảnh hiện trạng</span></div>
       </div>
       <input type="file" id="refInp" accept="image/*" class="hidden"/>
-      <div style="margin-top:7px">
+      <div id="refStrengthWrap" style="margin-top:7px">
         <span class="flbl">Strength (ảnh hưởng reference): <span id="refStrengthVal" style="color:var(--ac)">55%</span></span>
         <input type="range" id="refStrength" min="15" max="95" value="55" style="width:100%;accent-color:var(--ac);margin-bottom:3px"/>
         <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-bottom:7px"><span>← Sáng tạo</span><span>Chính xác →</span></div>
+      </div>
+      <div id="ctrlStrengthWrap" class="hidden" style="margin-top:7px">
+        <span class="flbl" style="color:var(--gr)">🔬 ControlNet Strength (độ bám cấu trúc): <span id="ctrlStrengthVal" style="color:var(--ac)">65%</span></span>
+        <input type="range" id="ctrlStrength" min="20" max="100" value="65" style="width:100%;accent-color:var(--gr);margin-bottom:3px"/>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-bottom:6px"><span>← Sáng tạo hơn</span><span>Bám bản vẽ →</span></div>
+        <div style="font-size:9px;color:var(--mu);line-height:1.5;padding:5px 7px;background:rgba(61,220,151,.07);border-left:2px solid var(--gr);border-radius:0 4px 4px 0">🔬 <b>Canny ControlNet</b> trích xuất đường nét từ bản vẽ → ràng buộc AI render theo đúng cấu trúc không gian. Cần <b>Fal.ai API key</b>.</div>
       </div>
       <div style="font-size:9px;color:var(--mu);line-height:1.6;border-left:2px solid var(--bd2);padding-left:7px">
         💡 <b>Gợi ý strength:</b><br/>
@@ -929,6 +935,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <option value="fal-flux-schnell">Fal Flux Schnell ($0.003)</option>
         <option value="fal-flux-dev">Fal Flux Dev ($0.025)</option>
         <option value="fal-recraft-v3">Fal Recraft v3 ($0.04)</option>
+        <option value="fal-flux-ctrl">🔬 FLUX ControlNet — bám bản vẽ ($0.04)</option>
       </select>
       <select class="psel" id="pFormat">
         <option value="jpeg">JPEG</option>
@@ -979,7 +986,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <span class="pl-gl-lbl">GLOBAL:</span>
         <select class="psel" id="plGStyle"><option value="">Style (auto)</option><option>Tropical Modern</option><option>Japandi</option><option>Minimalist</option><option>Luxury</option><option>Neo-Vietnamese</option><option>Green Biophilic</option></select>
         <select class="psel" id="plGLight"><option value="">Lighting (auto)</option><option>Golden hour</option><option>Soft morning</option><option>Overcast</option><option>Studio</option><option>Ban đêm</option></select>
-        <select class="psel" id="plGModel"><option value="pollinations-flux">🆓 Pollinations (Free)</option><option value="google-imagen3">🤖 Google Imagen 3</option><option value="google-imagen3f">🤖 Imagen 3 Fast</option><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option></select>
+        <select class="psel" id="plGModel"><option value="pollinations-flux">🆓 Pollinations (Free)</option><option value="google-imagen3">🤖 Google Imagen 3</option><option value="google-imagen3f">🤖 Imagen 3 Fast</option><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option><option value="fal-flux-ctrl">🔬 ControlNet</option></select>
         <select class="psel" id="plGCount"><option value="1">×1</option><option value="2" selected>×2</option><option value="4">×4</option></select>
         <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoSheet" checked style="accent-color:var(--ac)"/> Auto→Sheet</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoExport"/> Auto PDF</label>
@@ -1224,10 +1231,11 @@ const MODEL_MAP={
   "fal-flux-schnell":  {prov:"fal",       model:"fal-ai/flux/schnell",                   steps:4,  price:0.003, cfg:false, i2i:false},
   "fal-flux-dev":      {prov:"fal",       model:"fal-ai/flux/dev",                       steps:28, price:0.025, cfg:true,  i2i:true},
   "fal-recraft-v3":    {prov:"fal",       model:"fal-ai/recraft-v3",                     steps:28, price:0.04,  cfg:false, i2i:false},
+  "fal-flux-ctrl":     {prov:"fal-ctrl",  model:"fal-ai/flux-general",                   steps:28, price:0.04,  cfg:true,  i2i:false, ctrl:true},
 };
 
 const NEG_PRESETS=[
-  {l:"Kiến trúc chuẩn",   v:"blurry, distorted, warped geometry, unrealistic proportions, cartoon, anime, sketch, watermark, text overlay, logo, low quality, jpeg artifacts, deformed, noisy, oversaturated"},
+  {l:"Kiến trúc chuẩn",   v:"blurry, soft focus, out of focus, depth of field blur, distorted, warped geometry, unrealistic proportions, cartoon, anime, sketch, watermark, text overlay, logo, low quality, jpeg artifacts, deformed, noisy, oversaturated, pixelated, aliased edges, chromatic aberration, lens distortion, haze, foggy details"},
   {l:"Không méo lens",    v:"fisheye distortion, barrel distortion, lens flare, chromatic aberration, vignette, perspective warp"},
   {l:"Người tự nhiên",    v:"deformed face, bad hands, extra fingers, missing limbs, anatomically incorrect, unrealistic skin, doll-like"},
   {l:"Ngoại thất sạch",   v:"indoor, messy clutter, graffiti, overhead power lines, random signage, garbage, trash"},
@@ -1497,8 +1505,14 @@ function switchMode(mode){
 function updateRefModelWarn(){
   const model=document.getElementById("pModel")?.value||"flux-free";
   const cfg=MODEL_MAP[model]||MODEL_MAP["flux-free"];
+  const isCtrl=cfg.ctrl===true;
+  const refModes=["exterior","interior","seasonal","char_sync"];
   const warn=document.getElementById("refModelWarn");
-  if(warn)warn.classList.toggle("hidden",cfg.i2i!==false||!["exterior","interior","seasonal","char_sync"].includes(S.mode));
+  const ctrlWrap=document.getElementById("ctrlStrengthWrap");
+  const refStrWrap=document.getElementById("refStrengthWrap");
+  if(warn)warn.classList.toggle("hidden",cfg.i2i!==false||isCtrl||!refModes.includes(S.mode));
+  if(ctrlWrap)ctrlWrap.classList.toggle("hidden",!isCtrl);
+  if(refStrWrap)refStrWrap.classList.toggle("hidden",isCtrl);
 }
 
 /* ═══════════════════════════════
@@ -1760,9 +1774,9 @@ function buildPrompt(){
   const cp=document.getElementById("customPrompt")?.value?.trim();
   if(cp)parts.push(cp);
   if(document.getElementById("chkAutoEnhance")?.checked&&!["floorplan"].includes(S.mode)){
-    parts.push("ultra sharp, professional architectural visualization, award-winning photography");
+    parts.push("ultra sharp crisp detail, professional architectural CGI, award-winning visualization, razor-sharp edges, physically-based materials, perfect geometry, no blur anywhere");
   }
-  parts.push("high quality professional render, 8K detail");
+  parts.push("masterpiece quality, 8K ultra resolution, sharp focus throughout, photorealistic render, hyper-detailed textures, professional lighting, clean crisp lines");
   return parts.filter(Boolean).join(", ");
 }
 
@@ -1843,6 +1857,35 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
           const blob=await ir.blob();
           imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
         }
+      }else if(cfg.prov==="fal-ctrl"){
+        // FLUX General + ControlNet Canny — structural conditioning from reference drawing
+        const ctrlScale=Math.min(1,Math.max(0.1,parseFloat(document.getElementById("ctrlStrength")?.value||65)/100));
+        const falCtrlBody={
+          prompt,
+          image_size:{width:w,height:h},
+          num_images:1,
+          num_inference_steps:parseInt(quality)||cfg.steps,
+          seed:usedSeed,
+          guidance_scale:cfgScale,
+          enable_safety_checker:false
+        };
+        if(negPrompt)falCtrlBody.negative_prompt=negPrompt;
+        if(imgB64){
+          falCtrlBody.controlnets=[{
+            path:"InstantX/FLUX.1-dev-Controlnet-Canny",
+            image_url:imgB64,
+            conditioning_scale:ctrlScale
+          }];
+        }
+        const cresp=await fetch("https://fal.run/fal-ai/flux-general",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(falCtrlBody)});
+        if(!cresp.ok){const e=await cresp.json().catch(()=>({}));throw new Error(e?.detail||e?.error||"Fal ControlNet error "+cresp.status);}
+        const cd=await cresp.json();
+        if(cd.images?.[0]?.url){
+          const ir=await fetch(cd.images[0].url);
+          if(!ir.ok)throw new Error("Fal ControlNet image fetch failed");
+          const blob=await ir.blob();
+          imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+        }
       }else if(cfg.prov==="google"){
         // Google AI Studio — Imagen 3 via Generative Language API
         const ratio=w/h;
@@ -1901,7 +1944,7 @@ async function doGenerate(){
   else if((S.mode==="exterior"||S.mode==="interior"||S.mode==="seasonal"||S.mode==="char_sync")&&refB64){
     srcB64=refB64;srcStrength=refStrPct;
     const m=document.getElementById("pModel")?.value||"flux-free";
-    if(!MODEL_MAP[m]?.i2i){showToast("⚠️ Model này không hỗ trợ img2img. Ảnh ref bị bỏ qua.");srcB64=null;}
+    if(!MODEL_MAP[m]?.i2i&&!MODEL_MAP[m]?.ctrl){showToast("⚠️ Model này không hỗ trợ img2img. Ảnh ref bị bỏ qua.");srcB64=null;}
   }
   // DNA reference injection when locked and no other source
   if(!srcB64&&dnaB64&&S.dnaLocked){
@@ -2756,7 +2799,7 @@ function reflectKeylessModel(modelKey){
   if(keyless) ph="🆓 Pollinations — không cần API key!";
   else if(prov==="google") ph="Google AI Studio key — aistudio.google.com/apikey";
   else if(prov==="stability") ph="Stability AI API key (platform.stability.ai)";
-  else if(prov==="fal") ph="Fal.ai API key (fal.ai/dashboard)";
+  else if(prov==="fal"||prov==="fal-ctrl") ph="Fal.ai API key (fal.ai/dashboard)";
   if(inp)inp.placeholder=ph;
   if(keyless&&dot){dot.className="api-dot ok";dot.title="Pollinations free — không cần key";}
   else if(dot){updateApiDot(inp?.value||"");}
@@ -3194,6 +3237,9 @@ function bindAll(){
   initUploadSlot("refSlot","refInp","ref");
   document.getElementById("refStrength")?.addEventListener("input",e=>{
     const v=document.getElementById("refStrengthVal");if(v)v.textContent=e.target.value+"%";
+  });
+  document.getElementById("ctrlStrength")?.addEventListener("input",e=>{
+    const v=document.getElementById("ctrlStrengthVal");if(v)v.textContent=e.target.value+"%";
   });
   // model change → update ref warning + HD resolution hint
   document.getElementById("pModel")?.addEventListener("change",e=>{
