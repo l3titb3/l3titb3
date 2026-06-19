@@ -317,6 +317,11 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .sv-handle{position:absolute;top:0;bottom:0;left:50%;width:3px;background:var(--ac);cursor:ew-resize;z-index:5;transform:translateX(-50%)}
 .sv-handle::after{content:'◄►';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--ac);color:#fff;font-size:11px;padding:3px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
 .sv-lbl-a{position:absolute;top:8px;left:10px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;z-index:4}
+/* ── VIDEO PLAYER OVERLAY ── */
+.vid-ov{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.vid-ov.on{display:flex}
+.vid-canvas{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;color:var(--mu)}
+.vid-canvas.on{display:flex}
 .sv-lbl-b{position:absolute;top:8px;right:10px;background:rgba(255,107,43,.85);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;z-index:6}
 </style>
 </head>
@@ -371,6 +376,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <button class="mchip" data-mode="before_after">📷 Before/After</button>
     <button class="mchip" data-mode="furniture">🪑 Nội thất</button>
     <button class="mchip" data-mode="char_sync">👤 Nhân vật</button>
+    <button class="mchip" data-mode="video">🎬 Video</button>
     <button class="mchip pl-chip" data-mode="pipeline">⚡ Pipeline</button>
   </div>
 
@@ -913,6 +919,40 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     </div>
   </div>
 
+  <!-- VIDEO WALKTHROUGH (D5 / Lumion style) -->
+  <div class="acc hidden" id="accVideo">
+    <div class="acc-head" onclick="toggleAcc('accVideo')"><span class="acc-title">🎬 Video Walkthrough</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Ảnh nguồn (Still → Video)</span>
+      <div class="uslot" id="vidSrcSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🖼</span><span>Upload ảnh render / ảnh chụp</span></div></div>
+      <input type="file" id="vidSrcInp" accept="image/*" class="hidden"/>
+      <button class="chip" id="btnVidFromLast" style="width:100%;margin-top:4px;margin-bottom:8px;text-align:center">📷 Dùng ảnh render cuối cùng</button>
+
+      <span class="flbl">Camera Motion (D5 / Lumion)</span>
+      <div class="chips" id="videoMotionChips" style="gap:4px"></div>
+
+      <span class="flbl" style="margin-top:8px">Thời lượng</span>
+      <div class="chips" id="videoDurChips"></div>
+
+      <span class="flbl">Video Model</span>
+      <select class="fsel" id="videoModel">
+        <option value="kling-v2">🏆 Kling v2 Master — chất lượng cao nhất ($0.12/5s)</option>
+        <option value="kling-std" selected>⚡ Kling Standard — nhanh & tốt ($0.05/5s)</option>
+        <option value="luma-i2v">🎭 Luma Dream Machine ($0.06/5s)</option>
+      </select>
+
+      <span class="flbl">Mô tả chuyển động tuỳ chỉnh</span>
+      <textarea class="fta" id="videoCustomMotion" placeholder="VD: slow dolly push forward revealing the main entrance…" style="min-height:36px"></textarea>
+
+      <div style="font-size:9px;color:var(--mu);line-height:1.7;padding:7px 8px;background:var(--bg4);border-radius:6px;margin:8px 0">
+        ⏱ Kling: <b>~60–120 giây</b> render / clip<br/>
+        🔑 Cần <b>Fal.ai API key</b> (fal.ai/dashboard)<br/>
+        📥 Tải về dạng <b>MP4</b> + xem preview trong app
+      </div>
+      <button class="gen-btn" id="btnVideoGen" style="width:100%;font-size:12px;padding:10px">🎬 RENDER VIDEO</button>
+    </div>
+  </div>
+
 </div></div><!-- end sidebar -->
 
 <!-- ── CANVAS ── -->
@@ -973,6 +1013,15 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div class="empty-icon">🏗</div>
       <div class="empty-title">NBOX DIRECT RENDER PRO</div>
       <div class="empty-sub">Chọn mode · Điền thông số · Bấm GENERATE<br/>Phím tắt: <span class="kbd">G</span> Generate · <span class="kbd">Esc</span> Đóng · <span class="kbd">←→</span> Duyệt ảnh</div>
+    </div>
+  </div>
+
+  <!-- VIDEO CANVAS PLACEHOLDER -->
+  <div class="vid-canvas" id="vidCanvas">
+    <div style="text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px;line-height:1">🎬</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Video Walkthrough</div>
+      <div style="font-size:12px;color:var(--mu);line-height:1.8">Chọn ảnh nguồn + Camera Motion bên trái<br/>Bấm <b>RENDER VIDEO</b> để tạo clip MP4<br/><span style="color:var(--ac2)">Cần Fal.ai API key · Kling ~60–120s/clip</span></div>
     </div>
   </div>
 
@@ -1090,6 +1139,16 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <button class="tbtn" id="viewerUpscale2x" title="Upscale 2× qua fal.ai aura-sr">⬆ 2×</button>
     <button class="tbtn" id="viewerUpscale4x" title="Upscale 4× qua fal.ai aura-sr">⬆ 4×</button>
     <button class="tbtn" id="viewerCompare" title="So sánh Before/After">◧ Compare</button>
+  </div>
+</div>
+
+<!-- VIDEO PLAYER OVERLAY -->
+<div class="vid-ov" id="vidOverlay">
+  <video id="vidElement" controls style="max-width:90vw;max-height:80vh;border-radius:10px;background:#000;box-shadow:0 8px 40px rgba(0,0,0,.8)"></video>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="tbtn tbtn-p" id="btnVidDownload">⬇ Tải MP4</button>
+    <button class="tbtn" id="btnVidClose">✕ Đóng</button>
+    <span id="vidFileSizeInfo" style="font-size:10px;color:var(--mu)"></span>
   </div>
 </div>
 
@@ -1232,6 +1291,9 @@ const MODEL_MAP={
   "fal-flux-dev":      {prov:"fal",       model:"fal-ai/flux/dev",                       steps:28, price:0.025, cfg:true,  i2i:true},
   "fal-recraft-v3":    {prov:"fal",       model:"fal-ai/recraft-v3",                     steps:28, price:0.04,  cfg:false, i2i:false},
   "fal-flux-ctrl":     {prov:"fal-ctrl",  model:"fal-ai/flux-general",                   steps:28, price:0.04,  cfg:true,  i2i:false, ctrl:true},
+  "kling-v2":          {prov:"fal-video", model:"fal-ai/kling-video/v2/master/image-to-video",     steps:0, price:0.12, cfg:false, i2i:false, video:true},
+  "kling-std":         {prov:"fal-video", model:"fal-ai/kling-video/v1.6/standard/image-to-video", steps:0, price:0.05, cfg:false, i2i:false, video:true},
+  "luma-i2v":          {prov:"fal-video", model:"fal-ai/luma-dream-machine/image-to-video",        steps:0, price:0.06, cfg:false, i2i:false, video:true},
 };
 
 const NEG_PRESETS=[
@@ -1272,15 +1334,22 @@ const S={
   entCategory:null, entActivity:null, entVehicle:null,
   wxPreset:null,
   whiteModel:false, dnaLocked:false,
+  // Floorplan / Masterplan / Before-After chip state (initialize explicitly for persistence)
+  fpRender:"3D Photorealistic", fpView:"Isometric 3/4", fpStyle:null,
+  mpType:null, mpView:null,
+  baType:null, baNewStyle:null,
+  // Video mode
+  videoMotion:"walkthrough", videoDuration:"5",
 };
-let history=[], projects=[], sheetImgs=[], activeProj=null;
+let history=[], projects=[], sheetImgs=[];
 let cancelFlag=false;
 let furnSpaceB64=null, furnObjB64=null, charRefB64=null;
 let fpB64=null, mpB64=null, baB64=null, refB64=null;
 let lsB64=null, matSwapB64=null, skyB64=null, artB64=null, secB64=null, urbanB64=null;
 let charViews=[{id:1,b64:null,label:"View 1"},{id:2,b64:null,label:"View 2"}];
 let cvIdCnt=3;
-let pipeline=[], plRunning=false, plPaused=false, plIdCnt=1;
+let pipeline=[], plActive=false, plPaused=false, plIdCnt=1;
+let vidSrcB64=null;
 let viewerImgs=[], viewerIdx=0, viewerZoom=1;
 let dnaB64=null, dnaActiveColors=[];
 let snapshots=[], snapIdCnt=1;
@@ -1309,6 +1378,17 @@ const TONE_MAPS=[
 ];
 
 const SUN_CITIES={hanoi:21,hcm:11,danang:16,hue:16,singapore:1,bangkok:14};
+
+const VIDEO_MOTIONS=[
+  {id:"walkthrough",   l:"Walk-through",    e:"🚶", v:"smooth forward camera walkthrough through architectural space, steady dolly movement, slow deliberate pace"},
+  {id:"orbit",         l:"Orbit 360°",      e:"🔄", v:"smooth 360-degree camera orbit around building exterior, continuous slow rotation reveal"},
+  {id:"drone",         l:"Drone fly-over",  e:"🚁", v:"aerial drone flyover, birds-eye perspective sweeping over building and surrounding landscape"},
+  {id:"zoom",          l:"Zoom reveal",     e:"🎬", v:"cinematic slow zoom toward building facade, smooth elegant establishing shot"},
+  {id:"sunrise",       l:"Sunrise TL",      e:"🌅", v:"time-lapse from pre-dawn blue hour to golden sunrise, sky transitions, warm light sweeping across architecture"},
+  {id:"pullback",      l:"Pull-back",       e:"↩️", v:"dramatic camera pull-back reveal starting close on architectural detail then widening to full building view"},
+  {id:"interior_pan",  l:"Interior pan",    e:"🛋", v:"smooth interior camera pan left to right exploring the space, warm ambient lighting, furnished interior"},
+  {id:"rain_fx",       l:"Rain FX",         e:"🌧️", v:"architectural visualization with gentle rain, wet reflective surfaces, moody cinematic atmosphere, puddle ripples"},
+];
 
 /* ═══════════════════════════════
    INIT
@@ -1430,6 +1510,9 @@ function buildAllChips(){
   buildChipGroup("entCategoryChips","entCategory",CHIPS.entCategory);
   buildChipGroup("entActivityChips","entActivity",CHIPS.entActivity);
   buildChipGroup("entVehicleChips","entVehicle",CHIPS.entVehicle);
+  // video mode chips
+  buildVideoMotionGrid();
+  buildVideoDurChips();
   // batch
   const bc=document.getElementById("batchChips"); if(!bc)return;
   bc.innerHTML="";
@@ -1462,9 +1545,11 @@ function switchMode(mode){
   S.mode=mode;
   document.querySelectorAll(".mchip").forEach(c=>c.classList.toggle("on",c.dataset.mode===mode));
   const isPL=mode==="pipeline";
-  document.getElementById("promptBar").style.display=isPL?"none":"";
-  document.getElementById("imgsArea").style.display=isPL?"none":"";
+  const isVid=mode==="video";
+  document.getElementById("promptBar").style.display=(isPL||isVid)?"none":"";
+  document.getElementById("imgsArea").style.display=(isPL||isVid)?"none":"";
   document.getElementById("plCanvas").classList.toggle("on",isPL);
+  document.getElementById("vidCanvas")?.classList.toggle("on",isVid);
   document.getElementById("accFloorplan").classList.toggle("hidden", mode!=="floorplan");
   document.getElementById("accMasterplan").classList.toggle("hidden", mode!=="masterplan");
   document.getElementById("accBeforeAfter").classList.toggle("hidden", mode!=="before_after");
@@ -1480,6 +1565,7 @@ function switchMode(mode){
   document.getElementById("accArtistic").classList.toggle("hidden",mode!=="artistic");
   document.getElementById("accSection").classList.toggle("hidden",mode!=="section_persp");
   document.getElementById("accUrban").classList.toggle("hidden",mode!=="urban_context");
+  document.getElementById("accVideo")?.classList.toggle("hidden",!isVid);
 
   // Reference image accordion: show for text-based modes that benefit from img2img
   const refModes=["exterior","interior","seasonal","char_sync"];
@@ -1902,7 +1988,8 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         const gd=await gresp.json();
         const gb=gd.predictions?.[0]?.bytesBase64Encoded;
         const gmt=gd.predictions?.[0]?.mimeType||"image/png";
-        if(gb)imgSrc=`data:${gmt};base64,`+gb;
+        if(!gb)throw new Error("Google AI: không nhận được dữ liệu ảnh (token limit hoặc safety filter)");
+        imgSrc=`data:${gmt};base64,`+gb;
       }
     };
 
@@ -1922,6 +2009,7 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
    GENERATE
 ═══════════════════════════════ */
 async function doGenerate(){
+  if(S.mode==="video"){doVideoGen();return;}
   if(S.mode==="furniture"){doFurnitureGen();return;}
   if(S.mode==="char_sync"){doCharSync();return;}
   if(S.mode==="material_swap"){doMatSwap();return;}
@@ -2370,7 +2458,7 @@ async function runAllPipeline(){
   const key=document.getElementById("apiKey")?.value?.trim();
   if(MODEL_MAP[plModel]?.prov!=="pollinations"&&!key){showToast("Nhập API key trước! (hoặc chọn model 🆓 Pollinations)");return;}
   if(!pipeline.length){showToast("Thêm ít nhất 1 bước vào pipeline!");return;}
-  plRunning=true;plPaused=false;
+  plActive=true;plPaused=false;
   const runBtn=document.getElementById("plRunBtn");
   const pauseBtn=document.getElementById("plPauseBtn");
   const overall=document.getElementById("plOverall");
@@ -2384,7 +2472,7 @@ async function runAllPipeline(){
   const size=document.getElementById("pSize")?.value||"1280x720";
   let done=0;
   for(let i=0;i<pipeline.length;i++){
-    if(!plRunning)break;
+    if(!plActive)break;
     while(plPaused)await sleep(400);
     const step=pipeline[i];
     const pct=Math.round(i/pipeline.length*100);
@@ -2406,7 +2494,7 @@ async function runAllPipeline(){
   document.getElementById("plOvLbl").textContent="✅ Pipeline xong — "+done+" bước!";
   if(runBtn){runBtn.disabled=false;runBtn.textContent="▶▶ RUN ALL PIPELINE";}
   if(pauseBtn)pauseBtn.style.display="none";
-  plRunning=false;
+  plActive=false;
   showToast("✅ Pipeline done — "+done+" steps · "+sheetImgs.length+" ảnh trong Sheet");
   if(document.getElementById("plAutoExport")?.checked)setTimeout(()=>openSheetModal(),1200);
 }
@@ -2479,7 +2567,7 @@ function initUploadSlot(slotId,inputId,stateKey){
         fp:()=>{fpB64=b64;updatePrompt();},mp:()=>{mpB64=b64;updatePrompt();},ba:()=>{baB64=b64;updatePrompt();},ref:()=>{refB64=b64;updatePrompt();},
         ls:()=>{lsB64=b64;updatePrompt();},matSwap:()=>{matSwapB64=b64;updatePrompt();},sky:()=>{skyB64=b64;updatePrompt();},
         art:()=>{artB64=b64;updatePrompt();},sec:()=>{secB64=b64;updatePrompt();},urban:()=>{urbanB64=b64;updatePrompt();},
-        dna:()=>{dnaB64=b64;updatePrompt();}};
+        dna:()=>{dnaB64=b64;updatePrompt();},vidSrc:()=>vidSrcB64=b64};
       (b64Map[stateKey]||function(){})();
       slot.innerHTML=`<img src="${b64}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;
       slot.classList.add("has");
@@ -2489,7 +2577,7 @@ function initUploadSlot(slotId,inputId,stateKey){
           fp:()=>{fpB64=null;updatePrompt();},mp:()=>{mpB64=null;updatePrompt();},ba:()=>{baB64=null;updatePrompt();},ref:()=>{refB64=null;updatePrompt();},
           ls:()=>{lsB64=null;updatePrompt();},matSwap:()=>{matSwapB64=null;updatePrompt();},sky:()=>{skyB64=null;updatePrompt();},
           art:()=>{artB64=null;updatePrompt();},sec:()=>{secB64=null;updatePrompt();},urban:()=>{urbanB64=null;updatePrompt();},
-          dna:()=>{dnaB64=null;updatePrompt();}};
+          dna:()=>{dnaB64=null;updatePrompt();},vidSrc:()=>vidSrcB64=null};
         (clrMap[stateKey]||function(){})();
         slot.innerHTML=ph;slot.classList.remove("has");
       });
@@ -2725,7 +2813,7 @@ function handleKeyboard(e){
   if(e.ctrlKey&&e.key==="Enter"){e.preventDefault();doGenerate();}
   if(e.key===" "&&S.mode==="pipeline"){
     e.preventDefault();
-    if(plRunning){plPaused=!plPaused;const b=document.getElementById("plPauseBtn");if(b)b.textContent=plPaused?"▶ Resume":"⏸ Pause";showToast(plPaused?"⏸ Pipeline paused":"▶ Pipeline resumed");}
+    if(plActive){plPaused=!plPaused;const b=document.getElementById("plPauseBtn");if(b)b.textContent=plPaused?"▶ Resume":"⏸ Pause";showToast(plPaused?"⏸ Pipeline paused":"▶ Pipeline resumed");}
   }
 }
 
@@ -2741,6 +2829,10 @@ function saveStorage(){
       seedVal:document.getElementById("seedVal")?.value||"",
       autoEnhance:document.getElementById("chkAutoEnhance")?.checked??true,
       outputFormat:S.outputFormat||"jpeg",
+      refStrength:document.getElementById("refStrength")?.value||"55",
+      ctrlStrength:document.getElementById("ctrlStrength")?.value||"65",
+      pModel:document.getElementById("pModel")?.value||"pollinations-flux",
+      pSize:document.getElementById("pSize")?.value||"1280x720",
     };
     localStorage.setItem("nbox_s",JSON.stringify({...S,...extras}));
     localStorage.setItem("nbox_h",JSON.stringify(history));
@@ -2764,6 +2856,12 @@ function loadStorage(){
         const ae=document.getElementById("chkAutoEnhance");if(ae)ae.checked=parsed.autoEnhance!==false;
         if(parsed.outputFormat)setFormat(parsed.outputFormat);
         const pf=document.getElementById("pFormat");if(pf&&parsed.outputFormat)pf.value=parsed.outputFormat;
+        // Restore slider values
+        const rs=document.getElementById("refStrength");if(rs&&parsed.refStrength){rs.value=parsed.refStrength;const rv=document.getElementById("refStrengthVal");if(rv)rv.textContent=parsed.refStrength+"%";}
+        const cs=document.getElementById("ctrlStrength");if(cs&&parsed.ctrlStrength){cs.value=parsed.ctrlStrength;const cv=document.getElementById("ctrlStrengthVal");if(cv)cv.textContent=parsed.ctrlStrength+"%";}
+        // Restore model and size selectors
+        const pm=document.getElementById("pModel");if(pm&&parsed.pModel)pm.value=parsed.pModel;
+        const ps=document.getElementById("pSize");if(ps&&parsed.pSize)ps.value=parsed.pSize;
       },50);
     }
     const h=localStorage.getItem("nbox_h");if(h)history=JSON.parse(h);
@@ -2810,6 +2908,8 @@ function reflectKeylessModel(modelKey){
 ═══════════════════════════════ */
 function dlImg(src,name){const a=document.createElement("a");a.href=src;a.download=name||("nbox_render."+getExt());a.click();}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function fetchTimeout(url,opts={},ms=30000){const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),ms);return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(tid));}
+function getLastRenderedSrc(){const imgs=document.querySelectorAll(".img-item img");return imgs.length?imgs[imgs.length-1].src:null;}
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 async function b64Blob(b64,mime){const d=b64.includes(",")?b64.split(",")[1]:b64;const b=atob(d);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:mime});}
 function updateResInfo(){
@@ -2827,6 +2927,117 @@ function showToast(msg){
   const t=document.getElementById("toast");
   t.textContent=msg;t.classList.add("on");
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2400);
+}
+
+/* ═══════════════════════════════
+   VIDEO GENERATION (Kling / Luma via fal.ai)
+═══════════════════════════════ */
+function buildVideoMotionGrid(){
+  const el=document.getElementById("videoMotionChips");if(!el)return;
+  el.innerHTML="";
+  VIDEO_MOTIONS.forEach(m=>{
+    const btn=document.createElement("button");
+    btn.className="chip"+(S.videoMotion===m.id?" on":"");
+    btn.textContent=m.e+" "+m.l;
+    btn.title=m.v;
+    btn.addEventListener("click",()=>{
+      S.videoMotion=m.id;
+      el.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+      btn.classList.add("on");
+    });
+    el.appendChild(btn);
+  });
+}
+function buildVideoDurChips(){
+  const el=document.getElementById("videoDurChips");if(!el)return;
+  el.innerHTML="";
+  [{v:"5",l:"5 giây (nhanh)"},{v:"10",l:"10 giây (chi tiết)"}].forEach(d=>{
+    const btn=document.createElement("button");
+    btn.className="chip"+(S.videoDuration===d.v?" on":"");
+    btn.textContent=d.l;
+    btn.addEventListener("click",()=>{
+      S.videoDuration=d.v;
+      el.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+      btn.classList.add("on");
+    });
+    el.appendChild(btn);
+  });
+}
+function buildVideoPrompt(motionDesc){
+  const parts=[motionDesc||"smooth cinematic camera movement"];
+  if(S.archStyle)parts.push(S.archStyle+" architecture");
+  if(S.light)parts.push(S.light);
+  const mood=MOODS.find(m=>m.id===S.mood);if(mood)parts.push(mood.v);
+  const wx=WEATHER_PRESETS.find(w=>w.id===S.wxPreset);if(wx)parts.push(wx.v);
+  parts.push("professional architectural visualization, cinematic quality, smooth motion, no camera shake, steady footage");
+  return parts.filter(Boolean).join(", ");
+}
+function showVideoResult(videoUrl){
+  const ov=document.getElementById("vidOverlay");if(!ov)return;
+  const vid=document.getElementById("vidElement");
+  if(vid){vid.src=videoUrl;vid.load();vid.play().catch(()=>{});}
+  const dl=document.getElementById("btnVidDownload");
+  if(dl)dl.onclick=()=>{const a=document.createElement("a");a.href=videoUrl;a.download="nbox_video_"+Date.now()+".mp4";a.target="_blank";a.click();};
+  ov.classList.add("on");
+}
+async function doVideoGen(){
+  const key=(document.getElementById("apiKey")?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
+  if(!key){showToast("❌ Cần Fal.ai API key cho video render!");return;}
+  const src=vidSrcB64||getLastRenderedSrc();
+  if(!src){showToast("Upload ảnh nguồn hoặc render ảnh tĩnh trước!");return;}
+  const modelKey=document.getElementById("videoModel")?.value||"kling-std";
+  const cfg=MODEL_MAP[modelKey];if(!cfg){showToast("Model video không hợp lệ");return;}
+  const motion=VIDEO_MOTIONS.find(m=>m.id===S.videoMotion)||VIDEO_MOTIONS[0];
+  const customMotion=document.getElementById("videoCustomMotion")?.value?.trim()||"";
+  const basePrompt=buildVideoPrompt(motion.v);
+  const finalPrompt=customMotion?basePrompt+", "+customMotion:basePrompt;
+  const duration=S.videoDuration||"5";
+  const[w,h]=(document.getElementById("pSize")?.value||"1280x720").split("x").map(Number);
+  const ar=w===h?"1:1":(w>h?(w/h>=1.6?"16:9":"4:3"):(h/w>=1.6?"9:16":"3:4"));
+
+  const body={image_url:src,prompt:finalPrompt};
+  if(cfg.model.includes("luma")){body.loop=false;}
+  else{body.duration=duration;body.aspect_ratio=ar;}
+
+  cancelFlag=false;
+  showGenOv();
+  const lbl=document.getElementById("ovLbl");const sub=document.getElementById("ovSub");
+  if(lbl)lbl.textContent="🎬 Đang gửi job video lên fal.ai...";
+  if(sub)sub.textContent=cfg.model.split("/").pop()+" · "+duration+"s · "+ar;
+  setBtnLoading(true);
+  try{
+    const qr=await fetchTimeout(`https://queue.fal.run/${cfg.model}`,
+      {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(body)},20000);
+    if(!qr.ok){const e=await qr.json().catch(()=>({}));throw new Error(e?.detail||e?.message||"Queue submit error "+qr.status);}
+    const qd=await qr.json();
+    const statusUrl=qd.status_url;
+    const responseUrl=qd.response_url;
+    if(!statusUrl)throw new Error("Không nhận được status URL từ fal.ai");
+    if(lbl)lbl.textContent="🎬 Video đang render (Kling AI)...";
+    let videoUrl=null;
+    for(let i=0;i<80;i++){
+      if(cancelFlag)throw new Error("Đã hủy bởi người dùng");
+      await sleep(3000);
+      const sr=await fetchTimeout(statusUrl,{headers:{"Authorization":"Key "+key}},10000).catch(()=>null);
+      if(!sr||!sr.ok)continue;
+      const sd=await sr.json().catch(()=>({}));
+      const elapsed=((i+1)*3);
+      if(sub)sub.textContent=`${sd.status||"IN_PROGRESS"} · ${elapsed}s / ~90s (${duration}s clip)`;
+      if(sd.status==="COMPLETED"){
+        const rr=await fetchTimeout(responseUrl,{headers:{"Authorization":"Key "+key}},15000);
+        if(!rr.ok)throw new Error("Không đọc được kết quả video từ fal.ai");
+        const rd=await rr.json();
+        videoUrl=rd.video?.url||rd.videos?.[0]?.url||rd.data?.[0]?.url;
+        break;
+      }else if(sd.status==="FAILED"){
+        throw new Error("Video render thất bại: "+(sd.error||sd.detail||"unknown error"));
+      }
+    }
+    if(!videoUrl)throw new Error("Timeout sau 4 phút — thử lại hoặc dùng clip 5s");
+    showVideoResult(videoUrl);
+    showToast("✅ Video xong! Đang mở player...");
+  }catch(e){showToast("❌ Video lỗi: "+e.message);}
+  hideGenOv();setBtnLoading(false);
 }
 
 /* ═══════════════════════════════
@@ -3196,7 +3407,6 @@ function bindAll(){
   document.getElementById("promptPreview")?.addEventListener("click",()=>{navigator.clipboard.writeText(buildPrompt()).catch(()=>{});showToast("📋 Copy prompt!");});
   // params
   document.getElementById("pSize")?.addEventListener("change",updateResInfo);
-  document.getElementById("pModel")?.addEventListener("change",()=>{});
   // quality chips
   document.querySelectorAll(".qchip").forEach(c=>{
     c.addEventListener("click",()=>{document.querySelectorAll(".qchip").forEach(x=>x.classList.remove("on"));c.classList.add("on");updateResInfo();});
@@ -3371,7 +3581,28 @@ function bindAll(){
   document.getElementById("svOverlay")?.addEventListener("click",e=>{if(e.target.id==="svOverlay")document.getElementById("svOverlay").classList.remove("on");});
   // Elevation set
   document.getElementById("btnElevSet")?.addEventListener("click",doElevationSet);
-  // ── END NEW FEATURE BINDINGS ──
+  // Video generation
+  initUploadSlot("vidSrcSlot","vidSrcInp","vidSrc");
+  document.getElementById("btnVideoGen")?.addEventListener("click",doVideoGen);
+  document.getElementById("btnVidFromLast")?.addEventListener("click",()=>{
+    const src=getLastRenderedSrc();
+    if(!src){showToast("Chưa có ảnh render — tạo ảnh trước!");return;}
+    vidSrcB64=src;
+    const slot=document.getElementById("vidSrcSlot");
+    if(slot){slot.innerHTML=`<img src="${src}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;slot.classList.add("has");slot.querySelector(".uclear")?.addEventListener("click",e=>{e.stopPropagation();vidSrcB64=null;slot.innerHTML='<div class="uslot-ph"><span class="uslot-ph-icon">🖼</span><span>Upload ảnh render / ảnh chụp</span></div>';slot.classList.remove("has");});}
+    showToast("✅ Đã dùng ảnh render cuối!");
+  });
+  document.getElementById("btnVidClose")?.addEventListener("click",()=>{
+    const ov=document.getElementById("vidOverlay");if(ov)ov.classList.remove("on");
+    const vid=document.getElementById("vidElement");if(vid){vid.pause();vid.src="";}
+  });
+  document.getElementById("vidOverlay")?.addEventListener("click",e=>{
+    if(e.target.id==="vidOverlay"){
+      const ov=document.getElementById("vidOverlay");if(ov)ov.classList.remove("on");
+      const vid=document.getElementById("vidElement");if(vid){vid.pause();vid.src="";}
+    }
+  });
+  // ── END BINDINGS ──
   document.getElementById("plGStyle")?.addEventListener("change",renderPipeline);
   document.getElementById("plGLight")?.addEventListener("change",renderPipeline);
   document.getElementById("plSaveBtn")?.addEventListener("click",()=>{
