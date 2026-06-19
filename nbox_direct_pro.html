@@ -329,6 +329,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   <div class="api-box">
     <span class="api-lbl">API</span>
     <select class="api-sel" id="apiProv">
+      <option value="pollinations">🆓 Pollinations (Free · KHÔNG cần key)</option>
       <option value="together">Together AI (Flux · Free & Pro)</option>
       <option value="stability">Stability AI (Ultra)</option>
       <option value="fal">Fal.ai (Flux · Fast)</option>
@@ -916,7 +917,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <div class="pbar-actions">
       <button class="gen-btn" id="btnGen">▶ <span id="btnGenTxt">GENERATE</span></button>
       <select class="psel" id="pModel">
-        <option value="flux-free">Flux Schnell (Free)</option>
+        <option value="pollinations-flux">🆓 Pollinations FLUX (Free · no key)</option>
+        <option value="flux-free">Flux Schnell (Free · cần key)</option>
         <option value="flux-dev">Flux Dev ($0.02)</option>
         <option value="flux-pro">Flux 1.1 Pro ($0.04)</option>
         <option value="flux-ultra">Flux Ultra ($0.06)</option>
@@ -974,7 +976,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <span class="pl-gl-lbl">GLOBAL:</span>
         <select class="psel" id="plGStyle"><option value="">Style (auto)</option><option>Tropical Modern</option><option>Japandi</option><option>Minimalist</option><option>Luxury</option><option>Neo-Vietnamese</option><option>Green Biophilic</option></select>
         <select class="psel" id="plGLight"><option value="">Lighting (auto)</option><option>Golden hour</option><option>Soft morning</option><option>Overcast</option><option>Studio</option><option>Ban đêm</option></select>
-        <select class="psel" id="plGModel"><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option></select>
+        <select class="psel" id="plGModel"><option value="pollinations-flux">🆓 Pollinations (Free)</option><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option></select>
         <select class="psel" id="plGCount"><option value="1">×1</option><option value="2" selected>×2</option><option value="4">×4</option></select>
         <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoSheet" checked style="accent-color:var(--ac)"/> Auto→Sheet</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoExport"/> Auto PDF</label>
@@ -1208,6 +1210,7 @@ const STEP_TYPES=[
 ];
 
 const MODEL_MAP={
+  "pollinations-flux": {prov:"pollinations",model:"flux",                                 steps:0,  price:0,     cfg:false, i2i:false},
   "flux-free":         {prov:"together",  model:"black-forest-labs/FLUX.1-schnell-Free", steps:4,  price:0,     cfg:false, i2i:false},
   "flux-dev":          {prov:"together",  model:"black-forest-labs/FLUX.1-dev",          steps:28, price:0.02,  cfg:true,  i2i:true},
   "flux-pro":          {prov:"together",  model:"black-forest-labs/FLUX.1.1-pro",        steps:25, price:0.04,  cfg:true,  i2i:true},
@@ -1317,6 +1320,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   updatePrompt();
   updateRefModelWarn();
   updateSunDisplay();
+  reflectKeylessModel(document.getElementById("pModel")?.value||"pollinations-flux");
   document.addEventListener("keydown",handleKeyboard);
 });
 
@@ -1768,11 +1772,12 @@ function updatePrompt(){
    API CALLS
 ═══════════════════════════════ */
 async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, strength=0.65){
+  const cfg=MODEL_MAP[modelKey]||MODEL_MAP["flux-free"];
   const rawKey=document.getElementById("apiKey")?.value||"";
   const key=rawKey.replace(/[^\x20-\x7E]/g,"").trim();
-  if(!key){showToast("Nhập API key trước!");return null;}
+  // Pollinations is free & keyless — every other provider needs a key
+  if(cfg.prov!=="pollinations"&&!key){showToast("Nhập API key trước! (hoặc chọn model 🆓 Pollinations)");return null;}
   const [w,h]=sizeStr.split("x").map(Number);
-  const cfg=MODEL_MAP[modelKey]||MODEL_MAP["flux-free"];
   const fmt=S.outputFormat||"jpeg";
   const negPrompt=document.getElementById("negPrompt")?.value?.trim()||"";
   const cfgScale=parseFloat(document.getElementById("cfgScale")?.value)||7;
@@ -1788,7 +1793,17 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
     let imgSrc=null;
 
     const attempt=async()=>{
-      if(cfg.prov==="together"){
+      if(cfg.prov==="pollinations"){
+        // Free & keyless. GET request returns the image directly.
+        const params=new URLSearchParams({width:w,height:h,seed:usedSeed,model:cfg.model,nologo:"true",enhance:"false",safe:"false"});
+        const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params.toString()}`;
+        const resp=await fetch(url);
+        if(!resp.ok)throw new Error("Pollinations error "+resp.status);
+        const blob=await resp.blob();
+        if(!blob.type.startsWith("image/"))throw new Error("Pollinations: phản hồi không phải ảnh");
+        imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=ev=>res(ev.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+
+      }else if(cfg.prov==="together"){
         const body={model:cfg.model,prompt,width:w,height:h,steps:parseInt(quality)||cfg.steps,n:1,response_format:"b64_json",seed:usedSeed};
         if(negPrompt)body.negative_prompt=negPrompt;
         if(cfg.cfg)body.guidance_scale=cfgScale;
@@ -2286,8 +2301,9 @@ async function runPLStep(step,model,count,size){
 }
 
 async function runAllPipeline(){
+  const plModel=document.getElementById("plGModel")?.value||"flux-free";
   const key=document.getElementById("apiKey")?.value?.trim();
-  if(!key){showToast("Nhập API key trước!");return;}
+  if(MODEL_MAP[plModel]?.prov!=="pollinations"&&!key){showToast("Nhập API key trước! (hoặc chọn model 🆓 Pollinations)");return;}
   if(!pipeline.length){showToast("Thêm ít nhất 1 bước vào pipeline!");return;}
   plRunning=true;plPaused=false;
   const runBtn=document.getElementById("plRunBtn");
@@ -2708,6 +2724,14 @@ function updateApiKeyLen(k){
   // flag when bullet/masked characters were pasted (raw > clean)
   el.textContent=clean+(raw!==clean?"⚠":"");
   el.style.color=raw!==clean?"#f87171":(clean>20?"var(--gr)":"var(--ac2)");
+}
+function reflectKeylessModel(modelKey){
+  const keyless=MODEL_MAP[modelKey]?.prov==="pollinations";
+  const inp=document.getElementById("apiKey");
+  const dot=document.getElementById("apiDot");
+  if(inp)inp.placeholder=keyless?"🆓 Pollinations — không cần API key!":"API key… (together.ai miễn phí)";
+  if(keyless&&dot){dot.className="api-dot ok";dot.title="Pollinations free — không cần key";}
+  else if(dot){updateApiDot(inp?.value||"");}
 }
 
 /* ═══════════════════════════════
@@ -3147,6 +3171,7 @@ function bindAll(){
   document.getElementById("pModel")?.addEventListener("change",e=>{
     updateRefModelWarn();
     updateResInfo();
+    reflectKeylessModel(e.target.value);
     // Mark HD options that need Pro/Ultra
     const m=e.target.value;
     const needsHD=["flux-pro","flux-ultra","fal-flux-dev"].includes(m);
