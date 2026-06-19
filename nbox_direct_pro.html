@@ -330,6 +330,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <span class="api-lbl">API</span>
     <select class="api-sel" id="apiProv">
       <option value="pollinations">🆓 Pollinations (Free · KHÔNG cần key)</option>
+      <option value="google">🤖 Google AI (Imagen 3 · AI Studio)</option>
       <option value="together">Together AI (Flux · Free & Pro)</option>
       <option value="stability">Stability AI (Ultra)</option>
       <option value="fal">Fal.ai (Flux · Fast)</option>
@@ -918,6 +919,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <button class="gen-btn" id="btnGen">▶ <span id="btnGenTxt">GENERATE</span></button>
       <select class="psel" id="pModel">
         <option value="pollinations-flux">🆓 Pollinations FLUX (Free · no key)</option>
+        <option value="google-imagen3">🤖 Google Imagen 3 (AI Studio key)</option>
+        <option value="google-imagen3f">🤖 Google Imagen 3 Fast (AI Studio key)</option>
         <option value="flux-free">Flux Schnell (Free · cần key)</option>
         <option value="flux-dev">Flux Dev ($0.02)</option>
         <option value="flux-pro">Flux 1.1 Pro ($0.04)</option>
@@ -976,7 +979,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <span class="pl-gl-lbl">GLOBAL:</span>
         <select class="psel" id="plGStyle"><option value="">Style (auto)</option><option>Tropical Modern</option><option>Japandi</option><option>Minimalist</option><option>Luxury</option><option>Neo-Vietnamese</option><option>Green Biophilic</option></select>
         <select class="psel" id="plGLight"><option value="">Lighting (auto)</option><option>Golden hour</option><option>Soft morning</option><option>Overcast</option><option>Studio</option><option>Ban đêm</option></select>
-        <select class="psel" id="plGModel"><option value="pollinations-flux">🆓 Pollinations (Free)</option><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option></select>
+        <select class="psel" id="plGModel"><option value="pollinations-flux">🆓 Pollinations (Free)</option><option value="google-imagen3">🤖 Google Imagen 3</option><option value="google-imagen3f">🤖 Imagen 3 Fast</option><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option></select>
         <select class="psel" id="plGCount"><option value="1">×1</option><option value="2" selected>×2</option><option value="4">×4</option></select>
         <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoSheet" checked style="accent-color:var(--ac)"/> Auto→Sheet</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoExport"/> Auto PDF</label>
@@ -1211,6 +1214,8 @@ const STEP_TYPES=[
 
 const MODEL_MAP={
   "pollinations-flux": {prov:"pollinations",model:"flux",                                 steps:0,  price:0,     cfg:false, i2i:false},
+  "google-imagen3":    {prov:"google",    model:"imagen-3.0-generate-002",               steps:0,  price:0,     cfg:false, i2i:false},
+  "google-imagen3f":   {prov:"google",    model:"imagen-3.0-fast-generate-002",          steps:0,  price:0,     cfg:false, i2i:false},
   "flux-free":         {prov:"together",  model:"black-forest-labs/FLUX.1-schnell-Free", steps:4,  price:0,     cfg:false, i2i:false},
   "flux-dev":          {prov:"together",  model:"black-forest-labs/FLUX.1-dev",          steps:28, price:0.02,  cfg:true,  i2i:true},
   "flux-pro":          {prov:"together",  model:"black-forest-labs/FLUX.1.1-pro",        steps:25, price:0.04,  cfg:true,  i2i:true},
@@ -1838,6 +1843,23 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
           const blob=await ir.blob();
           imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
         }
+      }else if(cfg.prov==="google"){
+        // Google AI Studio — Imagen 3 via Generative Language API
+        const ratio=w/h;
+        let ar;
+        if(Math.abs(ratio-1)<0.05) ar="1:1";
+        else if(ratio>=1.6) ar="16:9";
+        else if(ratio>1) ar="4:3";
+        else if(ratio<=0.625) ar="9:16";
+        else ar="3:4";
+        const gbody={instances:[{prompt}],parameters:{sampleCount:1,aspectRatio:ar,safetyFilterLevel:"BLOCK_ONLY_HIGH",personGeneration:"allow_all"}};
+        const gresp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:predict?key=${encodeURIComponent(key)}`,
+          {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(gbody)});
+        if(!gresp.ok){const e=await gresp.json().catch(()=>({}));throw new Error(e?.error?.message||"Google AI error "+gresp.status);}
+        const gd=await gresp.json();
+        const gb=gd.predictions?.[0]?.bytesBase64Encoded;
+        const gmt=gd.predictions?.[0]?.mimeType||"image/png";
+        if(gb)imgSrc=`data:${gmt};base64,`+gb;
       }
     };
 
@@ -2726,10 +2748,16 @@ function updateApiKeyLen(k){
   el.style.color=raw!==clean?"#f87171":(clean>20?"var(--gr)":"var(--ac2)");
 }
 function reflectKeylessModel(modelKey){
-  const keyless=MODEL_MAP[modelKey]?.prov==="pollinations";
+  const prov=MODEL_MAP[modelKey]?.prov;
+  const keyless=prov==="pollinations";
   const inp=document.getElementById("apiKey");
   const dot=document.getElementById("apiDot");
-  if(inp)inp.placeholder=keyless?"🆓 Pollinations — không cần API key!":"API key… (together.ai miễn phí)";
+  let ph="API key… (together.ai / fal.ai)";
+  if(keyless) ph="🆓 Pollinations — không cần API key!";
+  else if(prov==="google") ph="Google AI Studio key — aistudio.google.com/apikey";
+  else if(prov==="stability") ph="Stability AI API key (platform.stability.ai)";
+  else if(prov==="fal") ph="Fal.ai API key (fal.ai/dashboard)";
+  if(inp)inp.placeholder=ph;
   if(keyless&&dot){dot.className="api-dot ok";dot.title="Pollinations free — không cần key";}
   else if(dot){updateApiDot(inp?.value||"");}
 }
