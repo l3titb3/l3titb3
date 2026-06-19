@@ -44,6 +44,19 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 
 /* ── SIDEBAR ── */
 .sb{width:280px;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+
+/* Settings strip — always visible, not scrollable */
+.sb-strip{flex-shrink:0;padding:8px 10px 6px;border-bottom:1px solid var(--bd);background:var(--bg2);display:flex;flex-direction:column;gap:4px}
+.sb-strip-row{display:flex;gap:4px}
+.ss-sel{flex:1;min-width:0;padding:5px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--bg3);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:10px;outline:none;cursor:pointer}
+.ss-sel option{background:var(--bg4)}
+
+/* Mode header inside scroll area */
+.sb-mode-hd{display:flex;align-items:center;gap:9px;padding:10px 2px 6px;border-bottom:1px solid rgba(255,107,43,.12);margin-bottom:8px}
+.sb-mode-icon{font-size:18px;line-height:1;flex-shrink:0}
+.sb-mode-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.2}
+.sb-mode-desc{font-size:9px;color:var(--mu);margin-top:1px}
+
 .sb-scroll{flex:1;overflow-y:auto;padding:12px}
 
 /* mode chips */
@@ -387,9 +400,58 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 <div class="app">
 
 <!-- ── SIDEBAR ── -->
-<div class="sb"><div class="sb-scroll" id="sbScroll">
+<div class="sb">
 
-  <span class="flbl" style="margin-bottom:7px">Loại render</span>
+  <!-- SETTINGS STRIP — always visible -->
+  <div class="sb-strip">
+    <select class="ss-sel" id="pModel">
+      <option value="pollinations-flux">🆓 Pollinations FLUX (Free · no key)</option>
+      <option value="google-imagen3">🤖 Google Imagen 3 (AI Studio)</option>
+      <option value="google-imagen3f">🤖 Google Imagen 3 Fast</option>
+      <option value="flux-free">Flux Schnell Free</option>
+      <option value="flux-dev">Flux Dev ($0.02)</option>
+      <option value="flux-pro">Flux 1.1 Pro ($0.04)</option>
+      <option value="flux-ultra">Flux Ultra ($0.06)</option>
+      <option value="stability-ultra">Stability Ultra ($0.08)</option>
+      <option value="fal-flux-schnell">Fal Flux Schnell ($0.003)</option>
+      <option value="fal-flux-dev">Fal Flux Dev ($0.025)</option>
+      <option value="fal-recraft-v3">Fal Recraft v3 ($0.04)</option>
+      <option value="fal-flux-ctrl">🔬 FLUX ControlNet — bám bản vẽ ($0.04)</option>
+    </select>
+    <div class="sb-strip-row">
+      <select class="ss-sel" id="pSize" style="flex:3">
+        <option value="1280x720" selected>16:9 · 1280×720</option>
+        <option value="1024x1024">1:1 · 1024px</option>
+        <option value="720x1280">9:16 · 720×1280</option>
+        <option value="1216x832">3:2 · 1216×832</option>
+        <option value="1536x640">Cinematic · 1536×640</option>
+        <option value="1920x1080">FHD · 1920×1080 ★</option>
+        <option value="2048x1152">2K · 2048×1152 ★★</option>
+        <option value="2048x2048">2K Sq · 2048×2048 ★★</option>
+        <option value="1536x2048">Portrait · 1536×2048 ★★</option>
+        <option value="2048x1536">Landscape · 2048×1536 ★★</option>
+      </select>
+      <select class="ss-sel" id="pCount" style="flex:1">
+        <option value="1">×1</option>
+        <option value="2">×2</option>
+        <option value="4" selected>×4</option>
+      </select>
+      <select class="ss-sel" id="pQuality" style="flex:1">
+        <option value="20">Fast</option>
+        <option value="30" selected>Std</option>
+        <option value="50">High</option>
+      </select>
+      <select class="ss-sel" id="pFormat" style="flex:1">
+        <option value="jpeg">JPG</option>
+        <option value="png">PNG</option>
+        <option value="webp">WebP</option>
+      </select>
+    </div>
+  </div>
+
+<div class="sb-scroll" id="sbScroll">
+
+  <!-- MODE CHIPS -->
   <div class="mode-row" id="modeRow">
     <button class="mchip on" data-mode="exterior">🏠 Ngoại thất</button>
     <button class="mchip" data-mode="interior">🛋 Nội thất</button>
@@ -407,6 +469,12 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <button class="mchip" data-mode="video">🎬 Video</button>
     <button class="mchip" data-mode="timeline">🏗 Tiến độ</button>
     <button class="mchip pl-chip" data-mode="pipeline">⚡ Pipeline</button>
+  </div>
+
+  <!-- MODE TITLE HEADER (updated on mode switch) -->
+  <div class="sb-mode-hd" id="sbModeHd">
+    <div class="sb-mode-icon" id="sbModeIcon">🏠</div>
+    <div><div class="sb-mode-name" id="sbModeName">Ngoại thất</div><div class="sb-mode-desc" id="sbModeDesc">Exterior photorealistic render</div></div>
   </div>
 
   <!-- MOOD BOARD -->
@@ -1016,7 +1084,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     </div>
   </div>
 
-</div></div><!-- end sidebar -->
+</div><!-- end sb-scroll --></div><!-- end sb -->
 
 <!-- ── CANVAS ── -->
 <div class="canvas">
@@ -1026,47 +1094,6 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <div class="prompt-preview" id="promptPreview" title="Click để copy">Điền thông số → prompt tự tạo…</div>
     <div class="pbar-actions">
       <button class="gen-btn" id="btnGen">▶ <span id="btnGenTxt">GENERATE</span></button>
-      <select class="psel" id="pModel">
-        <option value="pollinations-flux">🆓 Pollinations FLUX (Free · no key)</option>
-        <option value="google-imagen3">🤖 Google Imagen 3 (AI Studio key)</option>
-        <option value="google-imagen3f">🤖 Google Imagen 3 Fast (AI Studio key)</option>
-        <option value="flux-free">Flux Schnell (Free · cần key)</option>
-        <option value="flux-dev">Flux Dev ($0.02)</option>
-        <option value="flux-pro">Flux 1.1 Pro ($0.04)</option>
-        <option value="flux-ultra">Flux Ultra ($0.06)</option>
-        <option value="stability-ultra">Stability Ultra ($0.08)</option>
-        <option value="fal-flux-schnell">Fal Flux Schnell ($0.003)</option>
-        <option value="fal-flux-dev">Fal Flux Dev ($0.025)</option>
-        <option value="fal-recraft-v3">Fal Recraft v3 ($0.04)</option>
-        <option value="fal-flux-ctrl">🔬 FLUX ControlNet — bám bản vẽ ($0.04)</option>
-      </select>
-      <select class="psel" id="pFormat">
-        <option value="jpeg">JPEG</option>
-        <option value="png">PNG</option>
-        <option value="webp">WebP</option>
-      </select>
-      <select class="psel" id="pSize">
-        <option value="1280x720" selected>16:9 · 1280×720</option>
-        <option value="1024x1024">1:1 · 1024px</option>
-        <option value="720x1280">9:16 · 720×1280</option>
-        <option value="1216x832">3:2 · 1216×832</option>
-        <option value="1536x640">Cinematic · 1536×640</option>
-        <option value="1920x1080">Full HD · 1920×1080 ★</option>
-        <option value="2048x1152">2K 16:9 · 2048×1152 ★★</option>
-        <option value="2048x2048">2K Square · 2048×2048 ★★</option>
-        <option value="1536x2048">Portrait HD · 1536×2048 ★★</option>
-        <option value="2048x1536">Landscape HD · 2048×1536 ★★</option>
-      </select>
-      <select class="psel" id="pCount">
-        <option value="1">×1</option>
-        <option value="2">×2</option>
-        <option value="4" selected>×4</option>
-      </select>
-      <select class="psel" id="pQuality">
-        <option value="20">Fast</option>
-        <option value="30" selected>Standard</option>
-        <option value="50">High</option>
-      </select>
     </div>
   </div>
 
@@ -1651,52 +1678,85 @@ function toggleAcc(id){
 /* ═══════════════════════════════
    MODE SWITCH
 ═══════════════════════════════ */
+/* ── MODE SECTION MAP: each mode shows only its relevant accordions ── */
+const MODE_SECTIONS={
+  exterior:     ['accMood','accStyle','accRef','accAtm','accSun','accSea','accEnt','accEntDetail','accDOF','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps'],
+  interior:     ['accInt','accStyle','accRef','accAtm','accDOF','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps'],
+  landscape:    ['accLandscape','accStyle','accAtm','accSun','accSea','accEnt','accPrecision','accGenSet','accPrompt','accNeg'],
+  material_swap:['accMatSwap','accPrompt','accNeg'],
+  sky_replace:  ['accSky','accPrompt'],
+  artistic:     ['accArtistic','accPrompt','accNeg'],
+  section_persp:['accSection','accPrecision','accPrompt','accNeg'],
+  urban_context:['accUrban','accStyle','accAtm','accPrecision','accPrompt','accNeg'],
+  floorplan:    ['accFloorplan','accPrecision','accPrompt','accNeg'],
+  masterplan:   ['accMasterplan','accPrecision','accPrompt','accNeg'],
+  before_after: ['accBeforeAfter','accStyle','accPrecision','accPrompt','accNeg'],
+  furniture:    ['accFurn','accPrompt'],
+  char_sync:    ['accChar','accPrompt'],
+  video:        ['accVideo'],
+  timeline:     ['accTimeline'],
+  pipeline:     [],
+};
+const ALL_ACC_IDS=['accMood','accStyle','accRef','accInt','accEnt','accSea','accFloorplan','accMasterplan','accBeforeAfter','accLandscape','accMatSwap','accSky','accArtistic','accSection','accUrban','accFurn','accChar','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accDOF','accSun','accAtm','accEntDetail','accPostFX','accSnaps','accVideo','accTimeline'];
+const MODE_META={
+  exterior:     {icon:'🏠',name:'Ngoại thất',desc:'Exterior photorealistic render'},
+  interior:     {icon:'🛋',name:'Nội thất',desc:'Interior visualization'},
+  landscape:    {icon:'🌿',name:'Cảnh quan',desc:'Landscape & garden render'},
+  material_swap:{icon:'🎨',name:'Thay vật liệu',desc:'Material & color swap'},
+  sky_replace:  {icon:'☁️',name:'Sky / BG',desc:'Sky & background replace'},
+  artistic:     {icon:'✏️',name:'Nghệ thuật',desc:'Artistic style render'},
+  section_persp:{icon:'✂️',name:'Mặt cắt',desc:'Section perspective'},
+  urban_context:{icon:'🏙️',name:'Đô thị',desc:'Urban context render'},
+  floorplan:    {icon:'📐',name:'Floorplan',desc:'2D plan → 3D perspective'},
+  masterplan:   {icon:'🗺',name:'Masterplan',desc:'Site plan → aerial 3D'},
+  before_after: {icon:'📷',name:'Before / After',desc:'Renovation visualization'},
+  furniture:    {icon:'🪑',name:'Ghép nội thất',desc:'Furniture placement'},
+  char_sync:    {icon:'👤',name:'Nhân vật',desc:'Character synchronize'},
+  video:        {icon:'🎬',name:'Video',desc:'AI video walkthrough'},
+  timeline:     {icon:'🏗',name:'Tiến độ XD',desc:'Construction timeline video'},
+  pipeline:     {icon:'⚡',name:'Pipeline',desc:'Multi-step batch workflow'},
+};
+
 function switchMode(mode){
   S.mode=mode;
   document.querySelectorAll(".mchip").forEach(c=>c.classList.toggle("on",c.dataset.mode===mode));
   const isPL=mode==="pipeline";
   const isVid=mode==="video";
   const isTL=mode==="timeline";
-  document.getElementById("promptBar").style.display=(isPL||isVid||isTL)?"none":"";
-  document.getElementById("imgsArea").style.display=(isPL||isVid||isTL)?"none":"";
+  const noPromptBar=isPL||isVid||isTL;
+  document.getElementById("promptBar").style.display=noPromptBar?"none":"";
+  document.getElementById("imgsArea").style.display=noPromptBar?"none":"";
   document.getElementById("plCanvas").classList.toggle("on",isPL);
   document.getElementById("vidCanvas")?.classList.toggle("on",isVid);
   document.getElementById("tlCanvas")?.classList.toggle("on",isTL);
-  document.getElementById("accFloorplan").classList.toggle("hidden", mode!=="floorplan");
-  document.getElementById("accMasterplan").classList.toggle("hidden", mode!=="masterplan");
-  document.getElementById("accBeforeAfter").classList.toggle("hidden", mode!=="before_after");
-  document.getElementById("accFurn").classList.toggle("hidden",mode!=="furniture");
-  document.getElementById("accChar").classList.toggle("hidden",mode!=="char_sync");
-  document.getElementById("accInt").classList.toggle("hidden",!["interior"].includes(mode));
-  const noDedicated=["furniture","char_sync","material_swap","sky_replace","artistic","timeline"];
-  document.getElementById("accBatch").classList.toggle("hidden",isPL||noDedicated.includes(mode));
-  // 6 new mode accordions
-  document.getElementById("accLandscape").classList.toggle("hidden",mode!=="landscape");
-  document.getElementById("accMatSwap").classList.toggle("hidden",mode!=="material_swap");
-  document.getElementById("accSky").classList.toggle("hidden",mode!=="sky_replace");
-  document.getElementById("accArtistic").classList.toggle("hidden",mode!=="artistic");
-  document.getElementById("accSection").classList.toggle("hidden",mode!=="section_persp");
-  document.getElementById("accUrban").classList.toggle("hidden",mode!=="urban_context");
-  document.getElementById("accVideo")?.classList.toggle("hidden",!isVid);
-  document.getElementById("accTimeline")?.classList.toggle("hidden",!isTL);
 
-  // Reference image accordion: show for text-based modes that benefit from img2img
-  const refModes=["exterior","interior","seasonal","char_sync"];
+  // ── Comprehensive accordion visibility via MODE_SECTIONS ──
+  ALL_ACC_IDS.forEach(id=>document.getElementById(id)?.classList.add("hidden"));
+  (MODE_SECTIONS[mode]||[]).forEach(id=>document.getElementById(id)?.classList.remove("hidden"));
+
+  // ── Auto-open dedicated mode accordions ──
+  const DEDICATED_MAIN={material_swap:'accMatSwap',sky_replace:'accSky',artistic:'accArtistic',section_persp:'accSection',floorplan:'accFloorplan',masterplan:'accMasterplan',before_after:'accBeforeAfter',furniture:'accFurn',char_sync:'accChar',video:'accVideo',timeline:'accTimeline'};
+  if(DEDICATED_MAIN[mode])document.getElementById(DEDICATED_MAIN[mode])?.classList.add("open");
+
+  // ── Reference accordion hints & label ──
+  const refModes=["exterior","interior","char_sync"];
   const accRef=document.getElementById("accRef");
-  if(accRef){
-    accRef.classList.toggle("hidden",!refModes.includes(mode)||isPL);
-    // Swap hints
+  if(accRef&&!accRef.classList.contains("hidden")){
     ["refHintExt","refHintInt","refHintSea"].forEach(id=>document.getElementById(id)?.classList.add("hidden"));
     if(mode==="exterior")document.getElementById("refHintExt")?.classList.remove("hidden");
     else if(mode==="interior")document.getElementById("refHintInt")?.classList.remove("hidden");
-    else if(mode==="seasonal")document.getElementById("refHintSea")?.classList.remove("hidden");
-    // Update label
     const lbl=document.getElementById("refLbl");
-    if(lbl){
-      const lblMap={exterior:"Ảnh 3D/sketch ngoại thất (tùy chọn)",interior:"Ảnh 3D/ảnh phòng thực (tùy chọn)",seasonal:"Ảnh ngoại thất gốc (tùy chọn)",char_sync:"Ảnh nền không gian (tùy chọn)"};
-      lbl.textContent=lblMap[mode]||"Ảnh tham chiếu (tùy chọn)";
-    }
+    if(lbl){const lblMap={exterior:"Ảnh 3D/sketch ngoại thất (tùy chọn)",interior:"Ảnh 3D/ảnh phòng thực (tùy chọn)",char_sync:"Ảnh nền không gian (tùy chọn)"};lbl.textContent=lblMap[mode]||"Ảnh tham chiếu (tùy chọn)";}
   }
+
+  // ── Update mode title header ──
+  const meta=MODE_META[mode]||{icon:'▶',name:mode,desc:''};
+  const icon=document.getElementById("sbModeIcon");const name=document.getElementById("sbModeName");const desc=document.getElementById("sbModeDesc");
+  if(icon)icon.textContent=meta.icon;if(name)name.textContent=meta.name;if(desc)desc.textContent=meta.desc;
+
+  // Scroll sidebar to top on mode switch
+  document.getElementById("sbScroll")?.scrollTo(0,0);
+
   updateRefModelWarn();
   updatePrompt();
 }
