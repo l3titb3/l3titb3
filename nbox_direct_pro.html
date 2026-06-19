@@ -282,6 +282,42 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 @keyframes copyPulse{0%{box-shadow:0 0 0 0 rgba(255,107,43,.7)}70%{box-shadow:0 0 0 8px rgba(255,107,43,0)}100%{box-shadow:none}}
 .copy-pulse{animation:copyPulse .5s ease}
 .model-price{font-size:9px;color:var(--mu);margin-left:3px;font-family:'Space Mono',monospace}
+
+/* ── NEW FEATURES ── */
+.tbtn-wm{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:var(--text)}
+.tbtn-wm.on{background:rgba(255,255,255,.9);color:#080910;border-color:rgba(255,255,255,.9);font-weight:700}
+.dna-palette{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap}
+.dna-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.12s;flex-shrink:0}
+.dna-swatch.on{border-color:#fff;transform:scale(1.15)}
+.dna-lock{padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;width:100%;margin-top:7px;font-family:'Space Grotesk',sans-serif}
+.dna-lock.on{background:rgba(61,220,151,.12);border-color:rgba(61,220,151,.4);color:var(--gr)}
+.sun-arc-wrap{background:var(--bg4);border-radius:8px;padding:8px 10px;margin:7px 0}
+.sun-arc-svg{width:100%;height:56px;display:block}
+.sun-info{font-size:10px;color:var(--ac);font-weight:700;text-align:center;margin-top:4px;font-family:'Space Mono',monospace}
+.wx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
+.wx-btn{padding:5px 3px;border-radius:6px;border:1px solid var(--bd);background:var(--bg4);color:var(--text);font-size:9px;cursor:pointer;text-align:center;transition:.12s;font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.35}
+.wx-btn:hover,.wx-btn.on{border-color:var(--ac);background:var(--ac-s);color:var(--ac)}
+.tone-row{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.tone-chip{padding:3px 7px;border-radius:4px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-size:10px;font-weight:700;cursor:pointer;transition:.12s;font-family:'Space Grotesk',sans-serif}
+.tone-chip:hover,.tone-chip.on{border-color:var(--ac);background:var(--ac-s);color:var(--ac)}
+.pfx-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.pfx-lbl{font-size:9px;color:var(--mu);font-weight:700;width:68px;flex-shrink:0;text-transform:uppercase}
+.pfx-val{font-size:9px;color:var(--ac);font-family:'Space Mono',monospace;width:32px;text-align:right;flex-shrink:0}
+.snap-list{display:flex;flex-direction:column;gap:4px;margin-bottom:7px;max-height:150px;overflow-y:auto}
+.snap-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--bg4);cursor:pointer;transition:.12s}
+.snap-item:hover{border-color:var(--ac)}
+.snap-name{flex:1;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snap-time{font-size:9px;color:var(--mu);flex-shrink:0}
+.sv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+.sv-overlay.on{display:flex}
+.sv-wrap{position:relative;width:min(88vw,900px);aspect-ratio:16/9;overflow:hidden;border-radius:8px;cursor:ew-resize;flex-shrink:0}
+.sv-a,.sv-b{position:absolute;inset:0}
+.sv-a img,.sv-b img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.sv-b{clip-path:inset(0 50% 0 0)}
+.sv-handle{position:absolute;top:0;bottom:0;left:50%;width:3px;background:var(--ac);cursor:ew-resize;z-index:5;transform:translateX(-50%)}
+.sv-handle::after{content:'◄►';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--ac);color:#fff;font-size:11px;padding:3px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.sv-lbl-a{position:absolute;top:8px;left:10px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;z-index:4}
+.sv-lbl-b{position:absolute;top:8px;right:10px;background:rgba(255,107,43,.85);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;z-index:6}
 </style>
 </head>
 <body>
@@ -306,6 +342,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <button class="tbtn" id="btnHist">🕐 History</button>
     <button class="tbtn" id="btnSheet">📋 Sheet</button>
     <button class="tbtn" id="btnSaveProj">💾 Lưu</button>
+    <button class="tbtn tbtn-wm" id="btnWhiteModel" title="White Model — render mô hình trắng, focus mảng khối">⬜ White</button>
     <button class="tbtn tbtn-p" id="btnGenTop">▶ GENERATE</button>
   </div>
 </div>
@@ -617,6 +654,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div class="chips" id="batchChips"></div>
       <div class="bprog" id="bprog"><div class="bprog-bar"><div class="bprog-fill" id="bprogFill"></div></div><div class="bprog-lbl" id="bprogLbl"></div></div>
       <button class="gen-btn" id="btnBatch" style="width:100%;justify-content:center;margin-top:6px;padding:9px" disabled>⚡ Chạy Batch</button>
+      <button class="chip" id="btnElevSet" style="width:100%;margin-top:6px;padding:6px;text-align:center">📐 Elevation Set (4 mặt)</button>
     </div>
   </div>
 
@@ -728,6 +766,140 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div class="neg-chips" id="negPresetChips"></div>
       <textarea class="fta" id="negPrompt" placeholder="Những gì KHÔNG muốn trong ảnh…&#10;VD: blurry, distorted, watermark, cartoon…" style="min-height:54px"></textarea>
       <button class="chip" id="btnClearNeg" style="font-size:10px">✕ Xóa</button>
+    </div>
+  </div>
+
+
+  <!-- PROJECT DNA -->
+  <div class="acc" id="accDNA">
+    <div class="acc-head" onclick="toggleAcc('accDNA')"><span class="acc-title">🧬 Project DNA — Đồng bộ dự án</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Master Render Reference</span>
+      <div class="uslot" id="dnaSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🧬</span><span>Upload render chuẩn dự án</span></div></div>
+      <input type="file" id="dnaInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Style Seed (phong cách chủ đạo)</span>
+      <input type="text" class="finp" id="dnaStyle" placeholder="VD: Tropical Modern, warm timber, stone cladding…"/>
+      <span class="flbl">Bảng màu dự án</span>
+      <div class="dna-palette" id="dnaPalette">
+        <div class="dna-swatch" style="background:#8B6914" data-color="#8B6914" title="Warm Timber"></div>
+        <div class="dna-swatch" style="background:#C4A882" data-color="#C4A882" title="Sandstone"></div>
+        <div class="dna-swatch" style="background:#3d5a3e" data-color="#3d5a3e" title="Tropical Green"></div>
+        <div class="dna-swatch" style="background:#1a2a3a" data-color="#1a2a3a" title="Deep Blue"></div>
+        <div class="dna-swatch" style="background:#9b9b9b" data-color="#9b9b9b" title="Concrete Grey"></div>
+        <div class="dna-swatch" style="background:#F0EAD6" data-color="#F0EAD6" title="Off White"></div>
+        <input type="color" id="dnaColorPick" value="#ff6b2b" style="width:24px;height:24px;border-radius:50%;border:2px dashed var(--bd);cursor:pointer;padding:0;flex-shrink:0;background:none" title="Màu tùy chỉnh"/>
+      </div>
+      <div id="dnaActiveColors" style="font-size:9px;color:var(--ac);min-height:14px;font-family:'Space Mono',monospace;margin-bottom:4px"></div>
+      <button class="dna-lock" id="btnDnaLock">🔓 Khóa DNA — Đồng bộ tất cả view</button>
+    </div>
+  </div>
+
+  <!-- CAMERA & DOF -->
+  <div class="acc" id="accDOF">
+    <div class="acc-head" onclick="toggleAcc('accDOF')"><span class="acc-title">📷 Camera & Depth of Field</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Chiều cao camera</span>
+      <div class="chips" id="eyeHeightChips"></div>
+      <span class="flbl">Khẩu độ (Aperture / Bokeh)</span>
+      <div class="chips" id="apertureChips"></div>
+      <span class="flbl">Focus điểm</span>
+      <div class="chips" id="dofFocusChips"></div>
+    </div>
+  </div>
+
+  <!-- SUN CALCULATOR -->
+  <div class="acc" id="accSun">
+    <div class="acc-head" onclick="toggleAcc('accSun')"><span class="acc-title">☀️ Sun Calculator</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <div class="frow2">
+        <div><span class="flbl">Thành phố</span>
+          <select class="fsel" id="sunCity">
+            <option value="hanoi">Hà Nội (21°N)</option>
+            <option value="hcm">TP.HCM (11°N)</option>
+            <option value="danang">Đà Nẵng (16°N)</option>
+            <option value="hue">Huế (16°N)</option>
+            <option value="singapore">Singapore (1°N)</option>
+            <option value="bangkok">Bangkok (14°N)</option>
+          </select></div>
+        <div><span class="flbl">Tháng</span>
+          <select class="fsel" id="sunMonth">
+            <option value="1">T1 Đông</option><option value="2">T2</option><option value="3">T3</option>
+            <option value="4">T4</option><option value="5">T5</option><option value="6" selected>T6 Hạ</option>
+            <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+            <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+          </select></div>
+      </div>
+      <span class="flbl">Giờ: <span id="sunHourLbl" style="color:var(--ac)">10:00</span></span>
+      <input type="range" id="sunHour" min="6" max="20" value="10" style="width:100%;accent-color:var(--ac);margin-bottom:3px"/>
+      <div class="sun-arc-wrap">
+        <svg class="sun-arc-svg" id="sunArcSvg" viewBox="0 0 240 60">
+          <rect x="0" y="48" width="240" height="12" fill="#1a2a18" rx="2"/>
+          <path d="M10,52 Q120,-15 230,52" fill="none" stroke="rgba(255,179,71,.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <circle id="sunDot" cx="120" cy="12" r="6" fill="#ffb347" opacity=".95"/>
+          <text id="sunTimeLbl" x="120" y="44" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" font-family="Space Mono,monospace">10:00</text>
+        </svg>
+        <div class="sun-info" id="sunInfo">Alt: 70° · Azi: 170° · Hướng: Nam</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATMOSPHERE & WEATHER -->
+  <div class="acc" id="accAtm">
+    <div class="acc-head" onclick="toggleAcc('accAtm')"><span class="acc-title">🌤 Atmosphere & Weather</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Thời tiết (D5/Lumion style)</span>
+      <div class="wx-grid" id="wxGrid"></div>
+      <span class="flbl">Hiệu ứng bổ sung</span>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:7px">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)"><input type="checkbox" id="chkFog" style="accent-color:var(--ac)"/> Volumetric fog / Sương khói</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)"><input type="checkbox" id="chkGodray" style="accent-color:var(--ac)"/> God rays / Light shafts</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)"><input type="checkbox" id="chkWetRoad" style="accent-color:var(--ac)"/> Mặt đường ướt / Wet reflections</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)"><input type="checkbox" id="chkBloom" style="accent-color:var(--ac)"/> Bloom / Lens glow</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENTOURAGE CHI TIẾT -->
+  <div class="acc" id="accEntDetail">
+    <div class="acc-head" onclick="toggleAcc('accEntDetail')"><span class="acc-title">👥 Entourage Chi Tiết</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Nhóm người</span>
+      <div class="chips" id="entCategoryChips"></div>
+      <span class="flbl">Hoạt động</span>
+      <div class="chips" id="entActivityChips"></div>
+      <span class="flbl">Phương tiện</span>
+      <div class="chips" id="entVehicleChips"></div>
+    </div>
+  </div>
+
+  <!-- POST PROCESSING FX (3dsMax FBuffer style) -->
+  <div class="acc" id="accPostFX">
+    <div class="acc-head" onclick="toggleAcc('accPostFX')"><span class="acc-title">🎞 Post Processing FX</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Tone Mapping (V-Ray / ACES style)</span>
+      <div class="tone-row" id="toneMaps"></div>
+      <span class="flbl" style="margin-top:2px">Điều chỉnh hình ảnh</span>
+      <div class="pfx-row"><span class="pfx-lbl">Sáng</span><input type="range" class="cfg-track" id="pfxBright" min="50" max="200" value="100" style="flex:1"/><span class="pfx-val" id="pfxBrightV">100</span></div>
+      <div class="pfx-row"><span class="pfx-lbl">Tương phản</span><input type="range" class="cfg-track" id="pfxContrast" min="50" max="200" value="100" style="flex:1"/><span class="pfx-val" id="pfxContrastV">100</span></div>
+      <div class="pfx-row"><span class="pfx-lbl">Bão hòa</span><input type="range" class="cfg-track" id="pfxSat" min="0" max="300" value="100" style="flex:1"/><span class="pfx-val" id="pfxSatV">100</span></div>
+      <div class="pfx-row"><span class="pfx-lbl">Ấm/Lạnh</span><input type="range" class="cfg-track" id="pfxHue" min="-30" max="30" value="0" style="flex:1"/><span class="pfx-val" id="pfxHueV">0°</span></div>
+      <div class="pfx-row"><span class="pfx-lbl">Vintage</span><input type="range" class="cfg-track" id="pfxSepia" min="0" max="100" value="0" style="flex:1"/><span class="pfx-val" id="pfxSepiaV">0</span></div>
+      <div style="display:flex;gap:5px;margin-top:7px">
+        <button class="chip on" id="btnApplyFX" style="flex:1;padding:6px;justify-content:center">✓ Áp dụng</button>
+        <button class="chip" id="btnResetFX" style="padding:6px 10px">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE SNAPSHOTS (3dsMax State Sets) -->
+  <div class="acc" id="accSnaps">
+    <div class="acc-head" onclick="toggleAcc('accSnaps')"><span class="acc-title">📸 Scene Snapshots</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <div class="snap-list" id="snapList"><div style="font-size:10px;color:var(--mu);padding:8px 0;text-align:center">Chưa có snapshot</div></div>
+      <div style="display:flex;gap:5px;margin-top:4px">
+        <input type="text" class="finp" id="snapName" placeholder="Tên snapshot…" style="flex:1;margin-bottom:0"/>
+        <button class="chip on" id="btnSaveSnap" style="padding:6px 10px;white-space:nowrap">💾 Lưu</button>
+      </div>
     </div>
   </div>
 
@@ -901,6 +1073,24 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <button class="tbtn" id="viewerDl">⬇ Tải về</button>
     <button class="tbtn" id="viewerCopy">📋 Copy</button>
     <button class="tbtn" id="viewerSheet">+ Sheet</button>
+    <button class="tbtn" id="viewerUpscale2x" title="Upscale 2× qua fal.ai aura-sr">⬆ 2×</button>
+    <button class="tbtn" id="viewerUpscale4x" title="Upscale 4× qua fal.ai aura-sr">⬆ 4×</button>
+    <button class="tbtn" id="viewerCompare" title="So sánh Before/After">◧ Compare</button>
+  </div>
+</div>
+
+<!-- SPLIT VIEW OVERLAY -->
+<div class="sv-overlay" id="svOverlay">
+  <div class="sv-wrap" id="svWrap">
+    <div class="sv-a"><img id="svImgA" src="" alt="Before"/></div>
+    <div class="sv-b" id="svB"><img id="svImgB" src="" alt="After"/></div>
+    <div class="sv-handle" id="svHandle"></div>
+    <div class="sv-lbl-a">Before</div>
+    <div class="sv-lbl-b">After</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:11px;color:rgba(255,255,255,.45)">Kéo đường phân cách để so sánh</span>
+    <button class="tbtn" id="svClose">✕ Đóng</button>
   </div>
 </div>
 
@@ -981,6 +1171,14 @@ const CHIPS = {
   urbanDensity:["Mật độ thấp","Khu dân cư","Khu đô thị trung","CBD mật độ cao","Siêu đô thị"],
   urbanCity:["Hà Nội phố cổ","TP.HCM CBD","Đà Nẵng ven biển","Đô thị VN mới","Smart city tương lai","Thành phố châu Á"],
   urbanView:["Street level","Góc nhìn bộ hành","Eye-level con phố","Perspective đường lớn","Aerial 45° khu phố"],
+  // Camera & DOF
+  eyeHeight:["0.8m (ngồi)","1.6m (người đứng)","1.8m (cao)","3.0m (tầng lửng)","6.0m (tầng 2)"],
+  aperture:["f/1.4 (bokeh mạnh)","f/2.8 (portrait)","f/5.6 (chuẩn KT)","f/8 (toàn cảnh)","f/11 (ultra sharp)"],
+  dofFocus:["Công trình chính","Tiền cảnh","Hậu cảnh","Trung cảnh","Không có DOF"],
+  // Enhanced Entourage
+  entCategory:["Mặc định","Gia đình VN","Văn phòng","Sinh viên","Khách du lịch","Người cao tuổi"],
+  entActivity:["Đi bộ thư giãn","Ngồi café","Chơi thể thao","Mua sắm","Làm việc ngoài trời","Trẻ em chơi"],
+  entVehicle:["Không có","Xe đạp","Xe máy điện","Ô tô hiện đại","Grab/taxi","Mix các loại"],
 };
 
 const BATCH_COMBOS=[
@@ -1051,6 +1249,11 @@ const S={
   artisticStyle:null, artPaper:null,
   sectionType:null, sectionStyle:null, sectionDetail:null,
   urbanDensity:null, urbanCity:null, urbanView:null,
+  // New features
+  eyeHeight:null, aperture:null, dofFocus:null,
+  entCategory:null, entActivity:null, entVehicle:null,
+  wxPreset:null,
+  whiteModel:false, dnaLocked:false,
 };
 let history=[], projects=[], sheetImgs=[], activeProj=null;
 let cancelFlag=false;
@@ -1061,6 +1264,33 @@ let charViews=[{id:1,b64:null,label:"View 1"},{id:2,b64:null,label:"View 2"}];
 let cvIdCnt=3;
 let pipeline=[], plRunning=false, plPaused=false, plIdCnt=1;
 let viewerImgs=[], viewerIdx=0, viewerZoom=1;
+let dnaB64=null, dnaActiveColors=[];
+let snapshots=[], snapIdCnt=1;
+let activeToneMap="none";
+let svDragging=false, svWrapRect=null;
+
+const WEATHER_PRESETS=[
+  {id:"sunny",    e:"☀️",  l:"Nắng đẹp",   v:"bright sunny day, clear blue sky, crisp sharp shadows"},
+  {id:"overcast", e:"☁️",  l:"Mây mù",     v:"overcast soft diffused light, no harsh shadows, even illumination"},
+  {id:"golden",   e:"🌅",  l:"Hoàng hôn",  v:"golden hour sunset, long warm shadows, orange-pink sky"},
+  {id:"night",    e:"🌃",  l:"Đêm đô thị", v:"night scene, warm artificial lighting, city ambient glow"},
+  {id:"rain",     e:"🌧️",  l:"Sau mưa",    v:"after rain, wet reflections on pavement, moody grey atmosphere, glistening surfaces"},
+  {id:"storm",    e:"⛈️",  l:"Trước bão",  v:"dramatic storm clouds approaching, heavy overcast, pre-storm tension, dark moody sky"},
+  {id:"fog",      e:"🌫️",  l:"Sương mù",   v:"misty morning, volumetric fog layers, soft diffused light, atmospheric depth haze"},
+  {id:"coldry",   e:"❄️",  l:"Khô lạnh",   v:"cool dry season, crisp clear air, sharp shadows, winter-light quality"},
+];
+
+const TONE_MAPS=[
+  {id:"none",   l:"Original", v:""},
+  {id:"vray",   l:"V-Ray",    v:"V-Ray photorealistic tone mapping, balanced exposure, architect visualization"},
+  {id:"filmic", l:"Filmic",   v:"filmic tone mapping, cinematic S-curve contrast, slightly crushed blacks"},
+  {id:"aces",   l:"ACES",     v:"ACES cinema standard tone mapping, rich deep shadows, vibrant highlights"},
+  {id:"warm",   l:"Warm",     v:"warm color grading, golden amber tones, inviting cozy atmosphere"},
+  {id:"cool",   l:"Cool",     v:"cool blue-grey color grading, modern minimal mood, nordic palette"},
+  {id:"vivid",  l:"Vivid",    v:"vivid color enhancement, punchy saturated tones, high impact"},
+];
+
+const SUN_CITIES={hanoi:21,hcm:11,danang:16,hue:16,singapore:1,bangkok:14};
 
 /* ═══════════════════════════════
    INIT
@@ -1076,10 +1306,15 @@ window.addEventListener("DOMContentLoaded",()=>{
   renderProjList();
   renderHistoryUI();
   updateResInfo();
+  buildWxGrid();
+  buildToneMapRow();
+  renderSnapshotList();
   bindAll();
+  initDNAPalette();
   switchMode(S.mode||"exterior");
   updatePrompt();
   updateRefModelWarn();
+  updateSunDisplay();
   document.addEventListener("keydown",handleKeyboard);
 });
 
@@ -1169,6 +1404,13 @@ function buildAllChips(){
   buildChipGroup("urbanDensityChips","urbanDensity",CHIPS.urbanDensity);
   buildChipGroup("urbanCityChips","urbanCity",CHIPS.urbanCity);
   buildChipGroup("urbanViewChips","urbanView",CHIPS.urbanView);
+  // new feature chip groups
+  buildChipGroup("eyeHeightChips","eyeHeight",CHIPS.eyeHeight);
+  buildChipGroup("apertureChips","aperture",CHIPS.aperture);
+  buildChipGroup("dofFocusChips","dofFocus",CHIPS.dofFocus);
+  buildChipGroup("entCategoryChips","entCategory",CHIPS.entCategory);
+  buildChipGroup("entActivityChips","entActivity",CHIPS.entActivity);
+  buildChipGroup("entVehicleChips","entVehicle",CHIPS.entVehicle);
   // batch
   const bc=document.getElementById("batchChips"); if(!bc)return;
   bc.innerHTML="";
@@ -1317,6 +1559,13 @@ function updatePrecisionPreview(){
 }
 
 function buildPrompt(){
+  // White Model override — pure architectural massing study
+  if(S.whiteModel){
+    const style=S.archStyle||"contemporary";
+    const cam=S.camera||"eye-level wide";
+    const pre=getPrecisionPrompt();
+    return["pure white architectural scale model, "+style+" architecture design, all surfaces white plaster, white matte foam model aesthetic, white studio seamless background, no color no texture variation, focus on building form and massing only, "+cam+" view, clean minimal presentation", pre,"ultra sharp detail, architectural concept model photography"].filter(Boolean).join(", ");
+  }
   const parts=[];
   const mood=MOODS.find(m=>m.id===S.mood);
 
@@ -1484,6 +1733,19 @@ function buildPrompt(){
   const precisionPrompt=getPrecisionPrompt();
   if(precisionPrompt)parts.push(precisionPrompt);
 
+  // ── DNA PROJECT LOCK ──
+  const dnaP=buildDNAPrompt();if(dnaP)parts.push(dnaP);
+  // ── SUN POSITION ──
+  const sunP=buildSunPrompt();if(sunP&&document.getElementById("accSun")?.classList.contains("open"))parts.push(sunP);
+  // ── ATMOSPHERE / WEATHER ──
+  const atmP=buildAtmospherePrompt();if(atmP)parts.push(atmP);
+  // ── CAMERA / DOF ──
+  const dofP=buildDOFPrompt();if(dofP)parts.push(dofP);
+  // ── ENHANCED ENTOURAGE ──
+  const entP=buildEntourageVNPrompt();if(entP)parts.push(entP);
+  // ── TONE MAP (for prompt guidance) ──
+  const toneMap=TONE_MAPS.find(t=>t.id===activeToneMap);if(toneMap&&toneMap.v)parts.push(toneMap.v);
+
   const cp=document.getElementById("customPrompt")?.value?.trim();
   if(cp)parts.push(cp);
   if(document.getElementById("chkAutoEnhance")?.checked&&!["floorplan"].includes(S.mode)){
@@ -1599,9 +1861,13 @@ async function doGenerate(){
   else if(S.mode==="before_after"&&baB64){srcB64=baB64;srcStrength=0.6;}
   else if((S.mode==="exterior"||S.mode==="interior"||S.mode==="seasonal"||S.mode==="char_sync")&&refB64){
     srcB64=refB64;srcStrength=refStrPct;
-    // Warn if model doesn't support img2img
     const m=document.getElementById("pModel")?.value||"flux-free";
     if(!MODEL_MAP[m]?.i2i){showToast("⚠️ Model này không hỗ trợ img2img. Ảnh ref bị bỏ qua.");srcB64=null;}
+  }
+  // DNA reference injection when locked and no other source
+  if(!srcB64&&dnaB64&&S.dnaLocked){
+    const m=document.getElementById("pModel")?.value||"flux-free";
+    if(MODEL_MAP[m]?.i2i){srcB64=dnaB64;srcStrength=0.25;}
   }
   cancelFlag=false;
   const gid="rg_"+Date.now();
@@ -2129,7 +2395,8 @@ function initUploadSlot(slotId,inputId,stateKey){
       const b64Map={furnSpace:()=>furnSpaceB64=b64,furnObj:()=>furnObjB64=b64,charRef:()=>charRefB64=b64,
         fp:()=>{fpB64=b64;updatePrompt();},mp:()=>{mpB64=b64;updatePrompt();},ba:()=>{baB64=b64;updatePrompt();},ref:()=>{refB64=b64;updatePrompt();},
         ls:()=>{lsB64=b64;updatePrompt();},matSwap:()=>{matSwapB64=b64;updatePrompt();},sky:()=>{skyB64=b64;updatePrompt();},
-        art:()=>{artB64=b64;updatePrompt();},sec:()=>{secB64=b64;updatePrompt();},urban:()=>{urbanB64=b64;updatePrompt();}};
+        art:()=>{artB64=b64;updatePrompt();},sec:()=>{secB64=b64;updatePrompt();},urban:()=>{urbanB64=b64;updatePrompt();},
+        dna:()=>{dnaB64=b64;updatePrompt();}};
       (b64Map[stateKey]||function(){})();
       slot.innerHTML=`<img src="${b64}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;
       slot.classList.add("has");
@@ -2138,7 +2405,8 @@ function initUploadSlot(slotId,inputId,stateKey){
         const clrMap={furnSpace:()=>furnSpaceB64=null,furnObj:()=>furnObjB64=null,charRef:()=>charRefB64=null,
           fp:()=>{fpB64=null;updatePrompt();},mp:()=>{mpB64=null;updatePrompt();},ba:()=>{baB64=null;updatePrompt();},ref:()=>{refB64=null;updatePrompt();},
           ls:()=>{lsB64=null;updatePrompt();},matSwap:()=>{matSwapB64=null;updatePrompt();},sky:()=>{skyB64=null;updatePrompt();},
-          art:()=>{artB64=null;updatePrompt();},sec:()=>{secB64=null;updatePrompt();},urban:()=>{urbanB64=null;updatePrompt();}};
+          art:()=>{artB64=null;updatePrompt();},sec:()=>{secB64=null;updatePrompt();},urban:()=>{urbanB64=null;updatePrompt();},
+          dna:()=>{dnaB64=null;updatePrompt();}};
         (clrMap[stateKey]||function(){})();
         slot.innerHTML=ph;slot.classList.remove("has");
       });
@@ -2394,6 +2662,7 @@ function saveStorage(){
     localStorage.setItem("nbox_s",JSON.stringify({...S,...extras}));
     localStorage.setItem("nbox_h",JSON.stringify(history));
     localStorage.setItem("nbox_p",JSON.stringify(projects));
+    try{localStorage.setItem("nbox_snaps",JSON.stringify(snapshots.map(s=>({...s,state:{...s.state}}))));}catch{}
     const k=document.getElementById("apiKey")?.value?.trim();if(k)localStorage.setItem("nbox_k",k);
     const pv=document.getElementById("apiProv")?.value;if(pv)localStorage.setItem("nbox_pv",pv);
   }catch{}
@@ -2416,6 +2685,7 @@ function loadStorage(){
     }
     const h=localStorage.getItem("nbox_h");if(h)history=JSON.parse(h);
     const p=localStorage.getItem("nbox_p");if(p)projects=JSON.parse(p);
+    const sn=localStorage.getItem("nbox_snaps");if(sn){snapshots=JSON.parse(sn);snapIdCnt=snapshots.reduce((m,s)=>Math.max(m,s.id||0),0)+1;}
     const k=localStorage.getItem("nbox_k");if(k){const inp=document.getElementById("apiKey");if(inp){inp.value=k;updateApiDot(k);}}
     const pv=localStorage.getItem("nbox_pv");if(pv){const sel=document.getElementById("apiProv");if(sel)sel.value=pv;}
     const pn=localStorage.getItem("nbox_pn");if(pn){const inp=document.getElementById("projName");if(inp)inp.value=pn;}
@@ -2448,6 +2718,345 @@ function showToast(msg){
   const t=document.getElementById("toast");
   t.textContent=msg;t.classList.add("on");
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2400);
+}
+
+/* ═══════════════════════════════
+   WHITE MODEL
+═══════════════════════════════ */
+function toggleWhiteModel(){
+  S.whiteModel=!S.whiteModel;
+  const btn=document.getElementById("btnWhiteModel");
+  if(btn)btn.classList.toggle("on",S.whiteModel);
+  updatePrompt();
+  showToast(S.whiteModel?"⬜ White Model ON — thuần trắng":"🎨 White Model OFF");
+}
+
+/* ═══════════════════════════════
+   DNA / PROJECT LOCK
+═══════════════════════════════ */
+function initDNAPalette(){
+  const palette=document.getElementById("dnaPalette"); if(!palette)return;
+  palette.querySelectorAll(".dna-swatch").forEach(sw=>{
+    sw.addEventListener("click",()=>{
+      const color=sw.dataset.color;
+      if(dnaActiveColors.includes(color)){
+        dnaActiveColors=dnaActiveColors.filter(c=>c!==color);
+        sw.classList.remove("on");
+      }else{
+        dnaActiveColors.push(color);
+        sw.classList.add("on");
+      }
+      const lbl=document.getElementById("dnaActiveColors");
+      if(lbl)lbl.textContent=dnaActiveColors.length?dnaActiveColors.join(" · "):"";
+      updatePrompt();
+    });
+  });
+  document.getElementById("dnaColorPick")?.addEventListener("input",e=>{
+    const color=e.target.value;
+    if(!dnaActiveColors.includes(color)){
+      dnaActiveColors.push(color);
+      const lbl=document.getElementById("dnaActiveColors");
+      if(lbl)lbl.textContent=dnaActiveColors.join(" · ");
+      updatePrompt();
+    }
+  });
+}
+function toggleDNALock(){
+  S.dnaLocked=!S.dnaLocked;
+  const btn=document.getElementById("btnDnaLock");
+  if(btn){btn.classList.toggle("on",S.dnaLocked);btn.textContent=S.dnaLocked?"🔒 DNA Đã Khóa — Đồng bộ tất cả view":"🔓 Khóa DNA — Đồng bộ tất cả view";}
+  updatePrompt();
+  showToast(S.dnaLocked?"🔒 DNA Locked — style đồng nhất cho mọi view":"🔓 DNA Unlocked");
+}
+function buildDNAPrompt(){
+  if(!S.dnaLocked)return"";
+  const parts=[];
+  const style=document.getElementById("dnaStyle")?.value?.trim();
+  if(style)parts.push("consistent project design style: "+style);
+  if(dnaActiveColors.length)parts.push("project color palette: "+dnaActiveColors.join(", "));
+  if(dnaB64)parts.push("consistent material and atmosphere with master reference render");
+  return parts.join(", ");
+}
+
+/* ═══════════════════════════════
+   SUN CALCULATOR
+═══════════════════════════════ */
+function calcSunPos(latDeg, month, hour){
+  const lat=latDeg*Math.PI/180;
+  const doy=Math.floor((month-1)*30.4+15);
+  const decl=23.45*Math.sin((284+doy)/365*2*Math.PI)*Math.PI/180;
+  const ha=(hour-12)*15*Math.PI/180;
+  const alt=Math.asin(Math.sin(lat)*Math.sin(decl)+Math.cos(lat)*Math.cos(decl)*Math.cos(ha));
+  const azNom=Math.cos(decl)*Math.sin(ha);
+  const azDen=Math.cos(lat)*Math.sin(decl)-Math.sin(lat)*Math.cos(decl)*Math.cos(ha);
+  let azi=Math.atan2(azNom,azDen)*180/Math.PI+180;
+  if(azi<0)azi+=360; if(azi>=360)azi-=360;
+  return{alt:Math.round(alt*180/Math.PI),azi:Math.round(azi)};
+}
+function updateSunDisplay(){
+  const cityKey=document.getElementById("sunCity")?.value||"hanoi";
+  const month=parseInt(document.getElementById("sunMonth")?.value||6);
+  const hour=parseFloat(document.getElementById("sunHour")?.value||10);
+  const lbl=document.getElementById("sunHourLbl");
+  if(lbl)lbl.textContent=String(Math.floor(hour)).padStart(2,"0")+":00";
+  const lat=SUN_CITIES[cityKey]||21;
+  const{alt,azi}=calcSunPos(lat,month,hour);
+  const t=(hour-6)/14;
+  const cx=10+t*220, cy=Math.max(4,52-Math.max(0,alt)*0.55);
+  const dot=document.getElementById("sunDot");
+  if(dot){dot.setAttribute("cx",cx.toFixed(1));dot.setAttribute("cy",cy.toFixed(1));}
+  const tlbl=document.getElementById("sunTimeLbl");
+  if(tlbl){tlbl.setAttribute("x",cx.toFixed(1));tlbl.textContent=String(Math.floor(hour)).padStart(2,"0")+":00";}
+  const dirs=["Bắc","Đông Bắc","Đông","Đông Nam","Nam","Tây Nam","Tây","Tây Bắc"];
+  const dirLbl=dirs[Math.round(azi/45)%8]||"Nam";
+  const info=document.getElementById("sunInfo");
+  if(info)info.textContent=`Alt: ${alt}° · Azi: ${azi}° · ${dirLbl} · ${Math.floor(hour)}h`;
+  updatePrompt();
+}
+function buildSunPrompt(){
+  const cityKey=document.getElementById("sunCity")?.value||"hanoi";
+  const month=parseInt(document.getElementById("sunMonth")?.value||6);
+  const hour=parseFloat(document.getElementById("sunHour")?.value||10);
+  const lat=SUN_CITIES[cityKey]||21;
+  const{alt,azi}=calcSunPos(lat,month,hour);
+  if(alt<0)return"nighttime, no sun";
+  const dirsEn=["north","northeast","east","southeast","south","southwest","west","northwest"];
+  const dir=dirsEn[Math.round(azi/45)%8]||"south";
+  const tod=hour<8?"early morning golden light":hour<11?"morning sidelight":hour<13?"high-noon overhead light":hour<16?"afternoon warm light":hour<18?"late afternoon warm sidelight":"evening dusk";
+  const mths=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  return `sun altitude ${alt}°, sunlight from ${dir}, ${tod}, ${mths[month-1]||"June"} seasonal light`;
+}
+
+/* ═══════════════════════════════
+   WEATHER / ATMOSPHERE
+═══════════════════════════════ */
+function buildWxGrid(){
+  const grid=document.getElementById("wxGrid"); if(!grid)return;
+  grid.innerHTML="";
+  WEATHER_PRESETS.forEach(wx=>{
+    const btn=document.createElement("button");
+    btn.className="wx-btn"+(S.wxPreset===wx.id?" on":"");
+    btn.innerHTML=wx.e+"<br/>"+wx.l;
+    btn.title=wx.v;
+    btn.addEventListener("click",()=>{
+      S.wxPreset=S.wxPreset===wx.id?null:wx.id;
+      grid.querySelectorAll(".wx-btn").forEach(b=>b.classList.remove("on"));
+      if(S.wxPreset)btn.classList.add("on");
+      updatePrompt();
+    });
+    grid.appendChild(btn);
+  });
+}
+function buildAtmospherePrompt(){
+  const parts=[];
+  const wx=WEATHER_PRESETS.find(w=>w.id===S.wxPreset);
+  if(wx)parts.push(wx.v);
+  if(document.getElementById("chkFog")?.checked)parts.push("volumetric atmospheric fog, misty depth");
+  if(document.getElementById("chkGodray")?.checked)parts.push("god rays shafts of light through atmosphere");
+  if(document.getElementById("chkWetRoad")?.checked)parts.push("wet ground reflections, rain-washed surfaces");
+  if(document.getElementById("chkBloom")?.checked)parts.push("subtle lens bloom on bright light sources");
+  return parts.join(", ");
+}
+
+/* ═══════════════════════════════
+   CAMERA / DOF
+═══════════════════════════════ */
+function buildDOFPrompt(){
+  const parts=[];
+  if(S.eyeHeight){
+    const m={
+      "0.8m (ngồi)":"camera height 0.8m seated eye level low angle",
+      "1.6m (người đứng)":"camera height 1.6m natural standing eye level",
+      "1.8m (cao)":"camera height 1.8m tall perspective",
+      "3.0m (tầng lửng)":"camera height 3m mezzanine level elevated view",
+      "6.0m (tầng 2)":"camera height 6m second floor elevated perspective"
+    };
+    parts.push(m[S.eyeHeight]||S.eyeHeight);
+  }
+  if(S.aperture){
+    if(S.aperture.includes("f/1.4"))parts.push("f/1.4 very shallow depth of field, strong bokeh background blur");
+    else if(S.aperture.includes("f/2.8"))parts.push("f/2.8 shallow depth of field, soft portrait bokeh");
+    else if(S.aperture.includes("f/5.6"))parts.push("f/5.6 moderate depth of field, standard architectural sharpness");
+    else if(S.aperture.includes("f/8"))parts.push("f/8 deep focus, sharp foreground to background");
+    else if(S.aperture.includes("f/11"))parts.push("f/11 maximum sharpness, wide architectural panorama");
+  }
+  if(S.dofFocus&&!S.dofFocus.includes("Không"))parts.push("focus on "+S.dofFocus.toLowerCase()+", intentional depth of field");
+  return parts.join(", ");
+}
+
+/* ═══════════════════════════════
+   ENHANCED ENTOURAGE
+═══════════════════════════════ */
+function buildEntourageVNPrompt(){
+  const parts=[];
+  if(S.entCategory&&S.entCategory!=="Mặc định")parts.push(S.entCategory.toLowerCase()+" demographic");
+  if(S.entActivity)parts.push("people "+S.entActivity.toLowerCase());
+  if(S.entVehicle&&S.entVehicle!=="Không có")parts.push(S.entVehicle.toLowerCase()+" in scene");
+  return parts.join(", ");
+}
+
+/* ═══════════════════════════════
+   TONE MAPPING
+═══════════════════════════════ */
+function buildToneMapRow(){
+  const row=document.getElementById("toneMaps"); if(!row)return;
+  row.innerHTML="";
+  TONE_MAPS.forEach(t=>{
+    const btn=document.createElement("button");
+    btn.className="tone-chip"+(activeToneMap===t.id?" on":"");
+    btn.textContent=t.l;
+    btn.addEventListener("click",()=>{
+      activeToneMap=activeToneMap===t.id?"none":t.id;
+      row.querySelectorAll(".tone-chip").forEach(b=>b.classList.remove("on"));
+      if(activeToneMap!=="none")btn.classList.add("on");
+      updatePrompt();
+    });
+    row.appendChild(btn);
+  });
+}
+
+/* ═══════════════════════════════
+   POST FX (CSS Filters)
+═══════════════════════════════ */
+function applyPostFX(){
+  const bright=document.getElementById("pfxBright")?.value||100;
+  const contrast=document.getElementById("pfxContrast")?.value||100;
+  const sat=document.getElementById("pfxSat")?.value||100;
+  const hue=document.getElementById("pfxHue")?.value||0;
+  const sepia=document.getElementById("pfxSepia")?.value||0;
+  const filter=`brightness(${bright}%) contrast(${contrast}%) saturate(${sat}%) hue-rotate(${hue}deg) sepia(${sepia}%)`;
+  document.querySelectorAll(".img-item img").forEach(img=>{img.style.filter=filter;});
+  showToast("✅ Post FX applied to "+document.querySelectorAll(".img-item img").length+" ảnh!");
+}
+function resetPostFX(){
+  [["pfxBright","pfxBrightV","100"],["pfxContrast","pfxContrastV","100"],["pfxSat","pfxSatV","100"],
+   ["pfxHue","pfxHueV","0°"],["pfxSepia","pfxSepiaV","0"]].forEach(([rid,vid,dv])=>{
+    const r=document.getElementById(rid);if(r)r.value=["pfxHue","pfxSepia"].includes(rid)?"0":"100";
+    const v=document.getElementById(vid);if(v)v.textContent=dv;
+  });
+  document.querySelectorAll(".img-item img").forEach(img=>img.style.filter="");
+  showToast("↺ Post FX reset");
+}
+
+/* ═══════════════════════════════
+   UPSCALE (Fal.ai aura-sr)
+═══════════════════════════════ */
+async function doUpscale(imgSrc, factor){
+  const key=document.getElementById("apiKey")?.value?.replace(/[^\x20-\x7E]/g,"").trim();
+  if(!key){showToast("Nhập Fal.ai API key để upscale!");return;}
+  const scaleFactor=factor===4?4:2;
+  showGenOv("Upscaling "+scaleFactor+"×… (fal.ai aura-sr)");
+  setBtnLoading(true);
+  try{
+    const resp=await fetch("https://fal.run/fal-ai/aura-sr",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Key "+key},
+      body:JSON.stringify({image_url:imgSrc,upscaling_factor:scaleFactor,overlapping_tiles:true,checkpoint:"v2"})
+    });
+    if(!resp.ok)throw new Error("Fal aura-sr error "+resp.status);
+    const d=await resp.json();
+    const url=d.image?.url||d.output?.image?.url||d.images?.[0]?.url;
+    if(!url)throw new Error("No upscaled URL returned");
+    const ir=await fetch(url);const blob=await ir.blob();
+    const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+    renderGroup("Upscaled "+scaleFactor+"× · aura-sr","⬆ upscale",[b64]);
+    dlImg(b64,"nbox_upscaled_"+scaleFactor+"x_"+Date.now()+"."+getExt());
+    showToast("✅ Upscale "+scaleFactor+"× xong! Đã tự động tải về.");
+  }catch(e){showToast("❌ Upscale: "+e.message);}
+  hideGenOv();setBtnLoading(false);
+}
+
+/* ═══════════════════════════════
+   SPLIT VIEW (Compare Before/After)
+═══════════════════════════════ */
+function openSplitView(beforeSrc, afterSrc){
+  const ov=document.getElementById("svOverlay"); if(!ov)return;
+  const all=Array.from(document.querySelectorAll(".img-item img")).map(i=>i.src);
+  document.getElementById("svImgA").src=beforeSrc||(all[Math.max(0,all.length-2)]||all[0]||"");
+  document.getElementById("svImgB").src=afterSrc||(all[all.length-1]||"");
+  ov.classList.add("on");
+  setSvPosition(50);
+}
+function setSvPosition(pct){
+  const b=document.getElementById("svB");if(b)b.style.clipPath=`inset(0 ${(100-pct).toFixed(1)}% 0 0)`;
+  const h=document.getElementById("svHandle");if(h)h.style.left=pct.toFixed(1)+"%";
+}
+function svPointerMove(e){
+  if(!svDragging||!svWrapRect)return;
+  const cx=(e.touches?e.touches[0].clientX:e.clientX)-svWrapRect.left;
+  setSvPosition(Math.min(95,Math.max(5,cx/svWrapRect.width*100)));
+}
+
+/* ═══════════════════════════════
+   SCENE SNAPSHOTS
+═══════════════════════════════ */
+function saveSnapshot(){
+  const name=document.getElementById("snapName")?.value?.trim()||("Snap "+(snapshots.length+1));
+  const snap={id:snapIdCnt++,name,time:Date.now(),state:{...S},
+    customPrompt:document.getElementById("customPrompt")?.value||"",
+    negPrompt:document.getElementById("negPrompt")?.value||""};
+  snapshots.unshift(snap);
+  if(snapshots.length>20)snapshots=snapshots.slice(0,20);
+  renderSnapshotList();saveStorage();
+  const inp=document.getElementById("snapName");if(inp)inp.value="";
+  showToast("📸 Snapshot \""+name+"\" đã lưu!");
+}
+function loadSnapshot(id){
+  const snap=snapshots.find(s=>s.id===id); if(!snap)return;
+  Object.assign(S,snap.state);
+  const ta=document.getElementById("customPrompt");if(ta)ta.value=snap.customPrompt||"";
+  const na=document.getElementById("negPrompt");if(na)na.value=snap.negPrompt||"";
+  buildMoodGrid();buildAllChips();switchMode(S.mode);buildWxGrid();updatePrompt();
+  showToast("↩ Loaded snapshot \""+snap.name+"\"");
+}
+function deleteSnapshot(id){
+  snapshots=snapshots.filter(s=>s.id!==id);renderSnapshotList();saveStorage();
+}
+function renderSnapshotList(){
+  const list=document.getElementById("snapList"); if(!list)return;
+  if(!snapshots.length){list.innerHTML='<div style="font-size:10px;color:var(--mu);padding:8px 0;text-align:center">Chưa có snapshot</div>';return;}
+  list.innerHTML="";
+  snapshots.slice(0,15).forEach(snap=>{
+    const item=document.createElement("div");item.className="snap-item";
+    item.innerHTML=`<div class="snap-name">${esc(snap.name)}</div><div class="snap-time">${new Date(snap.time).toLocaleTimeString("vi-VN")}</div><button style="background:none;border:none;color:var(--ac);cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;padding:0 2px">↩</button><button style="background:none;border:none;color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0;padding:0 2px">✕</button>`;
+    const[lb,db]=item.querySelectorAll("button");
+    lb.addEventListener("click",()=>loadSnapshot(snap.id));
+    db.addEventListener("click",()=>deleteSnapshot(snap.id));
+    list.appendChild(item);
+  });
+}
+
+/* ═══════════════════════════════
+   ELEVATION SET
+═══════════════════════════════ */
+async function doElevationSet(){
+  const basePrompt=buildPrompt();
+  const model=document.getElementById("pModel")?.value||"flux-dev";
+  const m=MODEL_MAP[model]?.i2i===false?"flux-dev":model;
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const elevViews=[
+    {l:"Mặt tiền",   i:"front south facade elevation, orthographic frontal view, flat perspective no distortion"},
+    {l:"Mặt hông Đ", i:"east side elevation, orthographic side view, flat perspective"},
+    {l:"Mặt hậu",    i:"rear north facade elevation, orthographic rear view"},
+    {l:"Phối cảnh",  i:"3D bird eye perspective view 45 degrees, full building visible"},
+  ];
+  cancelFlag=false;
+  showToast("⚙ Generating 4 elevations…");
+  for(let i=0;i<elevViews.length;i++){
+    if(cancelFlag)break;
+    const v=elevViews[i];
+    const prompt=basePrompt+", "+v.i+", white background, clean architectural presentation";
+    const gid="rg_"+Date.now();
+    showGenOv("Elevation "+v.l+" ("+( i+1)+"/4)…");renderSkeletons(gid,1);
+    try{
+      const imgs=await callAPI(prompt,1,size,m,"28");
+      removeEl(gid);
+      if(imgs?.length){renderGroup(prompt,"📐 elevation · "+v.l,imgs);addHist(prompt,"elevation",imgs.length);}
+    }catch(e){removeEl(gid);showToast("❌ "+v.l+": "+e.message);}
+    hideGenOv();
+    if(i<elevViews.length-1)await sleep(500);
+  }
+  showToast("✅ Elevation Set xong — 4 mặt phối cảnh!");
 }
 
 /* ═══════════════════════════════
@@ -2599,6 +3208,50 @@ function bindAll(){
     pipeline.forEach(s=>{s.status="pending";s.results=[];s.error=null;});
     renderPipeline();showToast("🗑 Cleared");
   });
+  // ── NEW FEATURE BINDINGS ──
+  // White model
+  document.getElementById("btnWhiteModel")?.addEventListener("click",toggleWhiteModel);
+  // DNA
+  initUploadSlot("dnaSlot","dnaInp","dna");
+  document.getElementById("btnDnaLock")?.addEventListener("click",toggleDNALock);
+  document.getElementById("dnaStyle")?.addEventListener("input",()=>updatePrompt());
+  // Sun calculator
+  document.getElementById("sunCity")?.addEventListener("change",updateSunDisplay);
+  document.getElementById("sunMonth")?.addEventListener("change",updateSunDisplay);
+  document.getElementById("sunHour")?.addEventListener("input",updateSunDisplay);
+  // Atmosphere
+  ["chkFog","chkGodray","chkWetRoad","chkBloom"].forEach(id=>document.getElementById(id)?.addEventListener("change",updatePrompt));
+  // Post FX
+  document.getElementById("btnApplyFX")?.addEventListener("click",applyPostFX);
+  document.getElementById("btnResetFX")?.addEventListener("click",resetPostFX);
+  [["pfxBright","pfxBrightV","%"],["pfxContrast","pfxContrastV","%"],["pfxSat","pfxSatV","%"]].forEach(([rid,vid,su])=>{
+    document.getElementById(rid)?.addEventListener("input",e=>{const v=document.getElementById(vid);if(v)v.textContent=e.target.value+su;});
+  });
+  document.getElementById("pfxHue")?.addEventListener("input",e=>{const v=document.getElementById("pfxHueV");if(v)v.textContent=e.target.value+"°";});
+  document.getElementById("pfxSepia")?.addEventListener("input",e=>{const v=document.getElementById("pfxSepiaV");if(v)v.textContent=e.target.value;});
+  // Scene snapshots
+  document.getElementById("btnSaveSnap")?.addEventListener("click",saveSnapshot);
+  // Viewer: upscale + compare
+  document.getElementById("viewerUpscale2x")?.addEventListener("click",()=>{const src=viewerImgs[viewerIdx]||"";if(src)doUpscale(src,2);});
+  document.getElementById("viewerUpscale4x")?.addEventListener("click",()=>{const src=viewerImgs[viewerIdx]||"";if(src)doUpscale(src,4);});
+  document.getElementById("viewerCompare")?.addEventListener("click",()=>openSplitView());
+  // Split view
+  const svHandle=document.getElementById("svHandle");
+  const svWrapEl=document.getElementById("svWrap");
+  if(svHandle&&svWrapEl){
+    svHandle.addEventListener("mousedown",e=>{svDragging=true;svWrapRect=svWrapEl.getBoundingClientRect();e.preventDefault();});
+    svHandle.addEventListener("touchstart",e=>{svDragging=true;svWrapRect=svWrapEl.getBoundingClientRect();},{passive:true});
+    document.addEventListener("mousemove",svPointerMove);
+    document.addEventListener("touchmove",svPointerMove,{passive:true});
+    document.addEventListener("mouseup",()=>svDragging=false);
+    document.addEventListener("touchend",()=>svDragging=false);
+    svWrapEl.addEventListener("mousedown",e=>{svDragging=true;svWrapRect=svWrapEl.getBoundingClientRect();svPointerMove(e);});
+  }
+  document.getElementById("svClose")?.addEventListener("click",()=>document.getElementById("svOverlay")?.classList.remove("on"));
+  document.getElementById("svOverlay")?.addEventListener("click",e=>{if(e.target.id==="svOverlay")document.getElementById("svOverlay").classList.remove("on");});
+  // Elevation set
+  document.getElementById("btnElevSet")?.addEventListener("click",doElevationSet);
+  // ── END NEW FEATURE BINDINGS ──
   document.getElementById("plGStyle")?.addEventListener("change",renderPipeline);
   document.getElementById("plGLight")?.addEventListener("change",renderPipeline);
   document.getElementById("plSaveBtn")?.addEventListener("click",()=>{
