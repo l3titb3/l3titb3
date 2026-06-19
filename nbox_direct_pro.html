@@ -2247,8 +2247,9 @@ function showGenOv(lbl){
 function hideGenOv(){const ov=document.getElementById("genOv");if(ov)ov.classList.remove("on");}
 function setBtnLoading(on){
   const b=document.getElementById("btnGen");const bt=document.getElementById("btnGenTop");
-  const t=document.getElementById("btnGenTxt");
+  const t=document.getElementById("btnGenTxt");const bv=document.getElementById("btnVideoGen");
   if(b)b.disabled=on;if(bt)bt.disabled=on;if(t)t.textContent=on?"Rendering…":"GENERATE";
+  if(bv){bv.disabled=on;bv.textContent=on?"🎬 Đang render video…":"🎬 RENDER VIDEO";}
 }
 function removeEl(id){document.getElementById(id)?.remove();}
 
@@ -2910,6 +2911,20 @@ function dlImg(src,name){const a=document.createElement("a");a.href=src;a.downlo
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function fetchTimeout(url,opts={},ms=30000){const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),ms);return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(tid));}
 function getLastRenderedSrc(){const imgs=document.querySelectorAll(".img-item img");return imgs.length?imgs[imgs.length-1].src:null;}
+function resizeForVideo(src,maxW=1280,maxH=720){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.naturalWidth,h=img.naturalHeight;
+      if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      res(c.toDataURL("image/jpeg",0.88));
+    };
+    img.onerror=()=>res(src);
+    img.src=src;
+  });
+}
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 async function b64Blob(b64,mime){const d=b64.includes(",")?b64.split(",")[1]:b64;const b=atob(d);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:mime});}
 function updateResInfo(){
@@ -2995,19 +3010,25 @@ async function doVideoGen(){
   const[w,h]=(document.getElementById("pSize")?.value||"1280x720").split("x").map(Number);
   const ar=w===h?"1:1":(w>h?(w/h>=1.6?"16:9":"4:3"):(h/w>=1.6?"9:16":"3:4"));
 
-  const body={image_url:src,prompt:finalPrompt};
-  if(cfg.model.includes("luma")){body.loop=false;}
-  else{body.duration=duration;body.aspect_ratio=ar;}
-
   cancelFlag=false;
   showGenOv();
   const lbl=document.getElementById("ovLbl");const sub=document.getElementById("ovSub");
+  if(lbl)lbl.textContent="🖼 Đang chuẩn bị ảnh nguồn...";
+  if(sub)sub.textContent="Resize về max 1280×720 để tối ưu tốc độ...";
+  setBtnLoading(true);
+
+  // Resize source image to max 1280×720 before sending (keeps payload under 500KB)
+  const resizedSrc=await resizeForVideo(src,1280,720);
+
+  const body={image_url:resizedSrc,prompt:finalPrompt};
+  if(cfg.model.includes("luma")){body.loop=false;}
+  else{body.duration=duration;body.aspect_ratio=ar;}
+
   if(lbl)lbl.textContent="🎬 Đang gửi job video lên fal.ai...";
   if(sub)sub.textContent=cfg.model.split("/").pop()+" · "+duration+"s · "+ar;
-  setBtnLoading(true);
   try{
     const qr=await fetchTimeout(`https://queue.fal.run/${cfg.model}`,
-      {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(body)},20000);
+      {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(body)},60000);
     if(!qr.ok){const e=await qr.json().catch(()=>({}));throw new Error(e?.detail||e?.message||"Queue submit error "+qr.status);}
     const qd=await qr.json();
     const statusUrl=qd.status_url;
