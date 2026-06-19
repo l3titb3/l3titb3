@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NBOX Direct Render Pro v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── VARS ── */
+:root{
+  --bg:#080910;--bg2:#0f1018;--bg3:#161821;--bg4:#1e2030;--bg5:#262840;
+  --ac:#ff6b2b;--ac2:#ffb347;--ac-s:rgba(255,107,43,.12);--ac-g:rgba(255,107,43,.35);
+  --gr:#3ddc97;--text:#eeeef5;--mu:#6b6d8a;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,107,43,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
+
+/* ── TOPBAR ── */
+.topbar{height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--bg2);border-bottom:1px solid var(--bd);flex-shrink:0;z-index:10}
+.logo{font-family:'Space Mono',monospace;font-weight:700;font-size:14px;color:var(--ac);letter-spacing:.1em;white-space:nowrap}
+.logo-v{font-size:9px;padding:2px 6px;border-radius:4px;background:var(--ac-s);border:1px solid var(--bd2);color:var(--ac2);font-weight:700;margin-left:6px}
+.sep{width:1px;height:22px;background:var(--bd);flex-shrink:0}
+.api-box{display:flex;align-items:center;gap:7px;flex:1;min-width:0;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:5px 11px}
+.api-lbl{font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.api-sel{background:none;border:none;outline:none;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:12px;cursor:pointer}
+.api-sel option{background:var(--bg4)}
+.api-key{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;min-width:0}
+.api-key::placeholder{color:var(--mu)}
+.api-dot{width:8px;height:8px;border-radius:50%;background:var(--mu);flex-shrink:0;transition:.2s}
+.api-dot.ok{background:var(--gr);box-shadow:0 0 8px rgba(61,220,151,.5)}
+.api-dot.warn{background:var(--ac2)}
+.proj-in{background:var(--bg3);border:1px solid var(--bd);border-radius:7px;padding:6px 10px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;outline:none;width:160px;transition:.15s}
+.proj-in:focus{border-color:var(--bd2)}
+.tbtn{padding:7px 13px;border-radius:7px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+.tbtn:hover{border-color:var(--ac);color:var(--ac)}
+.tbtn-p{background:var(--ac);border-color:var(--ac);color:#fff}
+.tbtn-p:hover{background:#ff8550;border-color:#ff8550}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex:1;min-height:0;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sb{width:280px;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sb-scroll{flex:1;overflow-y:auto;padding:12px}
+
+/* mode chips */
+.mode-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.mchip{padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:.12s;white-space:nowrap}
+.mchip:hover{border-color:var(--ac);color:var(--text)}
+.mchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.mchip.pl-chip{background:linear-gradient(135deg,var(--ac-s),rgba(255,179,71,.15));border-color:rgba(255,107,43,.4);color:var(--ac2)}
+.mchip.pl-chip.on{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff}
+
+/* accordion sections */
+.acc{border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:6px}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;cursor:pointer;background:var(--bg3);user-select:none;transition:.12s}
+.acc-head:hover{background:var(--bg4)}
+.acc-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ac2)}
+.acc-arr{font-size:11px;color:var(--mu);transition:transform .18s}
+.acc.open .acc-arr{transform:rotate(180deg)}
+.acc-body{padding:10px 11px;background:var(--bg3);display:none;border-top:1px solid var(--bd)}
+.acc.open .acc-body{display:block}
+
+/* form */
+.flbl{font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;display:block;margin-top:8px}
+.flbl:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.chip{padding:4px 8px;border-radius:5px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:.12s;white-space:nowrap}
+.chip:hover{border-color:var(--ac);color:var(--text)}
+.chip.on{background:var(--ac-s);border-color:var(--bd2);color:var(--ac)}
+.fsel,.finp,.fta{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg4);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:12px;outline:none;transition:.15s;margin-bottom:6px}
+.fsel:focus,.finp:focus,.fta:focus{border-color:var(--bd2)}
+.fsel option{background:var(--bg)}
+.fta{resize:vertical;min-height:50px;line-height:1.5}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hidden{display:none!important}
+
+/* upload slot */
+.uslot{border:2px dashed var(--bd);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg4);margin-bottom:8px;position:relative;overflow:hidden}
+.uslot:hover{border-color:var(--ac)}
+.uslot.has{border-color:var(--bd2);border-style:solid}
+.uslot img{width:100%;max-height:100px;object-fit:contain;border-radius:5px;display:block}
+.uslot-ph{font-size:11px;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:4px}
+.uslot-ph-icon{font-size:22px;opacity:.4}
+.uclear{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;z-index:2}
+
+/* ── CANVAS ── */
+.canvas{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--bg)}
+.prompt-bar{padding:11px 14px;background:var(--bg2);border-bottom:1px solid var(--bd);flex-shrink:0}
+.prompt-preview{font-family:'Space Mono',monospace;font-size:10px;color:var(--mu);line-height:1.5;border-left:2px solid var(--ac);padding-left:9px;margin-bottom:9px;min-height:18px;word-break:break-word;cursor:pointer;transition:color .15s}
+.prompt-preview:hover{color:var(--text)}
+.pbar-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.gen-btn{padding:9px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.15s;flex-shrink:0}
+.gen-btn:hover{transform:translateY(-1px);box-shadow:0 5px 20px var(--ac-g)}
+.gen-btn:active{transform:none}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.psel{padding:5px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg3);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:11px;outline:none;cursor:pointer}
+.psel option{background:var(--bg)}
+.pin{width:52px;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--bg3);color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;text-align:center}
+
+/* images */
+.imgs-area{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:40px}
+.empty-icon{font-size:50px;opacity:.12}
+.empty-title{font-family:'Space Mono',monospace;font-size:14px;color:var(--mu)}
+.empty-sub{font-size:11px;color:var(--mu);opacity:.6;max-width:260px;line-height:1.6}
+.rgroup{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.rgroup-head{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--bd)}
+.rgroup-type{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;background:var(--ac-s);border:1px solid var(--bd2);color:var(--ac);text-transform:uppercase;letter-spacing:.06em}
+.rgroup-p{flex:1;font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rgroup-t{font-size:9px;color:var(--mu)}
+.img-grid{display:grid;gap:5px;padding:9px}
+.img-grid.n1{grid-template-columns:1fr}.img-grid.n2{grid-template-columns:1fr 1fr}.img-grid.n3{grid-template-columns:1fr 1fr 1fr}.img-grid.n4{grid-template-columns:1fr 1fr}
+.img-item{position:relative;border-radius:7px;overflow:hidden;border:1px solid var(--bd);cursor:pointer;transition:.15s}
+.img-item:hover{border-color:var(--ac)}
+.img-item img{width:100%;display:block;max-height:280px;object-fit:cover}
+.img-actions{position:absolute;top:6px;right:6px;display:none;gap:4px}
+.img-item:hover .img-actions{display:flex}
+.iab{width:26px;height:26px;border-radius:5px;background:rgba(8,9,16,.85);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}
+.iab:hover{border-color:var(--ac);color:var(--ac)}
+.skeleton{border-radius:7px;background:var(--bg4);border:1px solid var(--bd);aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;position:relative;overflow:hidden}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.03),transparent);background-size:400px 100%;animation:shimmer 1.5s ease infinite}
+
+/* ── PIPELINE CANVAS ── */
+.pl-canvas{display:none;flex:1;flex-direction:column;overflow:hidden}
+.pl-canvas.on{display:flex}
+.pl-bar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.pl-run{padding:9px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s}
+.pl-run:hover{transform:translateY(-1px);box-shadow:0 5px 18px var(--ac-g)}
+.pl-run:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.pl-global{display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:1}
+.pl-gl-lbl{font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.pl-stat{font-size:10px;color:var(--mu);margin-left:auto;white-space:nowrap}
+.pl-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.pl-sec-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac2);margin-bottom:7px;display:flex;justify-content:space-between}
+
+/* step cards */
+.pl-step{background:var(--bg2);border:1px solid var(--bd);border-radius:9px;overflow:hidden;transition:.15s}
+.pl-step:hover{border-color:rgba(255,255,255,.12)}
+.pl-step.running{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.pl-step.done{border-color:rgba(61,220,151,.4)}
+.pl-step.error{border-color:rgba(248,113,113,.4)}
+.pl-step-head{display:flex;align-items:center;gap:9px;padding:9px 11px;cursor:pointer}
+.pl-step-drag{color:var(--mu);font-size:13px;cursor:grab;flex-shrink:0}
+.pl-step-num{width:20px;height:20px;border-radius:50%;background:var(--bg4);border:1px solid var(--bd);font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pl-step.running .pl-step-num{background:var(--ac);color:#fff;border-color:var(--ac)}
+.pl-step.done .pl-step-num{background:var(--gr);color:#000;border-color:var(--gr)}
+.pl-step.error .pl-step-num{background:#f87171;color:#fff}
+.pl-step-info{flex:1;min-width:0}
+.pl-step-lbl{font-size:12px;font-weight:700;color:var(--text)}
+.pl-step-meta{font-size:10px;color:var(--mu);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-step-acts{display:flex;gap:4px;flex-shrink:0}
+.pl-step-btn{width:23px;height:23px;border-radius:5px;background:transparent;border:1px solid var(--bd);color:var(--mu);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}
+.pl-step-btn:hover{border-color:var(--ac);color:var(--ac)}
+.pl-step-body{padding:9px 11px;border-top:1px solid var(--bd);background:var(--bg3);display:none}
+.pl-step.expanded .pl-step-body{display:block}
+.pl-step-results{display:flex;gap:5px;padding:7px 11px;border-top:1px solid var(--bd);background:var(--bg3);flex-wrap:wrap}
+.pl-thumb{width:56px;height:40px;border-radius:4px;object-fit:cover;cursor:pointer;border:1px solid var(--bd);transition:.12s}
+.pl-thumb:hover{border-color:var(--ac);transform:scale(1.05)}
+.pl-prog{height:2px;background:var(--bd);border-radius:1px;overflow:hidden;margin:4px 11px 6px}
+.pl-prog-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:1px;width:0%;transition:width .3s}
+
+/* add step grid */
+.pl-add{background:var(--bg2);border:1px dashed var(--bd);border-radius:9px;padding:10px}
+.pl-add-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}
+.pl-add-card{padding:9px 7px;border-radius:7px;border:1px solid var(--bd);background:var(--bg3);cursor:pointer;text-align:center;transition:.12s}
+.pl-add-card:hover{border-color:var(--ac);background:var(--ac-s)}
+.pl-add-icon{font-size:18px;display:block;margin-bottom:3px}
+.pl-add-name{font-size:10px;font-weight:700;color:var(--text)}
+
+/* overall progress */
+.pl-overall{padding:9px 13px;background:var(--bg3);border-top:1px solid var(--bd);flex-shrink:0;display:none}
+.pl-overall.on{display:block}
+.pl-overall-lbl{font-size:11px;color:var(--text);font-weight:600;margin-bottom:5px;display:flex;justify-content:space-between}
+.pl-overall-bar{height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
+.pl-overall-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;width:0%;transition:width .3s}
+.pl-overall-sub{font-size:10px;color:var(--mu);margin-top:4px}
+
+/* ── RIGHT PANEL ── */
+.rp{width:200px;background:var(--bg2);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.rp-scroll{flex:1;overflow-y:auto;padding:11px}
+.rp-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ac2);margin-bottom:7px;margin-top:10px}
+.rp-title:first-child{margin-top:0}
+.res-box{background:var(--bg3);border:1px solid var(--bd);border-radius:7px;padding:9px;margin-bottom:7px}
+.res-main{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text)}
+.res-sub{font-size:10px;color:var(--mu);margin-top:2px}
+.qchips{display:flex;gap:3px;flex-wrap:wrap;margin-top:7px}
+.qchip{padding:3px 7px;border-radius:4px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-size:10px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.12s}
+.qchip:hover{border-color:var(--ac);color:var(--text)}
+.qchip.on{background:var(--ac-s);border-color:var(--bd2);color:var(--ac)}
+.hist-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto}
+.hist-item{border:1px solid var(--bd);border-radius:6px;padding:6px 8px;background:var(--bg3);cursor:pointer;transition:.12s}
+.hist-item:hover{border-color:var(--ac)}
+.hist-type{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--ac-s);color:var(--ac);display:inline-block;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.hist-p{font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-t{font-size:9px;color:var(--mu);opacity:.5;margin-top:1px}
+.proj-list{display:flex;flex-direction:column;gap:4px;margin-bottom:7px}
+.proj-item{padding:6px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--bg3);cursor:pointer;transition:.12s}
+.proj-item:hover,.proj-item.on{border-color:var(--bd2);background:var(--ac-s)}
+.proj-item-name{font-size:11px;font-weight:700;color:var(--text)}
+.proj-item-sub{font-size:9px;color:var(--mu)}
+.up-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.up-item{padding:6px 7px;border-radius:6px;border:1px solid var(--bd);background:var(--bg3);text-decoration:none;transition:.12s;display:block}
+.up-item:hover{border-color:var(--ac)}
+.up-name{font-size:10px;font-weight:700;color:var(--text)}
+.up-desc{font-size:8px;color:var(--mu);margin-top:1px}
+
+/* ── MODALS ── */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:none;align-items:center;justify-content:center;padding:14px}
+.modal-back.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;width:min(660px,95vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.modal-title{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--ac)}
+.modal-x{background:none;border:none;color:var(--mu);font-size:20px;cursor:pointer;line-height:1;padding:3px}
+.modal-x:hover{color:var(--text)}
+.modal-body{flex:1;overflow-y:auto;padding:16px}
+.modal-foot{padding:11px 16px;border-top:1px solid var(--bd);display:flex;gap:7px;justify-content:flex-end;flex-shrink:0}
+
+/* gen overlay */
+.gen-ov{position:fixed;bottom:20px;right:210px;background:var(--bg2);border:1px solid var(--bd2);border-radius:11px;padding:12px 16px;display:none;gap:10px;align-items:center;box-shadow:0 8px 28px rgba(0,0,0,.5);z-index:100;min-width:240px}
+.gen-ov.on{display:flex}
+.gen-spin{width:20px;height:20px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-ov-text{flex:1}.gen-ov-lbl{color:var(--text);font-size:11px;font-weight:600}.gen-ov-sub{color:var(--mu);font-size:9px;margin-top:1px}
+.gen-ov-cancel{padding:4px 10px;border-radius:5px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-size:10px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600}
+.gen-ov-cancel:hover{border-color:var(--ac);color:var(--ac)}
+
+/* viewer */
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.viewer.on{display:flex}
+.viewer img{max-width:90vw;max-height:84vh;object-fit:contain;border-radius:7px}
+.viewer-x{position:absolute;top:14px;right:18px;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:5px;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.viewer-acts{display:flex;gap:7px}
+
+/* batch progress */
+.bprog{margin-top:7px;display:none}
+.bprog-bar{height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
+.bprog-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;width:0%;transition:width .3s}
+.bprog-lbl{font-size:10px;color:var(--mu);margin-top:3px}
+
+/* char view list */
+.cv-list{display:flex;flex-direction:column;gap:4px;margin-bottom:7px}
+.cv-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--bg4);font-size:10px;cursor:pointer;transition:.12s}
+.cv-item:hover{border-color:var(--ac)}
+.cv-item.has{border-color:rgba(61,220,151,.4)}
+.cv-num{width:17px;height:17px;border-radius:50%;background:var(--bg5);color:var(--mu);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* toast */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--ac);color:var(--ac);padding:7px 18px;border-radius:999px;font-size:11px;font-weight:600;z-index:9999;opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── PRO: GENERATION SETTINGS ── */
+.gen-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.seed-num{width:84px;padding:4px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--bg4);color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;text-align:center;transition:.15s}
+.seed-num:focus{border-color:var(--bd2)}.seed-num:disabled{opacity:.3;cursor:not-allowed}
+.sbtn{padding:4px 8px;border-radius:5px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-size:10px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;transition:.12s;white-space:nowrap}
+.sbtn:hover{border-color:var(--ac);color:var(--ac)}
+.cfg-track{width:100%;accent-color:var(--ac);margin-bottom:2px}
+.ae-toggle{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mu);cursor:pointer;padding:4px 0}
+.ae-toggle input{accent-color:var(--ac)}
+
+/* ── PRO: NEGATIVE PROMPT ── */
+.neg-chips{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.neg-chip{padding:3px 7px;border-radius:4px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);color:#f87171;font-size:9px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.12s;white-space:nowrap}
+.neg-chip:hover{border-color:#f87171;background:rgba(248,113,113,.18)}
+
+/* ── PRO: VIEWER NAV ── */
+.viewer-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:24px;cursor:pointer;border-radius:8px;width:44px;height:64px;display:flex;align-items:center;justify-content:center;transition:.15s;user-select:none;z-index:10;line-height:1}
+.viewer-nav:hover{background:rgba(255,107,43,.45);border-color:var(--ac)}
+.viewer-prev{left:10px}.viewer-next{right:10px}
+.viewer-counter{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,.45);white-space:nowrap}
+.viewer-bottom{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center}
+.vzb{width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s;flex-shrink:0}
+.vzb:hover{background:rgba(255,107,43,.4);border-color:var(--ac)}
+
+/* ── PRO: MISC ── */
+.kbd{display:inline-block;padding:1px 4px;border:1px solid var(--bd);border-radius:3px;background:var(--bg4);font-family:'Space Mono',monospace;font-size:9px;color:var(--mu)}
+@keyframes copyPulse{0%{box-shadow:0 0 0 0 rgba(255,107,43,.7)}70%{box-shadow:0 0 0 8px rgba(255,107,43,0)}100%{box-shadow:none}}
+.copy-pulse{animation:copyPulse .5s ease}
+.model-price{font-size:9px;color:var(--mu);margin-left:3px;font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">NBOX<span class="logo-v">DIRECT PRO v2</span></div>
+  <div class="sep"></div>
+  <div class="api-box">
+    <span class="api-lbl">API</span>
+    <select class="api-sel" id="apiProv">
+      <option value="together">Together AI (Flux · Free & Pro)</option>
+      <option value="stability">Stability AI (Ultra)</option>
+      <option value="fal">Fal.ai (Flux · Fast)</option>
+    </select>
+    <div class="sep"></div>
+    <input class="api-key" id="apiKey" type="password" placeholder="API key… (together.ai miễn phí)"/>
+    <div class="api-dot" id="apiDot"></div>
+  </div>
+  <input class="proj-in" id="projName" placeholder="Tên dự án…"/>
+  <div style="display:flex;gap:6px;margin-left:auto">
+    <button class="tbtn" id="btnHist">🕐 History</button>
+    <button class="tbtn" id="btnSheet">📋 Sheet</button>
+    <button class="tbtn" id="btnSaveProj">💾 Lưu</button>
+    <button class="tbtn tbtn-p" id="btnGenTop">▶ GENERATE</button>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- ── SIDEBAR ── -->
+<div class="sb"><div class="sb-scroll" id="sbScroll">
+
+  <span class="flbl" style="margin-bottom:7px">Loại render</span>
+  <div class="mode-row" id="modeRow">
+    <button class="mchip on" data-mode="exterior">🏠 Ngoại thất</button>
+    <button class="mchip" data-mode="interior">🛋 Nội thất</button>
+    <button class="mchip" data-mode="floorplan">📐 Floorplan</button>
+    <button class="mchip" data-mode="masterplan">🗺 Masterplan</button>
+    <button class="mchip" data-mode="before_after">📷 Before/After</button>
+    <button class="mchip" data-mode="furniture">🪑 Ghép nội thất</button>
+    <button class="mchip" data-mode="char_sync">👤 Nhân vật</button>
+    <button class="mchip pl-chip" data-mode="pipeline">⚡ Pipeline</button>
+  </div>
+
+  <!-- MOOD BOARD -->
+  <div class="acc open" id="accMood">
+    <div class="acc-head" onclick="toggleAcc('accMood')"><span class="acc-title">🎨 Mood Board</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <div id="moodGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px"></div>
+      <div id="moodLbl" style="font-size:10px;color:var(--ac);font-weight:600;min-height:13px"></div>
+    </div>
+  </div>
+
+  <!-- PHONG CÁCH & ÁNH SÁNG -->
+  <div class="acc open" id="accStyle">
+    <div class="acc-head" onclick="toggleAcc('accStyle')"><span class="acc-title">🏗 Phong cách & Ánh sáng</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Phong cách KT</span>
+      <div class="chips" id="archStyleChips"></div>
+      <span class="flbl">Ánh sáng</span>
+      <div class="chips" id="lightChips"></div>
+      <span class="flbl">Camera</span>
+      <div class="chips" id="cameraChips"></div>
+    </div>
+  </div>
+
+  <!-- NỘI THẤT chi tiết -->
+  <div class="acc" id="accInt">
+    <div class="acc-head" onclick="toggleAcc('accInt')"><span class="acc-title">🛋 Nội thất chi tiết</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Loại phòng</span>
+      <div class="chips" id="intRoomChips"></div>
+      <span class="flbl">Phong cách nội thất</span>
+      <div class="chips" id="intStyleChips"></div>
+    </div>
+  </div>
+
+  <!-- ENTOURAGE VN -->
+  <div class="acc" id="accEnt">
+    <div class="acc-head" onclick="toggleAcc('accEnt')"><span class="acc-title">🎭 Entourage VN</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Người & Mật độ</span>
+      <div class="chips" id="entPeopleChips"></div>
+      <span class="flbl">Giao thông VN</span>
+      <div class="chips" id="entTrafficChips"></div>
+      <span class="flbl">Cây xanh đặc trưng</span>
+      <div class="chips" id="entTreeChips"></div>
+    </div>
+  </div>
+
+  <!-- MÙAVÀ THỜI ĐIỂM -->
+  <div class="acc" id="accSea">
+    <div class="acc-head" onclick="toggleAcc('accSea')"><span class="acc-title">🌦 Mùa & Thời điểm</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Mùa</span>
+      <div class="chips" id="seasonChips"></div>
+      <span class="flbl">Thời điểm</span>
+      <div class="chips" id="todChips"></div>
+    </div>
+  </div>
+
+  <!-- GHÉP NỘI THẤT -->
+  <!-- FLOORPLAN INPUT -->
+  <div class="acc hidden" id="accFloorplan">
+    <div class="acc-head" onclick="toggleAcc('accFloorplan')"><span class="acc-title">📐 Mặt Bằng 2D → 3D</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Upload mặt bằng 2D (CAD / sketch / ảnh chụp)</span>
+      <div class="uslot" id="fpSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Kéo thả hoặc click để upload</span></div></div>
+      <input type="file" id="fpInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Kiểu render output</span>
+      <div class="chips" id="fpRenderChips"></div>
+      <span class="flbl">Góc nhìn</span>
+      <div class="chips" id="fpViewChips"></div>
+      <span class="flbl">Phong cách</span>
+      <div class="chips" id="fpStyleChips"></div>
+    </div>
+  </div>
+
+  <!-- MASTERPLAN INPUT -->
+  <div class="acc hidden" id="accMasterplan">
+    <div class="acc-head" onclick="toggleAcc('accMasterplan')"><span class="acc-title">🗺 Quy Hoạch → 3D Aerial</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Upload sơ đồ quy hoạch / site plan</span>
+      <div class="uslot" id="mpSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🗺</span><span>CAD export · ảnh vệ tinh · sketch</span></div></div>
+      <input type="file" id="mpInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Loại dự án</span>
+      <div class="chips" id="mpTypeChips"></div>
+      <span class="flbl">Góc nhìn aerial</span>
+      <div class="chips" id="mpViewChips"></div>
+      <span class="flbl">Tỷ lệ mặt bằng</span>
+      <select class="fsel" id="mpScale"><option value="">Không biết</option><option value="1:200">1:200</option><option value="1:500" selected>1:500</option><option value="1:1000">1:1000</option><option value="1:2000">1:2000</option><option value="1:5000">1:5000</option></select>
+    </div>
+  </div>
+
+  <!-- BEFORE/AFTER INPUT -->
+  <div class="acc hidden" id="accBeforeAfter">
+    <div class="acc-head" onclick="toggleAcc('accBeforeAfter')"><span class="acc-title">📷 Before / After Cải Tạo</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Ảnh hiện trạng (Before)</span>
+      <div class="uslot" id="baSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📷</span><span>Upload ảnh công trình hiện tại</span></div></div>
+      <input type="file" id="baInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Loại cải tạo</span>
+      <div class="chips" id="baTypeChips"></div>
+      <span class="flbl">Phong cách mới</span>
+      <div class="chips" id="baNewStyleChips"></div>
+    </div>
+  </div>
+
+  <div class="acc hidden" id="accFurn">
+    <div class="acc-head" onclick="toggleAcc('accFurn')"><span class="acc-title">🪑 Ghép Nội Thất</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Ảnh không gian (bắt buộc)</span>
+      <div class="uslot" id="furnSpaceSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🏠</span><span>Upload ảnh phòng</span></div></div>
+      <input type="file" id="furnSpaceInp" accept="image/*" class="hidden"/>
+      <span class="flbl">Ảnh đồ vật muốn ghép</span>
+      <div class="uslot" id="furnObjSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🪑</span><span>Upload ảnh đồ vật</span></div></div>
+      <input type="file" id="furnObjInp" accept="image/*" class="hidden"/>
+      <span class="flbl">Vị trí</span>
+      <div class="chips" id="furnPosChips"></div>
+      <span class="flbl">Loại đồ vật</span>
+      <div class="chips" id="furnTypeChips"></div>
+      <span class="flbl" style="margin-top:6px">Blend strength: <span id="furnBlendVal" style="color:var(--ac)">65%</span></span>
+      <input type="range" id="furnBlend" min="20" max="90" value="65" style="width:100%;margin-bottom:8px;accent-color:var(--ac)"/>
+      <button class="gen-btn" id="btnFurnGen" style="width:100%;justify-content:center;padding:9px">🪑 Ghép nội thất</button>
+    </div>
+  </div>
+
+  <!-- NHÂN VẬT SYNC -->
+  <div class="acc hidden" id="accChar">
+    <div class="acc-head" onclick="toggleAcc('accChar')"><span class="acc-title">👤 Đồng Bộ Nhân Vật</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Ảnh tham chiếu nhân vật</span>
+      <div class="uslot" id="charRefSlot"><div class="uslot-ph"><span class="uslot-ph-icon">👤</span><span>Upload ảnh người tham chiếu</span></div></div>
+      <input type="file" id="charRefInp" accept="image/*" class="hidden"/>
+      <span class="flbl">Mô tả nhân vật</span>
+      <textarea class="fta" id="charDesc" placeholder="VD: Người phụ nữ VN 30 tuổi, tóc đen dài, áo dài trắng…"></textarea>
+      <span class="flbl">Vị trí trong cảnh</span>
+      <div class="chips" id="charPosChips"></div>
+      <span class="flbl">Hoạt động</span>
+      <div class="chips" id="charActChips"></div>
+      <span class="flbl">Views (upload ảnh không gian cho từng view)</span>
+      <div class="cv-list" id="cvList"></div>
+      <button class="chip on" id="btnAddCv" style="width:100%;margin-bottom:7px;padding:5px">+ Thêm view</button>
+      <button class="gen-btn" id="btnCharSync" style="width:100%;justify-content:center;padding:9px">👤 Sync nhân vật</button>
+    </div>
+  </div>
+
+  <!-- BATCH -->
+  <div class="acc" id="accBatch">
+    <div class="acc-head" onclick="toggleAcc('accBatch')"><span class="acc-title">⚡ Batch Combo</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <div class="chips" id="batchChips"></div>
+      <div class="bprog" id="bprog"><div class="bprog-bar"><div class="bprog-fill" id="bprogFill"></div></div><div class="bprog-lbl" id="bprogLbl"></div></div>
+      <button class="gen-btn" id="btnBatch" style="width:100%;justify-content:center;margin-top:6px;padding:9px" disabled>⚡ Chạy Batch</button>
+    </div>
+  </div>
+
+  <!-- PROMPT TUỲ CHỈNH -->
+  <!-- ARCHITECTURAL PRECISION -->
+  <div class="acc open" id="accPrecision">
+    <div class="acc-head" onclick="toggleAcc('accPrecision')"><span class="acc-title">🎯 Độ Chính Xác Kiến Trúc</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Mức độ chính xác</span>
+      <div class="chips" id="precisionLevelChips"></div>
+
+      <span class="flbl" style="margin-top:6px">Độ chính xác vật liệu</span>
+      <div class="chips" id="matFidelityChips"></div>
+
+      <span class="flbl" style="margin-top:6px">Loại camera / lens</span>
+      <div class="chips" id="lensChips"></div>
+
+      <span class="flbl" style="margin-top:6px">Bổ sung kỹ thuật</span>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px" id="techToggles">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)">
+          <input type="checkbox" id="chkStructural" checked style="accent-color:var(--ac)"/> Tỷ lệ & cấu trúc chính xác
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)">
+          <input type="checkbox" id="chkPBR" checked style="accent-color:var(--ac)"/> Vật liệu PBR (physically accurate)
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--ac)">
+          <input type="checkbox" id="chkShadow" checked style="accent-color:var(--ac)"/> Bóng đổ & ánh sáng chính xác
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)">
+          <input type="checkbox" id="chkNoDistort" checked style="accent-color:var(--ac)"/> Không méo, không artistic distortion
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)">
+          <input type="checkbox" id="chkScale" style="accent-color:var(--ac)"/> Người & cây làm mốc tỷ lệ
+        </label>
+      </div>
+
+      <span class="flbl">Đặc tính vật liệu chi tiết</span>
+      <select class="fsel" id="matDetailSelect">
+        <option value="">Mặc định (tự động)</option>
+        <optgroup label="── Tường & Mặt tiền ──">
+          <option value="exposed concrete, 45MPa grade, formwork texture, aggregate visible, grey matte finish">Bê tông lộ cốt (45MPa)</option>
+          <option value="polished concrete, smooth float finish, light grey, slight sheen">Bê tông đánh bóng</option>
+          <option value="Vietnamese handmade fired brick, rough texture, natural clay red, uneven surface, mortar joints 10mm">Gạch nung thủ công VN</option>
+          <option value="natural stone cladding, travertine limestone, cross-cut, vein-cut finish, cream-beige, 600x300mm panels">Đá tự nhiên travertine</option>
+          <option value="corten steel weathered finish, rust-brown patina, 3mm thickness, horizontal grooves">Thép Corten phong hóa</option>
+          <option value="teak wood cladding, vertical battens 80x20mm, natural oil finish, golden-brown, clear grain">Gỗ teak ốp dọc</option>
+          <option value="low-e double glazing, 6+12+6mm, slight green tint, high reflectivity, aluminium frame anthracite">Kính Low-E đôi (6+12+6)</option>
+          <option value="white plaster render, smooth skim coat finish, RAL 9010 pure white, flat matte">Sơn trắng phẳng (RAL 9010)</option>
+        </optgroup>
+        <optgroup label="── Sàn & Mái ──">
+          <option value="terrazzo floor, white cement base, marble chip aggregate, polished to 400 grit, seamless">Terrazzo đánh bóng</option>
+          <option value="teak hardwood floor, 120x15mm boards, tongue-groove, danish oil finish, warm honey tone">Sàn gỗ teak 120mm</option>
+          <option value="black granite floor, absolute black, polished mirror finish, 600x600mm, bookmatched">Đá granite đen bóng</option>
+          <option value="Vietnamese traditional clay roof tile, S-profile, aged terracotta, moss accents, handmade">Ngói âm dương truyền thống</option>
+          <option value="ETFE cushion roof, translucent, pneumatic triple-layer, diffused natural light below">Mái kính ETFE</option>
+        </optgroup>
+        <optgroup label="── Nội thất ──">
+          <option value="marble slab, Calacatta oro, bookmatched, polished, gold veining on white, 20mm thick">Đá marble Calacatta Oro</option>
+          <option value="solid oak veneer panels, quarter-sawn, natural lacquer, 2440x1220 sheets, horizontal grain">Veneer gỗ sồi quarter-sawn</option>
+          <option value="brushed brass hardware, PVD coating, warm gold tone, fingerprint-resistant">Đồng thau PVD brushed</option>
+          <option value="linen upholstery, natural undyed linen, loose weave texture, soft drape">Vải linen tự nhiên</option>
+        </optgroup>
+      </select>
+
+      <div id="precisionPromptPreview" style="margin-top:8px;padding:7px 9px;background:var(--bg4);border-radius:6px;border:1px solid var(--bd);font-size:10px;color:var(--mu);line-height:1.6;font-family:'Space Mono',monospace">Precision prompt sẽ hiện ở đây…</div>
+    </div>
+  </div>
+
+  <!-- GENERATION SETTINGS -->
+  <div class="acc" id="accGenSet">
+    <div class="acc-head" onclick="toggleAcc('accGenSet')"><span class="acc-title">⚙️ Cài Đặt Render</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Output format</span>
+      <div style="display:flex;gap:4px;margin-bottom:8px">
+        <button class="chip on" id="fmtJpeg" onclick="setFormat('jpeg')">JPEG</button>
+        <button class="chip" id="fmtPng" onclick="setFormat('png')">PNG</button>
+        <button class="chip" id="fmtWebp" onclick="setFormat('webp')">WebP</button>
+      </div>
+      <span class="flbl">CFG / Guidance scale: <span id="cfgVal" style="color:var(--ac)">7</span></span>
+      <input type="range" class="cfg-track" id="cfgScale" min="1" max="20" value="7"/>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-bottom:8px"><span>1 (tự do)</span><span>20 (tuân thủ)</span></div>
+      <span class="flbl">Seed</span>
+      <div class="gen-row">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:var(--mu)">
+          <input type="checkbox" id="seedFixed" style="accent-color:var(--ac)"/> Cố định seed
+        </label>
+        <input type="number" class="seed-num" id="seedVal" placeholder="Random" disabled min="0" max="2147483647"/>
+        <button class="sbtn" id="btnRandSeed">🎲</button>
+      </div>
+      <label class="ae-toggle">
+        <input type="checkbox" id="chkAutoEnhance" checked/> Tự động tăng chất lượng prompt
+      </label>
+    </div>
+  </div>
+
+  <div class="acc open" id="accPrompt">
+    <div class="acc-head" onclick="toggleAcc('accPrompt')"><span class="acc-title">✏️ Prompt Tuỳ Chỉnh</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <textarea class="fta" id="customPrompt" placeholder="Mô tả chi tiết, yêu cầu đặc biệt…"></textarea>
+      <button class="chip" id="btnClearP" style="font-size:10px">✕ Xóa</button>
+    </div>
+  </div>
+
+  <!-- NEGATIVE PROMPT -->
+  <div class="acc" id="accNeg">
+    <div class="acc-head" onclick="toggleAcc('accNeg')"><span class="acc-title">🚫 Negative Prompt</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Preset nhanh</span>
+      <div class="neg-chips" id="negPresetChips"></div>
+      <textarea class="fta" id="negPrompt" placeholder="Những gì KHÔNG muốn trong ảnh…&#10;VD: blurry, distorted, watermark, cartoon…" style="min-height:54px"></textarea>
+      <button class="chip" id="btnClearNeg" style="font-size:10px">✕ Xóa</button>
+    </div>
+  </div>
+
+</div></div><!-- end sidebar -->
+
+<!-- ── CANVAS ── -->
+<div class="canvas">
+
+  <!-- PROMPT BAR (hidden in pipeline mode) -->
+  <div class="prompt-bar" id="promptBar">
+    <div class="prompt-preview" id="promptPreview" title="Click để copy">Điền thông số → prompt tự tạo…</div>
+    <div class="pbar-actions">
+      <button class="gen-btn" id="btnGen">▶ <span id="btnGenTxt">GENERATE</span></button>
+      <select class="psel" id="pModel">
+        <option value="flux-free">Flux Schnell (Free)</option>
+        <option value="flux-dev">Flux Dev ($0.02)</option>
+        <option value="flux-pro">Flux 1.1 Pro ($0.04)</option>
+        <option value="flux-ultra">Flux Ultra ($0.06)</option>
+        <option value="stability-ultra">Stability Ultra ($0.08)</option>
+        <option value="fal-flux-schnell">Fal Flux Schnell ($0.003)</option>
+        <option value="fal-flux-dev">Fal Flux Dev ($0.025)</option>
+        <option value="fal-recraft-v3">Fal Recraft v3 ($0.04)</option>
+      </select>
+      <select class="psel" id="pFormat">
+        <option value="jpeg">JPEG</option>
+        <option value="png">PNG</option>
+        <option value="webp">WebP</option>
+      </select>
+      <select class="psel" id="pSize">
+        <option value="1280x720" selected>16:9 · 1280×720</option>
+        <option value="1024x1024">1:1 · 1024px</option>
+        <option value="720x1280">9:16 · 720×1280</option>
+        <option value="1216x832">3:2 · 1216×832</option>
+        <option value="1536x640">Cinematic</option>
+      </select>
+      <select class="psel" id="pCount">
+        <option value="1">×1</option>
+        <option value="2">×2</option>
+        <option value="4" selected>×4</option>
+      </select>
+      <select class="psel" id="pQuality">
+        <option value="20">Fast</option>
+        <option value="30" selected>Standard</option>
+        <option value="50">High</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- IMAGES AREA -->
+  <div class="imgs-area" id="imgsArea">
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">🏗</div>
+      <div class="empty-title">NBOX DIRECT RENDER PRO</div>
+      <div class="empty-sub">Chọn mode · Điền thông số · Bấm GENERATE<br/>Phím tắt: <span class="kbd">G</span> Generate · <span class="kbd">Esc</span> Đóng · <span class="kbd">←→</span> Duyệt ảnh</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE CANVAS -->
+  <div class="pl-canvas" id="plCanvas">
+    <div class="pl-bar">
+      <button class="pl-run" id="plRunBtn">▶▶ RUN ALL PIPELINE</button>
+      <button class="tbtn" id="plPauseBtn" style="display:none">⏸ Pause</button>
+      <button class="tbtn" id="plClearBtn">🗑 Clear</button>
+      <div class="pl-global">
+        <span class="pl-gl-lbl">GLOBAL:</span>
+        <select class="psel" id="plGStyle"><option value="">Style (auto)</option><option>Tropical Modern</option><option>Japandi</option><option>Minimalist</option><option>Luxury</option><option>Neo-Vietnamese</option><option>Green Biophilic</option></select>
+        <select class="psel" id="plGLight"><option value="">Lighting (auto)</option><option>Golden hour</option><option>Soft morning</option><option>Overcast</option><option>Studio</option><option>Ban đêm</option></select>
+        <select class="psel" id="plGModel"><option value="flux-free">Flux Free</option><option value="flux-dev">Flux Dev</option><option value="flux-pro">Flux Pro</option></select>
+        <select class="psel" id="plGCount"><option value="1">×1</option><option value="2" selected>×2</option><option value="4">×4</option></select>
+        <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoSheet" checked style="accent-color:var(--ac)"/> Auto→Sheet</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);cursor:pointer"><input type="checkbox" id="plAutoExport"/> Auto PDF</label>
+      </div>
+      <span class="pl-stat" id="plStat">0 steps</span>
+    </div>
+    <div class="pl-body" id="plBody">
+      <div>
+        <div class="pl-sec-title"><span>Pipeline Steps</span><span id="plStepCount" style="color:var(--mu)">0 bước</span></div>
+        <div id="plStepList"></div>
+      </div>
+      <div class="pl-add">
+        <div class="pl-sec-title" style="margin-bottom:0">+ Thêm bước render</div>
+        <div class="pl-add-grid" id="plAddGrid"></div>
+      </div>
+      <div>
+        <div class="pl-sec-title">🗂 Preset Pipeline</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <button class="pl-add-card" onclick="loadPreset('nha_o')"><span class="pl-add-icon">🏠</span><div class="pl-add-name">Nhà ở</div><div style="font-size:9px;color:var(--mu)">6 steps</div></button>
+          <button class="pl-add-card" onclick="loadPreset('resort')"><span class="pl-add-icon">🏨</span><div class="pl-add-name">Resort</div><div style="font-size:9px;color:var(--mu)">6 steps</div></button>
+          <button class="pl-add-card" onclick="loadPreset('van_phong')"><span class="pl-add-icon">💼</span><div class="pl-add-name">Văn phòng</div><div style="font-size:9px;color:var(--mu)">4 steps</div></button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button class="tbtn" id="plSaveBtn" style="flex:1;padding:7px">💾 Save pipeline</button>
+          <button class="tbtn" id="plLoadBtn" style="flex:1;padding:7px">📂 Load pipeline</button>
+          <input type="file" id="plLoadInput" accept=".json" class="hidden"/>
+        </div>
+      </div>
+    </div>
+    <div class="pl-overall" id="plOverall">
+      <div class="pl-overall-lbl"><span id="plOvLbl">Đang chạy…</span><span id="plOvPct" style="color:var(--ac);font-weight:700">0%</span></div>
+      <div class="pl-overall-bar"><div class="pl-overall-fill" id="plOvFill"></div></div>
+      <div class="pl-overall-sub" id="plOvSub"></div>
+    </div>
+  </div>
+
+</div><!-- end canvas -->
+
+<!-- ── RIGHT PANEL ── -->
+<div class="rp"><div class="rp-scroll">
+  <div class="rp-title">📊 Output</div>
+  <div class="res-box">
+    <div class="res-main" id="resMain">1280×720px</div>
+    <div class="res-sub" id="resSub">Standard · ~450KB</div>
+    <div class="qchips">
+      <button class="qchip" data-dpi="72">72dpi</button>
+      <button class="qchip on" data-dpi="150">150dpi</button>
+      <button class="qchip" data-dpi="300">300dpi</button>
+    </div>
+  </div>
+  <div class="rp-title">🔍 Upscale</div>
+  <div class="up-grid">
+    <a class="up-item" href="https://magnific.ai" target="_blank"><div class="up-name">✨ Magnific</div><div class="up-desc">2×–16× best</div></a>
+    <a class="up-item" href="https://krea.ai/upscale" target="_blank"><div class="up-name">⚡ Krea AI</div><div class="up-desc">Free</div></a>
+    <a class="up-item" href="https://firefly.adobe.com" target="_blank"><div class="up-name">🔥 Firefly</div><div class="up-desc">Adobe</div></a>
+    <a class="up-item" href="https://topazlabs.com" target="_blank"><div class="up-name">💎 Topaz</div><div class="up-desc">Print 300dpi</div></a>
+  </div>
+  <div class="rp-title">🗂 Dự án</div>
+  <div class="proj-list" id="projList"></div>
+  <button class="chip on" id="btnSaveProjRP" style="width:100%;margin-bottom:7px;padding:5px">💾 Lưu dự án</button>
+  <div class="rp-title">🕐 Lịch sử</div>
+  <div class="hist-list" id="histList"><div style="font-size:10px;color:var(--mu);padding:10px 0;text-align:center">Chưa có lịch sử</div></div>
+  <button class="chip" id="btnClearHist" style="width:100%;margin-top:5px;padding:4px">🗑 Xóa lịch sử</button>
+</div></div>
+
+</div><!-- end app -->
+
+<!-- PRESENTATION MODAL -->
+<div class="modal-back" id="sheetModal">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">📋 PRESENTATION SHEET</span><button class="modal-x" id="sheetX">×</button></div>
+    <div class="modal-body" id="sheetBody"></div>
+    <div class="modal-foot">
+      <button class="tbtn" id="sheetExport">🖨 Export (Ctrl+P→PDF)</button>
+      <button class="tbtn tbtn-p" id="sheetSlide">📊 Export Slide</button>
+    </div>
+  </div>
+</div>
+
+<!-- GEN OVERLAY -->
+<div class="gen-ov" id="genOv">
+  <div class="gen-spin"></div>
+  <div class="gen-ov-text"><div class="gen-ov-lbl" id="ovLbl">Đang render…</div><div class="gen-ov-sub" id="ovSub"></div></div>
+  <button class="gen-ov-cancel" id="btnCancel">Huỷ</button>
+</div>
+
+<!-- IMAGE VIEWER -->
+<div class="viewer" id="viewer">
+  <button class="viewer-x" id="viewerX">×</button>
+  <button class="viewer-nav viewer-prev" id="viewerPrev" style="display:none">‹</button>
+  <img id="viewerImg" src="" alt="" style="transition:transform .2s;cursor:zoom-in"/>
+  <button class="viewer-nav viewer-next" id="viewerNext" style="display:none">›</button>
+  <div class="viewer-bottom">
+    <span class="viewer-counter" id="viewerCounter"></span>
+    <button class="vzb" id="viewerZoomIn" title="Zoom in (+)">+</button>
+    <button class="vzb" id="viewerZoomOut" title="Zoom out (−)">−</button>
+    <button class="vzb" id="viewerZoom1" title="Reset zoom">⊙</button>
+    <button class="tbtn" id="viewerDl">⬇ Tải về</button>
+    <button class="tbtn" id="viewerCopy">📋 Copy</button>
+    <button class="tbtn" id="viewerSheet">+ Sheet</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════
+   DATA
+═══════════════════════════════ */
+const MOODS=[
+  {id:"warm_lux",e:"✨",l:"Warm Luxury",c:"#7c3c00",v:"warm golden hour lighting, luxurious amber tones"},
+  {id:"cold_min",e:"❄️",l:"Cold Minimal",c:"#1a2a3a",v:"cool overcast, minimalist clean, cold white tones"},
+  {id:"tropical",e:"🌴",l:"Tropical Lush",c:"#1a3a1a",v:"tropical sunlight through lush foliage, vibrant greens"},
+  {id:"night",   e:"🌃",l:"Night Drama",  c:"#0a0a1a",v:"dramatic night lighting, deep shadows, accent glow"},
+  {id:"golden",  e:"🌅",l:"Golden Hour",  c:"#4a2a00",v:"golden hour sunlight, long warm shadows"},
+  {id:"nordic",  e:"🏔️",l:"Nordic Frost", c:"#1a2a3a",v:"Nordic light, frost atmosphere, grey-blue tones"},
+  {id:"resort",  e:"🏊",l:"Resort Spa",   c:"#0a2a2a",v:"resort pool ambiance, turquoise reflections"},
+  {id:"urban",   e:"🌆",l:"Urban Haze",   c:"#2a2a2a",v:"urban morning haze, diffused city light"},
+  {id:"rain",    e:"🌧️",l:"After Rain",   c:"#1a2a1a",v:"just after rain, wet reflections, fresh monsoon"},
+  {id:"morning", e:"🌤️",l:"Soft Morning", c:"#2a1a00",v:"soft morning light, gentle diffused sun, peaceful"},
+  {id:"zen",     e:"🎋",l:"Biophilic Zen",c:"#1a2a0a",v:"biophilic design, zen atmosphere, dappled light"},
+  {id:"noon",    e:"☀️",l:"Desert Noon",  c:"#4a3a00",v:"harsh noon sunlight, high contrast, bleached tones"},
+];
+
+const CHIPS = {
+  archStyle:["Tropical Modern","Nhà phố VN","Resort cao cấp","Green Architecture","Japandi","Brutalist","Neo-Vietnamese","Minimalist","Luxury","Industrial","Wabi-sabi","Indochine"],
+  light:["Golden hour","Overcast mềm","Ban đêm","Sương sáng","Sau mưa","Studio","Bình minh","Blue hour","Trưa nhiệt đới"],
+  camera:["Eye-level wide","Bird's eye 45°","Street level","Low angle","Drone aerial","Interior perspective","Isometric"],
+  intRoom:["Phòng khách","Phòng ngủ master","Bếp & ăn","WC / Spa","Ban công","Phòng làm việc"],
+  intStyle:["Japandi","Tropical Modern","Minimalist","Luxury","Scandinavian","Wabi-sabi","Tân cổ điển","Industrial"],
+  entPeople:["Không có người","Vài người thưa thớt","Đông — gia đình VN","Đông — văn phòng"],
+  entTraffic:["Không có xe","Xe máy đỗ VN","Traffic nhẹ","Giờ cao điểm VN"],
+  entTree:["Mặc định","Dừa nhiệt đới","Phượng đỏ","Tre trúc","Bàng / Me","Cây cảnh cắt tỉa"],
+  season:["Mặc định","🌸 Xuân","☀️ Hè nhiệt đới","🍂 Thu","❄️ Mùa khô"],
+  timeOfDay:["Mặc định","Bình minh","9h sáng","Trưa nắng","Hoàng hôn","Đêm đô thị"],
+  furnPos:["Trung tâm","Bên trái","Bên phải","Góc phòng","Sát tường","Cạnh cửa sổ"],
+  furnType:["Sofa","Bàn ăn","Giường","Bàn làm việc","Tủ / Kệ","Cây cảnh","Đèn pendant","Tranh tường"],
+  charPos:["Tiền cảnh đứng","Đang đi","Đang ngồi","Phía sau nhỏ","Ở lối vào"],
+  charAct:["Tự nhiên","Ngắm nhìn","Đọc sách","Thư giãn","Trò chuyện"],
+  fpRender:["Đổ màu 2D","3D Isometric","3D Photorealistic","Watercolor","Blueprint","Hand-drawn sketch"],
+  fpView:["Top-down 90°","Isometric 3/4","Bird's eye 45°","3D perspective"],
+  fpStyle:["Modern","Minimalist","Luxury","Tropical","Scandinavian","Tân cổ điển"],
+  mpType:["Khu dân cư","Resort nghỉ dưỡng","Khu đô thị","Compound biệt thự","Trung tâm thương mại","Khu công nghiệp"],
+  mpView:["Bird's eye 45°","Top-down aerial","Isometric 3D","Drone 30°"],
+  baType:["Mặt tiền","Toàn bộ ngoại thất","Nội thất","Cảnh quan sân vườn","Mở rộng thêm tầng"],
+  baNewStyle:["Hiện đại VN","Tropical Modern","Japandi","Luxury cao cấp","Tân cổ điển","Minimalist"],
+  precisionLevel:[
+    "Standard",
+    "High Precision",
+    "Architectural Grade",
+  ],
+  matFidelity:[
+    "Basic",
+    "Detailed",
+    "Ultra",
+  ],
+  lens:[
+    "24mm wide (toàn cảnh)",
+    "35mm standard (tự nhiên)",
+    "50mm normal (thực tế)",
+    "85mm portrait (nội thất)",
+    "Tilt-shift (chống méo)",
+  ],
+};
+
+const BATCH_COMBOS=[
+  {id:"day3",  l:"Ngày·Hoàng hôn·Đêm",  v:[{l:"Ngày",i:"bright sunny daytime"},{l:"Hoàng hôn",i:"golden hour sunset"},{l:"Đêm",i:"dramatic night lighting"}]},
+  {id:"arch4", l:"4 Phong cách KT",      v:[{l:"Tropical",i:"Tropical Modern style"},{l:"Japandi",i:"Japandi style"},{l:"Luxury",i:"Luxury Contemporary"},{l:"Minimal",i:"Minimalist style"}]},
+  {id:"sea4",  l:"4 Mùa",               v:[{l:"Xuân",i:"spring season, fresh green"},{l:"Hè",i:"summer, lush tropical"},{l:"Thu",i:"autumn, warm amber"},{l:"Đông",i:"cool dry season"}]},
+  {id:"mat4",  l:"Khám phá vật liệu",   v:[{l:"Bê tông",i:"exposed concrete"},{l:"Gỗ teak",i:"teak wood cladding"},{l:"Đá tự nhiên",i:"natural stone"},{l:"Gạch nung",i:"Vietnamese brick"}]},
+];
+
+const STEP_TYPES=[
+  {type:"exterior",  icon:"🏠",name:"Ngoại thất",   desc:"Exterior render"},
+  {type:"interior",  icon:"🛋",name:"Nội thất",     desc:"Interior render"},
+  {type:"masterplan",icon:"🗺",name:"Masterplan",   desc:"Aerial site view"},
+  {type:"floorplan", icon:"📐",name:"Floorplan 3D", desc:"Plan → 3D"},
+  {type:"before_after",icon:"📷",name:"Before/After",desc:"Renovation"},
+  {type:"furniture", icon:"🪑",name:"Ghép nội thất",desc:"Place furniture"},
+  {type:"char_sync", icon:"👤",name:"Nhân vật",     desc:"Character sync"},
+  {type:"seasonal",  icon:"🌦",name:"Seasonal Batch",desc:"Time/season"},
+];
+
+const MODEL_MAP={
+  "flux-free":         {prov:"together",  model:"black-forest-labs/FLUX.1-schnell-Free", steps:4,  price:0,     cfg:false, i2i:false},
+  "flux-dev":          {prov:"together",  model:"black-forest-labs/FLUX.1-dev",          steps:28, price:0.02,  cfg:true,  i2i:true},
+  "flux-pro":          {prov:"together",  model:"black-forest-labs/FLUX.1.1-pro",        steps:25, price:0.04,  cfg:true,  i2i:true},
+  "flux-ultra":        {prov:"together",  model:"black-forest-labs/FLUX.1-ultra",        steps:25, price:0.06,  cfg:true,  i2i:true},
+  "stability-ultra":   {prov:"stability", model:"ultra",                                  steps:0,  price:0.08,  cfg:false, i2i:true},
+  "fal-flux-schnell":  {prov:"fal",       model:"fal-ai/flux/schnell",                   steps:4,  price:0.003, cfg:false, i2i:false},
+  "fal-flux-dev":      {prov:"fal",       model:"fal-ai/flux/dev",                       steps:28, price:0.025, cfg:true,  i2i:true},
+  "fal-recraft-v3":    {prov:"fal",       model:"fal-ai/recraft-v3",                     steps:28, price:0.04,  cfg:false, i2i:false},
+};
+
+const NEG_PRESETS=[
+  {l:"Kiến trúc chuẩn",   v:"blurry, distorted, warped geometry, unrealistic proportions, cartoon, anime, sketch, watermark, text overlay, logo, low quality, jpeg artifacts, deformed, noisy, oversaturated"},
+  {l:"Không méo lens",    v:"fisheye distortion, barrel distortion, lens flare, chromatic aberration, vignette, perspective warp"},
+  {l:"Người tự nhiên",    v:"deformed face, bad hands, extra fingers, missing limbs, anatomically incorrect, unrealistic skin, doll-like"},
+  {l:"Ngoại thất sạch",   v:"indoor, messy clutter, graffiti, overhead power lines, random signage, garbage, trash"},
+];
+
+/* ═══════════════════════════════
+   STATE
+═══════════════════════════════ */
+const S={
+  mode:"exterior", mood:null,
+  archStyle:null, light:null, camera:null,
+  intRoom:null, intStyle:null,
+  entPeople:null, entTraffic:null, entTree:null,
+  season:null, tod:null,
+  furnPos:"Trung tâm", furnType:"Sofa",
+  charPos:"Tiền cảnh đứng", charAct:"Tự nhiên",
+  batchCombo:null,
+  precisionLevel:"High Precision",
+  matFidelity:"Detailed",
+  lens:"35mm standard (tự nhiên)",
+  outputFormat:"jpeg",
+  cfgScale:7,
+  seedFixed:false,
+  seedVal:null,
+  autoEnhance:true,
+};
+let history=[], projects=[], sheetImgs=[], activeProj=null;
+let cancelFlag=false;
+let furnSpaceB64=null, furnObjB64=null, charRefB64=null;
+let fpB64=null, mpB64=null, baB64=null;
+let charViews=[{id:1,b64:null,label:"View 1"},{id:2,b64:null,label:"View 2"}];
+let cvIdCnt=3;
+let pipeline=[], plRunning=false, plPaused=false, plIdCnt=1;
+let viewerImgs=[], viewerIdx=0, viewerZoom=1;
+
+/* ═══════════════════════════════
+   INIT
+═══════════════════════════════ */
+window.addEventListener("DOMContentLoaded",()=>{
+  loadStorage();
+  buildMoodGrid();
+  buildAllChips();
+  buildNegPresets();
+  buildPipelineAddGrid();
+  renderPipeline();
+  renderCharViewList();
+  renderProjList();
+  renderHistoryUI();
+  updateResInfo();
+  bindAll();
+  switchMode(S.mode||"exterior");
+  updatePrompt();
+  document.addEventListener("keydown",handleKeyboard);
+});
+
+/* ═══════════════════════════════
+   MOOD GRID
+═══════════════════════════════ */
+function buildMoodGrid(){
+  const g=document.getElementById("moodGrid"); if(!g)return;
+  g.innerHTML="";
+  MOODS.forEach(m=>{
+    const t=document.createElement("div");
+    t.style.cssText="aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;position:relative;border:2px solid transparent;transition:.12s";
+    t.innerHTML=`<div style="position:absolute;inset:0;background:${m.c};display:flex;align-items:center;justify-content:center;font-size:16px">${m.e}</div><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);font-size:7px;font-weight:700;color:#fff;text-align:center;padding:2px;text-transform:uppercase">${m.l}</div>`;
+    t.title=m.v;
+    t.addEventListener("click",()=>{
+      S.mood=S.mood===m.id?null:m.id;
+      buildMoodGrid();
+      const lbl=document.getElementById("moodLbl");
+      if(lbl)lbl.textContent=S.mood?`✦ ${MOODS.find(x=>x.id===S.mood)?.l||""}`:"";
+      updatePrompt();
+    });
+    if(S.mood===m.id)t.style.borderColor="var(--ac)";
+    g.appendChild(t);
+  });
+}
+
+/* ═══════════════════════════════
+   CHIP BUILDER
+═══════════════════════════════ */
+function buildChipGroup(containerId, stateKey, items){
+  const el=document.getElementById(containerId); if(!el)return;
+  el.innerHTML="";
+  items.forEach(label=>{
+    const btn=document.createElement("button");
+    btn.className="chip"+(S[stateKey]===label?" on":"");
+    btn.textContent=label;
+    btn.addEventListener("click",()=>{
+      S[stateKey]=S[stateKey]===label?null:label;
+      el.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+      if(S[stateKey])btn.classList.add("on");
+      updatePrompt();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function buildAllChips(){
+  buildChipGroup("archStyleChips","archStyle",CHIPS.archStyle);
+  buildChipGroup("lightChips","light",CHIPS.light);
+  buildChipGroup("cameraChips","camera",CHIPS.camera);
+  buildChipGroup("intRoomChips","intRoom",CHIPS.intRoom);
+  buildChipGroup("intStyleChips","intStyle",CHIPS.intStyle);
+  buildChipGroup("entPeopleChips","entPeople",CHIPS.entPeople);
+  buildChipGroup("entTrafficChips","entTraffic",CHIPS.entTraffic);
+  buildChipGroup("entTreeChips","entTree",CHIPS.entTree);
+  buildChipGroup("seasonChips","season",CHIPS.season);
+  buildChipGroup("todChips","tod",CHIPS.timeOfDay);
+  buildChipGroup("furnPosChips","furnPos",CHIPS.furnPos);
+  buildChipGroup("furnTypeChips","furnType",CHIPS.furnType);
+  buildChipGroup("charPosChips","charPos",CHIPS.charPos);
+  buildChipGroup("charActChips","charAct",CHIPS.charAct);
+  buildChipGroup("fpRenderChips","fpRender",CHIPS.fpRender);
+  buildChipGroup("fpViewChips","fpView",CHIPS.fpView);
+  buildChipGroup("fpStyleChips","fpStyle",CHIPS.fpStyle);
+  buildChipGroup("mpTypeChips","mpType",CHIPS.mpType);
+  buildChipGroup("mpViewChips","mpView",CHIPS.mpView);
+  buildChipGroup("baTypeChips","baType",CHIPS.baType);
+  buildChipGroup("baNewStyleChips","baNewStyle",CHIPS.baNewStyle);
+  buildChipGroup("precisionLevelChips","precisionLevel",CHIPS.precisionLevel);
+  buildChipGroup("matFidelityChips","matFidelity",CHIPS.matFidelity);
+  buildChipGroup("lensChips","lens",CHIPS.lens);
+  // batch
+  const bc=document.getElementById("batchChips"); if(!bc)return;
+  bc.innerHTML="";
+  BATCH_COMBOS.forEach(c=>{
+    const btn=document.createElement("button");
+    btn.className="chip"+(S.batchCombo===c.id?" on":"");
+    btn.textContent=c.l;
+    btn.addEventListener("click",()=>{
+      S.batchCombo=S.batchCombo===c.id?null:c.id;
+      bc.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+      if(S.batchCombo)btn.classList.add("on");
+      document.getElementById("btnBatch").disabled=!S.batchCombo;
+    });
+    bc.appendChild(btn);
+  });
+}
+
+/* ═══════════════════════════════
+   ACCORDION
+═══════════════════════════════ */
+function toggleAcc(id){
+  const el=document.getElementById(id); if(!el)return;
+  el.classList.toggle("open");
+}
+
+/* ═══════════════════════════════
+   MODE SWITCH
+═══════════════════════════════ */
+function switchMode(mode){
+  S.mode=mode;
+  document.querySelectorAll(".mchip").forEach(c=>c.classList.toggle("on",c.dataset.mode===mode));
+  const isPL=mode==="pipeline";
+  document.getElementById("promptBar").style.display=isPL?"none":"";
+  document.getElementById("imgsArea").style.display=isPL?"none":"";
+  document.getElementById("plCanvas").classList.toggle("on",isPL);
+  document.getElementById("accFloorplan").classList.toggle("hidden", mode!=="floorplan");
+  document.getElementById("accMasterplan").classList.toggle("hidden", mode!=="masterplan");
+  document.getElementById("accBeforeAfter").classList.toggle("hidden", mode!=="before_after");
+  document.getElementById("accFurn").classList.toggle("hidden",mode!=="furniture");
+  document.getElementById("accChar").classList.toggle("hidden",mode!=="char_sync");
+  document.getElementById("accInt").classList.toggle("hidden",!["interior"].includes(mode));
+  document.getElementById("accBatch").classList.toggle("hidden",isPL||["furniture","char_sync"].includes(mode));
+  updatePrompt();
+}
+
+/* ═══════════════════════════════
+   PROMPT BUILDER
+═══════════════════════════════ */
+/* ═══════════════════════════════
+   PRECISION PROMPT BUILDER
+═══════════════════════════════ */
+function getPrecisionPrompt(){
+  const parts=[];
+
+  // Precision level
+  const level=S.precisionLevel||"High Precision";
+  if(level==="Standard"){
+    parts.push("photorealistic architectural visualization, accurate proportions");
+  } else if(level==="High Precision"){
+    parts.push("precise structural accuracy, correct scale, no artistic distortion");
+    parts.push("documentary architectural photography style");
+    parts.push("accurate building proportions, true-to-design render");
+  } else if(level==="Architectural Grade"){
+    parts.push("architectural grade rendering, Vray-quality photorealism");
+    parts.push("structurally accurate, correct scale and proportions, no distortion");
+    parts.push("precise shadow and light simulation, real-world physics");
+    parts.push("professional architectural visualization standards");
+  }
+
+  // Material fidelity
+  const matFid=S.matFidelity||"Detailed";
+  if(matFid==="Detailed"){
+    parts.push("accurate material textures, realistic surface finishes");
+    parts.push("correct material reflectivity and roughness");
+  } else if(matFid==="Ultra"){
+    parts.push("ultra-detailed PBR material rendering, physically accurate surfaces");
+    parts.push("micro-surface texture detail, realistic weathering and aging");
+    parts.push("accurate specularity, subsurface scattering where applicable");
+  }
+
+  // Specific material from dropdown
+  const matDetail=document.getElementById("matDetailSelect")?.value;
+  if(matDetail) parts.push(matDetail);
+
+  // Lens / camera
+  const lens=S.lens||"35mm standard (tự nhiên)";
+  if(lens.includes("24mm")) parts.push("24mm wide-angle lens, slight perspective distortion");
+  else if(lens.includes("35mm")) parts.push("35mm lens, natural perspective, minimal distortion");
+  else if(lens.includes("50mm")) parts.push("50mm standard lens, true-to-eye perspective");
+  else if(lens.includes("85mm")) parts.push("85mm portrait lens, compressed perspective, interior detail");
+  else if(lens.includes("Tilt-shift")) parts.push("tilt-shift lens, corrected perspective, vertical lines true vertical, no keystoning");
+
+  // Tech toggles
+  if(document.getElementById("chkStructural")?.checked)
+    parts.push("structurally correct, accurate beam and column proportions, proper floor-to-floor heights");
+  if(document.getElementById("chkPBR")?.checked)
+    parts.push("PBR materials, physically-based rendering, accurate BRDF");
+  if(document.getElementById("chkShadow")?.checked)
+    parts.push("accurate shadow simulation, correct sun angle, realistic ambient occlusion");
+  if(document.getElementById("chkNoDistort")?.checked)
+    parts.push("no lens distortion, no AI hallucination artifacts, no impossible geometry");
+  if(document.getElementById("chkScale")?.checked)
+    parts.push("human figures for scale reference, accurate entourage proportions");
+
+  return parts.join(", ");
+}
+
+function updatePrecisionPreview(){
+  const p=getPrecisionPrompt();
+  const el=document.getElementById("precisionPromptPreview");
+  if(el) el.textContent=p||"(Chọn cài đặt trên để xem preview)";
+}
+
+function buildPrompt(){
+  const parts=[];
+  const mood=MOODS.find(m=>m.id===S.mood);
+
+  switch(S.mode){
+    case"exterior":
+      parts.push("photorealistic architectural photograph");
+      if(S.archStyle)parts.push(S.archStyle+" architecture style");
+      if(S.camera)parts.push(S.camera);
+      break;
+    case"interior":
+      parts.push("photorealistic interior design photograph");
+      if(S.intRoom)parts.push(S.intRoom);
+      if(S.intStyle)parts.push(S.intStyle+" style");
+      break;
+    case"floorplan":{
+      const fpRender=S.fpRender||"3D Photorealistic";
+      const fpView=S.fpView||"Isometric 3/4";
+      const fpStyle=S.fpStyle||"";
+      if(fpB64){
+        parts.push("convert this 2D architectural floor plan drawing into a "+fpRender+" render");
+        parts.push(fpView+" view");
+        parts.push("preserve exact room layout, wall positions, door and window locations from the uploaded plan");
+      } else {
+        parts.push(fpRender+" architectural floor plan render, "+fpView);
+        parts.push("professional architectural drawing, clean lines");
+      }
+      if(fpStyle)parts.push(fpStyle+" interior style");
+      break;
+    }
+    case"masterplan":{
+      const mpType=S.mpType||"Khu dân cư";
+      const mpView=S.mpView||"Bird's eye 45°";
+      const mpScale=document.getElementById("mpScale")?.value||"";
+      if(mpB64){
+        parts.push("convert this site plan / masterplan drawing into an aerial 3D render");
+        parts.push("preserve all building footprints, road networks, and land use zones from uploaded plan");
+      } else {
+        parts.push("aerial masterplan rendering, "+mpView);
+      }
+      parts.push(mpType+", Vietnamese urban context");
+      parts.push("lush tropical greenery, detailed roads and pathways");
+      if(mpScale)parts.push("scale "+mpScale);
+      break;
+    }
+    case"before_after":{
+      const baType=S.baType||"Mặt tiền";
+      const baStyle=S.baNewStyle||"";
+      if(baB64){
+        parts.push("architectural renovation render of this existing building photograph");
+        parts.push("transform the "+baType.toLowerCase()+" while preserving structural elements");
+      } else {
+        parts.push("architectural renovation render, before-after transformation");
+        parts.push(baType+" renovation");
+      }
+      if(baStyle)parts.push("new design in "+baStyle+" style");
+      parts.push("photorealistic, high quality result");
+      break;
+    }
+    case"furniture":
+      parts.push("photorealistic interior photograph");
+      parts.push(`${S.furnType||"furniture"} placed at ${S.furnPos||"center"} of the space`);
+      parts.push("seamlessly integrated, matching lighting and perspective");
+      break;
+    case"char_sync":{
+      parts.push("photorealistic architectural lifestyle photograph");
+      const cd=document.getElementById("charDesc")?.value?.trim();
+      if(cd)parts.push("featuring person: "+cd);
+      if(S.charPos)parts.push(S.charPos);
+      if(S.charAct)parts.push(S.charAct);
+      parts.push("natural human scale, integrated into architecture");
+      break;
+    }
+  }
+
+  // Common settings
+  if(S.light)parts.push(S.light);
+  if(S.entPeople&&!S.entPeople.includes("Không"))parts.push(S.entPeople.toLowerCase());
+  if(S.entTraffic&&!S.entTraffic.includes("Không"))parts.push(S.entTraffic.toLowerCase());
+  if(S.entTree&&S.entTree!=="Mặc định")parts.push(S.entTree.toLowerCase()+" trees");
+  if(S.season&&S.season!=="Mặc định")parts.push(S.season.replace(/^[^\s]+\s/,"").toLowerCase()+" season");
+  if(S.tod&&S.tod!=="Mặc định")parts.push(S.tod.toLowerCase());
+  if(mood)parts.push(mood.v);
+
+  // ── PRECISION INJECT ──
+  const precisionPrompt=getPrecisionPrompt();
+  if(precisionPrompt)parts.push(precisionPrompt);
+
+  const cp=document.getElementById("customPrompt")?.value?.trim();
+  if(cp)parts.push(cp);
+  if(document.getElementById("chkAutoEnhance")?.checked&&!["floorplan"].includes(S.mode)){
+    parts.push("ultra sharp, professional architectural visualization, award-winning photography");
+  }
+  parts.push("high quality professional render, 8K detail");
+  return parts.filter(Boolean).join(", ");
+}
+
+function updatePrompt(){
+  const p=buildPrompt();
+  const el=document.getElementById("promptPreview");
+  if(el)el.textContent=p;
+  return p;
+}
+
+/* ═══════════════════════════════
+   API CALLS
+═══════════════════════════════ */
+async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, strength=0.65){
+  const rawKey=document.getElementById("apiKey")?.value||"";
+  const key=rawKey.replace(/[^\x20-\x7E]/g,"").trim();
+  if(!key){showToast("Nhập API key trước!");return null;}
+  const [w,h]=sizeStr.split("x").map(Number);
+  const cfg=MODEL_MAP[modelKey]||MODEL_MAP["flux-free"];
+  const fmt=S.outputFormat||"jpeg";
+  const negPrompt=document.getElementById("negPrompt")?.value?.trim()||"";
+  const cfgScale=parseFloat(document.getElementById("cfgScale")?.value)||7;
+  const seedFixed=document.getElementById("seedFixed")?.checked||false;
+  const seedBase=seedFixed?(parseInt(document.getElementById("seedVal")?.value)||Math.floor(Math.random()*2147483647)):null;
+  const results=[];
+
+  for(let i=0;i<count;i++){
+    if(cancelFlag)break;
+    const lbl=document.getElementById("ovLbl");if(lbl)lbl.textContent=`Đang render ${i+1}/${count}…`;
+    const sub=document.getElementById("ovSub");if(sub)sub.textContent=`${cfg.model.split("/").pop()} · ${w}×${h}`;
+    const usedSeed=seedBase!==null?seedBase+i:Math.floor(Math.random()*2147483647);
+    let imgSrc=null;
+
+    const attempt=async()=>{
+      if(cfg.prov==="together"){
+        const body={model:cfg.model,prompt,width:w,height:h,steps:parseInt(quality)||cfg.steps,n:1,response_format:"b64_json",seed:usedSeed};
+        if(negPrompt)body.negative_prompt=negPrompt;
+        if(cfg.cfg)body.guidance_scale=cfgScale;
+        if(imgB64){body.image_base64=imgB64.includes(",")?imgB64.split(",")[1]:imgB64;body.image_strength=1-strength;}
+        const resp=await fetch("https://api.together.xyz/v1/images/generations",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body)});
+        if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.message||"Together API error "+resp.status);}
+        const d=await resp.json();
+        const b=d.data?.[0]?.b64_json;
+        if(b)imgSrc=`data:image/${fmt};base64,`+b;
+
+      }else if(cfg.prov==="stability"){
+        const fd=new FormData();
+        fd.append("prompt",prompt);fd.append("output_format",fmt==="jpeg"?"jpeg":"png");
+        if(negPrompt)fd.append("negative_prompt",negPrompt);
+        if(imgB64){const blob=await b64Blob(imgB64,"image/jpeg");fd.append("image",blob,"img.jpg");fd.append("strength",(1-strength).toFixed(2));}
+        const resp=await fetch("https://api.stability.ai/v2beta/stable-image/generate/ultra",{method:"POST",headers:{authorization:"Bearer "+key,accept:"application/json"},body:fd});
+        if(!resp.ok)throw new Error("Stability AI error "+resp.status);
+        const d=await resp.json();
+        if(d.image)imgSrc=`data:image/${fmt};base64,`+d.image;
+
+      }else if(cfg.prov==="fal"){
+        const falBody={prompt,image_size:{width:w,height:h},num_images:1,num_inference_steps:parseInt(quality)||cfg.steps,seed:usedSeed,enable_safety_checker:false};
+        if(negPrompt)falBody.negative_prompt=negPrompt;
+        if(cfg.cfg)falBody.guidance_scale=cfgScale;
+        if(imgB64&&cfg.i2i){falBody.image_url=imgB64;falBody.strength=strength;}
+        const resp=await fetch(`https://fal.run/${cfg.model}`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(falBody)});
+        if(!resp.ok)throw new Error("Fal.ai error "+resp.status);
+        const d=await resp.json();
+        if(d.images?.[0]?.url){
+          const ir=await fetch(d.images[0].url);
+          if(!ir.ok)throw new Error("Fal image fetch failed");
+          const blob=await ir.blob();
+          imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+        }
+      }
+    };
+
+    // 3 retries with exponential backoff
+    let lastErr=null;
+    for(let retry=0;retry<3;retry++){
+      try{await attempt();lastErr=null;break;}
+      catch(e){lastErr=e;if(!cancelFlag&&retry<2)await sleep(900*(retry+1));}
+    }
+    if(lastErr)throw lastErr;
+    if(imgSrc)results.push(imgSrc);
+  }
+  return results;
+}
+
+/* ═══════════════════════════════
+   GENERATE
+═══════════════════════════════ */
+async function doGenerate(){
+  if(S.mode==="furniture"){doFurnitureGen();return;}
+  if(S.mode==="char_sync"){doCharSync();return;}
+  const prompt=buildPrompt();
+  const count=parseInt(document.getElementById("pCount")?.value||4);
+  const model=document.getElementById("pModel")?.value||"flux-free";
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const quality=document.getElementById("pQuality")?.value||"30";
+  // Use uploaded plan as source image for img2img (floorplan/masterplan/before_after)
+  let srcB64=null, srcStrength=0.55;
+  if(S.mode==="floorplan"&&fpB64){srcB64=fpB64;srcStrength=0.5;}
+  else if(S.mode==="masterplan"&&mpB64){srcB64=mpB64;srcStrength=0.45;}
+  else if(S.mode==="before_after"&&baB64){srcB64=baB64;srcStrength=0.6;}
+  cancelFlag=false;
+  const gid="rg_"+Date.now();
+  showGenOv();renderSkeletons(gid,count);
+  setBtnLoading(true);
+  try{
+    const imgs=await callAPI(prompt,count,size,model,quality,srcB64,srcStrength);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,S.mode,imgs);addHist(prompt,S.mode,imgs.length);showToast("✅ Render xong — "+imgs.length+" ảnh!");}
+    else showToast("Không nhận được ảnh từ API.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();setBtnLoading(false);
+}
+
+async function doFurnitureGen(){
+  if(!furnSpaceB64){showToast("Upload ảnh không gian trước!");return;}
+  const prompt=buildPrompt();
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value==="flux-free"?"flux-dev":document.getElementById("pModel")?.value;
+  const strength=parseInt(document.getElementById("furnBlend")?.value||65)/100;
+  cancelFlag=false;
+  const gid="rg_"+Date.now();
+  showGenOv("Đang ghép nội thất…");renderSkeletons(gid,1);
+  try{
+    const imgs=await callAPI(prompt,1,size,model,"30",furnSpaceB64,strength);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"furniture",imgs);addHist(prompt,"furniture",imgs.length);showToast("✅ Đã ghép nội thất!");}
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();
+}
+
+async function doCharSync(){
+  const cd=document.getElementById("charDesc")?.value?.trim();
+  if(!cd&&!charRefB64){showToast("Nhập mô tả nhân vật hoặc upload ảnh!");return;}
+  const prompt=buildPrompt();
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value==="flux-free"?"flux-dev":document.getElementById("pModel")?.value;
+  cancelFlag=false;
+  for(let i=0;i<charViews.length;i++){
+    if(cancelFlag)break;
+    const v=charViews[i];
+    const gid="rg_"+Date.now();
+    showGenOv(`Sync nhân vật view ${i+1}/${charViews.length}…`);
+    renderSkeletons(gid,1);
+    try{
+      const imgs=await callAPI(prompt,1,size,model,"30",v.b64||charRefB64,0.55);
+      removeEl(gid);
+      if(imgs?.length){renderGroup(prompt,"char_sync · "+v.label,imgs);addHist(prompt,"char_sync",imgs.length);}
+    }catch(e){removeEl(gid);showToast("❌ "+v.label+": "+e.message);}
+    await sleep(600);
+  }
+  hideGenOv();
+  showToast("✅ Character Sync xong — "+charViews.length+" views!");
+}
+
+async function doBatch(){
+  if(!S.batchCombo)return;
+  const combo=BATCH_COMBOS.find(c=>c.id===S.batchCombo);
+  if(!combo)return;
+  const basePrompt=buildPrompt();
+  const model=document.getElementById("pModel")?.value||"flux-free";
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  cancelFlag=false;
+  const prog=document.getElementById("bprog");
+  const fill=document.getElementById("bprogFill");
+  const lbl=document.getElementById("bprogLbl");
+  if(prog)prog.style.display="block";
+  for(let i=0;i<combo.v.length;i++){
+    if(cancelFlag)break;
+    const v=combo.v[i];
+    if(fill)fill.style.width=((i+1)/combo.v.length*100)+"%";
+    if(lbl)lbl.textContent=`${i+1}/${combo.v.length}: ${v.l}…`;
+    const prompt=basePrompt+", "+v.i;
+    showGenOv("Batch "+v.l+"…");
+    const gid="rg_"+Date.now();
+    renderSkeletons(gid,1);
+    try{
+      const imgs=await callAPI(prompt,1,size,model,"20");
+      removeEl(gid);
+      if(imgs?.length){renderGroup(prompt,S.mode+" · "+v.l,imgs);addHist(prompt,S.mode,imgs.length);}
+    }catch(e){removeEl(gid);showToast("❌ "+v.l+": "+e.message);}
+    hideGenOv();
+    await sleep(500);
+  }
+  if(lbl)lbl.textContent="✅ Batch xong!";
+  showToast("✅ Batch \""+combo.l+"\" xong!");
+}
+
+/* ═══════════════════════════════
+   RENDER HELPERS
+═══════════════════════════════ */
+function showGenOv(lbl){
+  const ov=document.getElementById("genOv"); if(ov)ov.classList.add("on");
+  const el=document.getElementById("ovLbl"); if(el)el.textContent=lbl||"Đang render…";
+}
+function hideGenOv(){const ov=document.getElementById("genOv");if(ov)ov.classList.remove("on");}
+function setBtnLoading(on){
+  const b=document.getElementById("btnGen");const bt=document.getElementById("btnGenTop");
+  const t=document.getElementById("btnGenTxt");
+  if(b)b.disabled=on;if(bt)bt.disabled=on;if(t)t.textContent=on?"Rendering…":"GENERATE";
+}
+function removeEl(id){document.getElementById(id)?.remove();}
+
+function renderSkeletons(gid,count){
+  const area=document.getElementById("imgsArea"); if(!area)return;
+  document.getElementById("emptyState").style.display="none";
+  const g=document.createElement("div");
+  g.className="rgroup";g.id=gid;
+  const n=["n1","n1","n2","n3","n4"][Math.min(count,4)]||"n4";
+  g.innerHTML=`<div class="rgroup-head"><span class="rgroup-type">rendering…</span><span class="rgroup-p">Đang tạo ảnh…</span></div><div class="img-grid ${n}">`+
+    Array.from({length:Math.min(count,4)},()=>`<div class="skeleton" style="min-height:120px"><span style="font-size:24px;opacity:.15">🏗</span><span style="font-size:10px;color:var(--mu)">Đang render…</span></div>`).join("")+
+    "</div>";
+  area.insertBefore(g,area.firstChild);
+}
+
+function renderGroup(prompt,type,imgs){
+  const area=document.getElementById("imgsArea"); if(!area)return;
+  document.getElementById("emptyState").style.display="none";
+  const g=document.createElement("div");g.className="rgroup";
+  const n=["n1","n1","n2","n3","n4"][Math.min(imgs.length,4)]||"n4";
+  g.innerHTML=`<div class="rgroup-head"><span class="rgroup-type">${esc(type)}</span><span class="rgroup-p">${esc(prompt.slice(0,90))}</span><span class="rgroup-t">${new Date().toLocaleTimeString("vi-VN")}</span></div><div class="img-grid ${n}" id="ig_${Date.now()}"></div>`;
+  area.insertBefore(g,area.firstChild);
+  const grid=g.querySelector(".img-grid");
+  imgs.forEach((src,i)=>{
+    const item=document.createElement("div");item.className="img-item";item.title="🔍 Click để xem · "+new Date().toLocaleTimeString("vi-VN");
+    item.innerHTML=`<img src="${src}" alt="Render ${i+1}" loading="lazy"/><div class="img-actions"><button class="iab" data-zoom>🔍</button><button class="iab" data-dl>⬇</button><button class="iab" data-copy>📋</button><button class="iab" data-sheet>📌</button></div>`;
+    item.querySelector("[data-zoom]").addEventListener("click",()=>openViewer(src,imgs));
+    item.querySelector("[data-dl]").addEventListener("click",()=>dlImg(src,"nbox_render_"+Date.now()+"."+getExt()));
+    item.querySelector("[data-copy]").addEventListener("click",()=>copyImgToClipboard(src));
+    item.querySelector("[data-sheet]").addEventListener("click",()=>{sheetImgs.push(src);showToast("+ Sheet ("+sheetImgs.length+" ảnh)");});
+    grid.appendChild(item);
+  });
+}
+
+/* ═══════════════════════════════
+   PIPELINE ENGINE
+═══════════════════════════════ */
+function createStep(type){
+  const t=STEP_TYPES.find(x=>x.type===type)||STEP_TYPES[0];
+  const def={exterior:{extStyle:null,light:null,camera:"Eye-level wide",prompt:"",count:2},
+    interior:{intRoom:"Phòng khách",intStyle:null,light:null,prompt:"",count:2},
+    masterplan:{context:"Vietnamese urban",view:"Bird's eye 45°",prompt:"",count:1},
+    floorplan:{style:"modern colored",prompt:"",count:1},
+    before_after:{renovStyle:null,prompt:"",count:2},
+    furniture:{furnType:"Sofa",position:"Trung tâm",prompt:"",count:1},
+    char_sync:{charDesc:"",position:"Tiền cảnh đứng",views:2,prompt:"",count:1},
+    seasonal:{pkg:"day3",prompt:"",count:1}};
+  return{id:plIdCnt++,type,icon:t.icon,name:t.name,settings:{...(def[type]||{})},status:"pending",results:[],error:null,expanded:false};
+}
+
+function buildStepPrompt(step){
+  const gs=document.getElementById("plGStyle")?.value||"";
+  const gl=document.getElementById("plGLight")?.value||"";
+  const mood=MOODS.find(m=>m.id===S.mood);
+  const s=step.settings;
+  const parts=[];
+  switch(step.type){
+    case"exterior":parts.push("photorealistic architectural photograph");parts.push((s.extStyle||gs||"contemporary")+" architecture");if(s.camera)parts.push(s.camera);break;
+    case"interior":parts.push("photorealistic interior design photograph");parts.push(s.intRoom||"living room");if(s.intStyle||gs)parts.push((s.intStyle||gs)+" style");break;
+    case"masterplan":parts.push("aerial masterplan rendering, bird's eye view");parts.push(s.context||"Vietnamese urban context");parts.push("lush greenery, detailed roads");break;
+    case"floorplan":parts.push("colored architectural floorplan, top-down view, professional drawing");break;
+    case"before_after":parts.push("architectural renovation render");if(s.renovStyle||gs)parts.push((s.renovStyle||gs)+" style");break;
+    case"furniture":parts.push("photorealistic interior, "+s.furnType+" at "+s.position+", seamlessly integrated");break;
+    case"char_sync":parts.push("architectural lifestyle photograph");if(s.charDesc)parts.push("featuring: "+s.charDesc);parts.push(s.position||"");break;
+    case"seasonal":parts.push("photorealistic architectural photograph");if(gs)parts.push(gs);break;
+  }
+  parts.push(s.light||gl||"natural daylight");
+  if(mood)parts.push(mood.v);
+  if(s.prompt)parts.push(s.prompt);
+  parts.push("high quality professional render 8K");
+  return parts.join(", ");
+}
+
+function buildStepMeta(step){
+  const gs=document.getElementById("plGStyle")?.value||"";
+  const gl=document.getElementById("plGLight")?.value||"";
+  const s=step.settings;
+  const p=[];
+  switch(step.type){
+    case"exterior":p.push(s.extStyle||gs||"auto style");p.push(s.camera||"");break;
+    case"interior":p.push(s.intRoom||"phòng khách");p.push(s.intStyle||gs||"");break;
+    case"masterplan":p.push(s.context||"VN urban");p.push(s.view||"");break;
+    case"seasonal":p.push(s.pkg==="sea4"?"4 mùa":"Ngày·Hoàng hôn·Đêm");break;
+    default:p.push(step.type);
+  }
+  p.push(s.light||gl||"");
+  return p.filter(Boolean).join(" · ");
+}
+
+function renderPipeline(){
+  const list=document.getElementById("plStepList"); if(!list)return;
+  const count=document.getElementById("plStepCount");
+  if(count)count.textContent=pipeline.length+" bước";
+  if(!pipeline.length){
+    list.innerHTML='<div style="font-size:11px;color:var(--mu);text-align:center;padding:18px;border:1px dashed var(--bd);border-radius:8px">Chưa có bước nào. Thêm từ panel bên dưới.</div>';
+    return;
+  }
+  list.innerHTML="";
+  pipeline.forEach((step,idx)=>{
+    const si={pending:"⚪",running:"⚙️",done:"✅",error:"❌"}[step.status]||"⚪";
+    const rHtml=step.results.length?`<div class="pl-step-results">${step.results.slice(0,6).map(s=>`<img class="pl-thumb" src="${s}" data-src="${s}"/>`).join("")}<span style="font-size:9px;color:var(--mu);align-self:center">${step.results.length} ảnh</span></div>`:"";
+    const pHtml=step.status==="running"?`<div class="pl-prog"><div class="pl-prog-fill" style="width:60%"></div></div>`:"";
+    const eHtml=step.error?`<div style="padding:5px 11px;font-size:10px;color:#f87171;border-top:1px solid var(--bd)">❌ ${esc(step.error)}</div>`:"";
+    const cls=["pl-step",step.status!=="pending"?step.status:"",step.expanded?"expanded":""].filter(Boolean).join(" ");
+    const div=document.createElement("div");
+    div.className=cls;div.id="ps_"+step.id;div.setAttribute("draggable","true");div.dataset.id=step.id;
+    div.innerHTML=`
+      <div class="pl-step-head">
+        <span class="pl-step-drag">⠿</span>
+        <div class="pl-step-num">${idx+1}</div>
+        <div class="pl-step-info"><div class="pl-step-lbl">${step.icon} ${esc(step.name)}</div><div class="pl-step-meta">${buildStepMeta(step)}</div></div>
+        <span style="font-size:13px">${si}</span>
+        <div class="pl-step-acts">
+          <button class="pl-step-btn" data-run>▶</button>
+          <button class="pl-step-btn" data-dup>⧉</button>
+          <button class="pl-step-btn" data-del style="color:#f87171">✕</button>
+        </div>
+      </div>
+      <div class="pl-step-body">${buildStepBodyHTML(step)}</div>
+      ${pHtml}${rHtml}${eHtml}`;
+
+    div.querySelector(".pl-step-head").addEventListener("click",e=>{if(e.target.closest("[data-run],[data-dup],[data-del]"))return;step.expanded=!step.expanded;div.classList.toggle("expanded",step.expanded);});
+    div.querySelector("[data-run]").addEventListener("click",async()=>{
+      const m=document.getElementById("plGModel")?.value||"flux-free";
+      const sz=document.getElementById("pSize")?.value||"1280x720";
+      const cnt=document.getElementById("plGCount")?.value||"2";
+      showGenOv(step.icon+" "+step.name+"…");
+      await runPLStep(step,m,cnt,sz);
+      hideGenOv();updatePlStat();showToast("✅ "+step.name+" — "+step.results.length+" ảnh");
+    });
+    div.querySelector("[data-dup]").addEventListener("click",()=>{
+      const dup={...createStep(step.type),settings:{...step.settings},name:step.name+" (copy)"};
+      pipeline.splice(pipeline.indexOf(step)+1,0,dup);renderPipeline();
+    });
+    div.querySelector("[data-del]").addEventListener("click",()=>{
+      pipeline=pipeline.filter(s=>s.id!==step.id);renderPipeline();
+    });
+    // settings binding
+    div.querySelectorAll("[data-sf]").forEach(el=>{
+      el.addEventListener("change",()=>{step.settings[el.dataset.sf]=el.value;});
+      el.addEventListener("input",()=>{step.settings[el.dataset.sf]=el.value;});
+    });
+    // thumb zoom
+    div.querySelectorAll(".pl-thumb").forEach(img=>{img.addEventListener("click",()=>openViewer(img.dataset.src));});
+    // drag
+    div.addEventListener("dragstart",e=>{e.dataTransfer.setData("pl_id",step.id);div.style.opacity=".4";});
+    div.addEventListener("dragend",()=>div.style.opacity="");
+    div.addEventListener("dragover",e=>{e.preventDefault();div.style.background="var(--ac-s)";});
+    div.addEventListener("dragleave",()=>div.style.background="");
+    div.addEventListener("drop",e=>{
+      e.preventDefault();div.style.background="";
+      const fromId=parseInt(e.dataTransfer.getData("pl_id"));
+      if(fromId===step.id)return;
+      const fi=pipeline.findIndex(s=>s.id===fromId),ti=pipeline.indexOf(step);
+      const[m]=pipeline.splice(fi,1);pipeline.splice(ti,0,m);renderPipeline();
+    });
+    list.appendChild(div);
+    // margin between
+    const sp=document.createElement("div");sp.style.height="5px";list.appendChild(sp);
+  });
+  updatePlStat();
+}
+
+function buildStepBodyHTML(step){
+  const s=step.settings;
+  const styOpts=["","Tropical Modern","Japandi","Minimalist","Luxury","Neo-Vietnamese","Green Biophilic"].map(v=>`<option value="${v}"${s.extStyle===v||s.intStyle===v||s.renovStyle===v?" selected":""}>${v||"Global"}</option>`).join("");
+  const ltOpts=["","Golden hour","Soft morning","Overcast","Studio","Ban đêm"].map(v=>`<option value="${v}"${s.light===v?" selected":""}>${v||"Global"}</option>`).join("");
+  const camOpts=["Eye-level wide","Bird's eye 45°","Street level","Low angle","Drone aerial"].map(v=>`<option value="${v}"${s.camera===v?" selected":""}>${v}</option>`).join("");
+  const cntOpts=[1,2,4].map(v=>`<option value="${v}"${parseInt(s.count)===v?" selected":""}>${v}×</option>`).join("");
+  switch(step.type){
+    case"exterior":return`<div class="frow2"><div><label class="flbl">Style</label><select class="fsel" data-sf="extStyle" style="margin-bottom:0">${styOpts}</select></div><div><label class="flbl">Camera</label><select class="fsel" data-sf="camera" style="margin-bottom:0">${camOpts}</select></div><div><label class="flbl">Ánh sáng</label><select class="fsel" data-sf="light" style="margin-bottom:0">${ltOpts}</select></div><div><label class="flbl">Số ảnh</label><select class="fsel" data-sf="count" style="margin-bottom:0">${cntOpts}</select></div></div><label class="flbl" style="margin-top:7px">Prompt riêng</label><textarea class="fta" data-sf="prompt" style="min-height:36px;margin-bottom:0">${esc(s.prompt||"")}</textarea>`;
+    case"interior":return`<div class="frow2"><div><label class="flbl">Loại phòng</label><select class="fsel" data-sf="intRoom" style="margin-bottom:0">${["Phòng khách","Phòng ngủ master","Bếp & ăn","WC / Spa","Ban công","Phòng làm việc"].map(v=>`<option value="${v}"${s.intRoom===v?" selected":""}>${v}</option>`).join("")}</select></div><div><label class="flbl">Style</label><select class="fsel" data-sf="intStyle" style="margin-bottom:0">${styOpts}</select></div><div><label class="flbl">Ánh sáng</label><select class="fsel" data-sf="light" style="margin-bottom:0">${ltOpts}</select></div><div><label class="flbl">Số ảnh</label><select class="fsel" data-sf="count" style="margin-bottom:0">${cntOpts}</select></div></div><textarea class="fta" data-sf="prompt" style="min-height:36px;margin-bottom:0;margin-top:6px">${esc(s.prompt||"")}</textarea>`;
+    case"seasonal":return`<div><label class="flbl">Package</label><select class="fsel" data-sf="pkg"><option value="day3"${s.pkg==="day3"?" selected":""}>Ngày · Hoàng hôn · Đêm</option><option value="sea4"${s.pkg==="sea4"?" selected":""}>4 Mùa</option></select></div><textarea class="fta" data-sf="prompt" placeholder="Prompt bổ sung…" style="min-height:32px;margin-bottom:0">${esc(s.prompt||"")}</textarea>`;
+    case"char_sync":return`<label class="flbl">Mô tả nhân vật</label><textarea class="fta" data-sf="charDesc" style="min-height:44px">${esc(s.charDesc||"")}</textarea><label class="flbl">Vị trí</label><select class="fsel" data-sf="position">${["Tiền cảnh đứng","Đang đi","Đang ngồi","Phía sau nhỏ"].map(v=>`<option value="${v}"${s.position===v?" selected":""}>${v}</option>`).join("")}</select>`;
+    default:return`<textarea class="fta" data-sf="prompt" style="min-height:44px;margin-bottom:0">${esc(s.prompt||"")}</textarea>`;
+  }
+}
+
+async function runPLStep(step,model,count,size){
+  step.status="running";step.results=[];step.error=null;
+  renderPipeline();
+  const SEASONAL_DATA={day3:[{l:"Ngày",i:"bright sunny daytime"},{l:"Hoàng hôn",i:"golden hour sunset"},{l:"Đêm",i:"dramatic night lighting"}],sea4:[{l:"Xuân",i:"spring season"},{l:"Hè",i:"summer tropical"},{l:"Thu",i:"autumn warm"},{l:"Đông",i:"cool dry season"}]};
+  try{
+    if(step.type==="seasonal"){
+      const pkg=SEASONAL_DATA[step.settings.pkg]||SEASONAL_DATA.day3;
+      for(const v of pkg){
+        if(cancelFlag)break;
+        while(plPaused)await sleep(400);
+        const prompt=buildStepPrompt(step)+", "+v.i;
+        const imgs=await callAPI(prompt,1,size,model,"20");
+        if(imgs?.length)step.results.push(...imgs);
+      }
+    }else{
+      const prompt=buildStepPrompt(step);
+      const imgs=await callAPI(prompt,parseInt(count)||2,size,model,"30");
+      if(imgs?.length)step.results.push(...imgs);
+    }
+    step.status="done";
+    if(document.getElementById("plAutoSheet")?.checked)step.results.forEach(s=>sheetImgs.push(s));
+    if(step.results.length){renderGroup(buildStepPrompt(step),step.icon+" "+step.name,step.results);addHist(buildStepPrompt(step),step.type,step.results.length);}
+  }catch(e){step.status="error";step.error=e.message;}
+  renderPipeline();
+}
+
+async function runAllPipeline(){
+  const key=document.getElementById("apiKey")?.value?.trim();
+  if(!key){showToast("Nhập API key trước!");return;}
+  if(!pipeline.length){showToast("Thêm ít nhất 1 bước vào pipeline!");return;}
+  plRunning=true;plPaused=false;
+  const runBtn=document.getElementById("plRunBtn");
+  const pauseBtn=document.getElementById("plPauseBtn");
+  const overall=document.getElementById("plOverall");
+  if(runBtn){runBtn.disabled=true;runBtn.textContent="⚙ Running…";}
+  if(pauseBtn)pauseBtn.style.display="";
+  if(overall)overall.classList.add("on");
+  pipeline.forEach(s=>{s.status="pending";s.results=[];s.error=null;});
+  renderPipeline();
+  const model=document.getElementById("plGModel")?.value||"flux-free";
+  const count=document.getElementById("plGCount")?.value||"2";
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  let done=0;
+  for(let i=0;i<pipeline.length;i++){
+    if(!plRunning)break;
+    while(plPaused)await sleep(400);
+    const step=pipeline[i];
+    const pct=Math.round(i/pipeline.length*100);
+    const ov=document.getElementById("plOverall");
+    if(ov){
+      document.getElementById("plOvLbl").textContent=`Step ${i+1}/${pipeline.length}: ${step.icon} ${step.name}`;
+      document.getElementById("plOvPct").textContent=pct+"%";
+      document.getElementById("plOvFill").style.width=pct+"%";
+      document.getElementById("plOvSub").textContent=buildStepPrompt(step).slice(0,70)+"…";
+    }
+    showGenOv(step.icon+" "+step.name+" ("+( i+1)+"/"+pipeline.length+")…");
+    await runPLStep(step,model,count,size);
+    hideGenOv();
+    done++;updatePlStat();
+    await sleep(600);
+  }
+  document.getElementById("plOvFill").style.width="100%";
+  document.getElementById("plOvPct").textContent="100%";
+  document.getElementById("plOvLbl").textContent="✅ Pipeline xong — "+done+" bước!";
+  if(runBtn){runBtn.disabled=false;runBtn.textContent="▶▶ RUN ALL PIPELINE";}
+  if(pauseBtn)pauseBtn.style.display="none";
+  plRunning=false;
+  showToast("✅ Pipeline done — "+done+" steps · "+sheetImgs.length+" ảnh trong Sheet");
+  if(document.getElementById("plAutoExport")?.checked)setTimeout(()=>openSheetModal(),1200);
+}
+
+function buildPipelineAddGrid(){
+  const grid=document.getElementById("plAddGrid"); if(!grid)return;
+  grid.innerHTML="";
+  STEP_TYPES.forEach(t=>{
+    const c=document.createElement("div");c.className="pl-add-card";
+    c.innerHTML=`<span class="pl-add-icon">${t.icon}</span><div class="pl-add-name">${t.name}</div>`;
+    c.addEventListener("click",()=>{pipeline.push(createStep(t.type));renderPipeline();showToast("+ "+t.name+" added");});
+    grid.appendChild(c);
+  });
+}
+
+function updatePlStat(){
+  const done=pipeline.filter(s=>s.status==="done").length;
+  const imgs=pipeline.reduce((n,s)=>n+s.results.length,0);
+  const el=document.getElementById("plStat");
+  if(el)el.textContent=pipeline.length+" steps · "+done+" done · "+imgs+" ảnh";
+  const ce=document.getElementById("plStepCount");
+  if(ce)ce.textContent=pipeline.length+" bước";
+}
+
+function loadPreset(key){
+  const P={
+    nha_o:[
+      {type:"exterior",settings:{extStyle:"Tropical Modern",camera:"Eye-level wide",light:null,count:2,prompt:""}},
+      {type:"exterior",settings:{extStyle:"Tropical Modern",camera:"Bird's eye 45°",light:null,count:2,prompt:""}},
+      {type:"interior",settings:{intRoom:"Phòng khách",intStyle:"Japandi",light:null,count:2,prompt:""}},
+      {type:"interior",settings:{intRoom:"Phòng ngủ master",intStyle:"Japandi",light:null,count:2,prompt:""}},
+      {type:"floorplan",settings:{style:"modern colored",count:1,prompt:""}},
+      {type:"seasonal",settings:{pkg:"day3",count:1,prompt:""}},
+    ],
+    resort:[
+      {type:"masterplan",settings:{context:"Resort tropical compound",view:"Bird's eye 45°",count:1,prompt:""}},
+      {type:"exterior",settings:{extStyle:"Resort cao cấp",camera:"Eye-level wide",light:null,count:2,prompt:""}},
+      {type:"exterior",settings:{extStyle:"Resort cao cấp",camera:"Drone aerial",light:null,count:2,prompt:""}},
+      {type:"interior",settings:{intRoom:"Phòng ngủ master",intStyle:"Tropical Modern",light:null,count:2,prompt:""}},
+      {type:"interior",settings:{intRoom:"WC / Spa",intStyle:"Luxury",light:null,count:2,prompt:""}},
+      {type:"seasonal",settings:{pkg:"day3",count:1,prompt:""}},
+    ],
+    van_phong:[
+      {type:"exterior",settings:{extStyle:"Minimalist",camera:"Eye-level wide",light:null,count:2,prompt:""}},
+      {type:"interior",settings:{intRoom:"Phòng làm việc",intStyle:"Industrial",light:null,count:2,prompt:""}},
+      {type:"interior",settings:{intRoom:"Phòng khách",intStyle:"Minimalist",light:null,count:2,prompt:""}},
+      {type:"seasonal",settings:{pkg:"day3",count:1,prompt:""}},
+    ],
+  };
+  const steps=P[key]; if(!steps)return;
+  pipeline=steps.map(d=>{const s=createStep(d.type);Object.assign(s.settings,d.settings);return s;});
+  renderPipeline();
+  showToast("✅ Preset \""+key+"\" — "+pipeline.length+" bước đã load!");
+}
+
+/* ═══════════════════════════════
+   UPLOAD SLOTS
+═══════════════════════════════ */
+function initUploadSlot(slotId,inputId,stateKey){
+  const slot=document.getElementById(slotId);
+  const inp=document.getElementById(inputId);
+  if(!slot||!inp)return;
+  const ph=slot.innerHTML;
+  const load=(file)=>{
+    if(!file?.type.startsWith("image/"))return;
+    const r=new FileReader();
+    r.onload=e=>{
+      const b64=e.target.result;
+      if(stateKey==="furnSpace")furnSpaceB64=b64;
+      else if(stateKey==="furnObj")furnObjB64=b64;
+      else if(stateKey==="charRef")charRefB64=b64;
+      else if(stateKey==="fp"){fpB64=b64;updatePrompt();}
+      else if(stateKey==="mp"){mpB64=b64;updatePrompt();}
+      else if(stateKey==="ba"){baB64=b64;updatePrompt();}
+      slot.innerHTML=`<img src="${b64}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;
+      slot.classList.add("has");
+      slot.querySelector(".uclear").addEventListener("click",e=>{
+        e.stopPropagation();
+        if(stateKey==="furnSpace")furnSpaceB64=null;
+        else if(stateKey==="furnObj")furnObjB64=null;
+        else if(stateKey==="charRef")charRefB64=null;
+        else if(stateKey==="fp"){fpB64=null;updatePrompt();}
+        else if(stateKey==="mp"){mpB64=null;updatePrompt();}
+        else if(stateKey==="ba"){baB64=null;updatePrompt();}
+        slot.innerHTML=ph;slot.classList.remove("has");
+      });
+      showToast("✅ Đã upload ảnh!");
+    };
+    r.readAsDataURL(file);
+  };
+  slot.addEventListener("click",()=>inp.click());
+  slot.addEventListener("dragover",e=>{e.preventDefault();slot.style.borderColor="var(--ac)";});
+  slot.addEventListener("dragleave",()=>slot.style.borderColor="");
+  slot.addEventListener("drop",e=>{e.preventDefault();slot.style.borderColor="";load(e.dataTransfer.files?.[0]);});
+  inp.addEventListener("change",e=>{load(e.target.files?.[0]);e.target.value="";});
+}
+
+/* ═══════════════════════════════
+   CHAR VIEWS
+═══════════════════════════════ */
+function renderCharViewList(){
+  const list=document.getElementById("cvList"); if(!list)return;
+  list.innerHTML="";
+  charViews.forEach((v,i)=>{
+    const item=document.createElement("div");
+    item.className="cv-item"+(v.b64?" has":"");
+    item.innerHTML=`<div class="cv-num">${i+1}</div><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.label)}</div><div style="font-size:9px;color:var(--mu)">${v.b64?"✅ Có ảnh":"⚪ Text2img"}</div></div><button style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:10px">📷</button>${charViews.length>1?`<button style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:11px">✕</button>`:""}`;
+    const btns=item.querySelectorAll("button");
+    btns[0].addEventListener("click",()=>{
+      const inp=document.createElement("input");inp.type="file";inp.accept="image/*";
+      inp.addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{v.b64=ev.target.result;renderCharViewList();showToast("✅ View "+(i+1)+" đã upload!");};r.readAsDataURL(f);});
+      inp.click();
+    });
+    if(btns[1])btns[1].addEventListener("click",()=>{charViews=charViews.filter(x=>x.id!==v.id);renderCharViewList();});
+    list.appendChild(item);
+  });
+}
+
+/* ═══════════════════════════════
+   PRESENTATION SHEET
+═══════════════════════════════ */
+function openSheetModal(){
+  const m=document.getElementById("sheetModal"); if(!m)return;
+  m.classList.add("on");
+  renderSheetModalBody();
+}
+function renderSheetModalBody(){
+  const b=document.getElementById("sheetBody"); if(!b)return;
+  b.innerHTML=`
+    <div class="frow2" style="margin-bottom:12px">
+      <div><label class="flbl">Tên dự án</label><input type="text" id="spName" class="finp" value="${esc(document.getElementById("projName")?.value||"")}"/></div>
+      <div><label class="flbl">Chủ đầu tư</label><input type="text" id="spClient" class="finp" placeholder="Chủ đầu tư…"/></div>
+      <div><label class="flbl">Thiết kế</label><input type="text" id="spDesigner" class="finp" placeholder="Designer…"/></div>
+      <div><label class="flbl">Khổ giấy</label><select id="spSize" class="fsel"><option value="A3" selected>A3</option><option value="A4">A4</option><option value="16:9">16:9 Slide</option></select></div>
+    </div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">${sheetImgs.length} ảnh trong Sheet. Thêm: hover vào ảnh → 📋</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px" id="spImgGrid">
+      ${sheetImgs.map((src,i)=>`<div style="position:relative;border-radius:5px;overflow:hidden;aspect-ratio:16/9"><img src="${src}" style="width:100%;height:100%;object-fit:cover"/><button onclick="sheetImgs.splice(${i},1);renderSheetModalBody()" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);border:none;color:#fff;cursor:pointer;border-radius:3px;padding:1px 5px;font-size:10px">✕</button></div>`).join("")}
+      ${!sheetImgs.length?'<div style="grid-column:1/-1;text-align:center;padding:18px;font-size:11px;color:var(--mu)">Chưa có ảnh. Bấm 📋 khi hover vào ảnh đã gen.</div>':""}
+    </div>`;
+}
+function exportSheet(asSlide){
+  const name=document.getElementById("spName")?.value||"Dự án";
+  const client=document.getElementById("spClient")?.value||"";
+  const designer=document.getElementById("spDesigner")?.value||"";
+  const size=document.getElementById("spSize")?.value||"A3";
+  const date=new Date().toLocaleDateString("vi-VN");
+  const sizeMap={"A3":"297mm 420mm","A4":"210mm 297mm","16:9":"320mm 180mm"};
+  const paper=sizeMap[size]||sizeMap.A3;
+  const cols=sheetImgs.length<=1?"1fr":sheetImgs.length<=2?"1fr 1fr":sheetImgs.length<=4?"1fr 1fr":"1fr 1fr 1fr";
+  const imgHtml=sheetImgs.map(src=>`<div style="border-radius:6px;overflow:hidden;background:#ddd"><img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block"/></div>`).join("");
+  const html=`<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"/><title>${esc(name)}</title>
+<style>@page{size:${paper};margin:0}*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Helvetica Neue',sans-serif;background:#fff}
+.sheet{width:100%;min-height:100vh;display:flex;flex-direction:column}
+.hd{background:#080910;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.ht{color:#ff6b2b;font-size:17px;font-weight:800;letter-spacing:.04em}
+.hm{color:rgba(255,255,255,.45);font-size:11px;text-align:right;line-height:1.5}
+.bd{flex:1;padding:10px;background:#f0f0f0}
+.ig{display:grid;grid-template-columns:${cols};gap:7px;height:100%}
+.ft{background:#080910;padding:9px 18px;display:flex;justify-content:space-between;align-items:center}
+.fl{color:rgba(255,255,255,.3);font-size:9px}.fr{color:#ff6b2b;font-size:10px;font-weight:700}
+@media print{@page{size:${paper};margin:0}.sheet{width:100vw;height:100vh}}
+</style></head><body><div class="sheet">
+<div class="hd"><div class="ht">${esc(name)}</div><div class="hm">${esc(client)}<br/>${esc(date)}</div></div>
+<div class="bd"><div class="ig">${imgHtml}</div></div>
+<div class="ft"><div class="fl">${esc(designer)} · NBOX Direct Render Pro</div><div class="fr">${esc(size)} · ${esc(date)}</div></div>
+</div>${asSlide?"":("<scr"+"ipt>window.onload=()=>setTimeout(()=>window.print(),400)<\\/scr"+"ipt>")}
+</body></html>`;
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));
+  a.download=name.replace(/\s+/g,"_")+(asSlide?"_slide":"_sheet")+".html";a.click();
+  showToast(asSlide?"📊 Export Slide!":"🖨 Mở file → Ctrl+P để lưu PDF!");
+}
+
+/* ═══════════════════════════════
+   HISTORY
+═══════════════════════════════ */
+function addHist(prompt,type,count){
+  history.unshift({prompt,type,count,time:Date.now()});
+  if(history.length>50)history=history.slice(0,50);
+  saveStorage();renderHistoryUI();
+}
+function renderHistoryUI(){
+  const list=document.getElementById("histList"); if(!list)return;
+  if(!history.length){list.innerHTML='<div style="font-size:10px;color:var(--mu);padding:10px 0;text-align:center">Chưa có lịch sử</div>';return;}
+  list.innerHTML="";
+  history.slice(0,12).forEach(h=>{
+    const item=document.createElement("div");item.className="hist-item";
+    item.innerHTML=`<div class="hist-type">${esc(h.type)}</div><div class="hist-p">${esc(h.prompt.slice(0,55))}</div><div class="hist-t">${new Date(h.time).toLocaleTimeString("vi-VN")} · ${h.count}↗</div>`;
+    item.addEventListener("click",()=>{
+      const ta=document.getElementById("customPrompt");
+      if(ta){ta.value=h.prompt;ta.dispatchEvent(new Event("input",{bubbles:true}));updatePrompt();}
+      showToast("↩ Đã load lại prompt!");
+    });
+    list.appendChild(item);
+  });
+}
+
+/* ═══════════════════════════════
+   PROJECTS
+═══════════════════════════════ */
+function saveProject(){
+  const name=document.getElementById("projName")?.value?.trim()||"Dự án "+(projects.length+1);
+  const snapshot={...S,customPrompt:document.getElementById("customPrompt")?.value||""};
+  const ex=projects.find(p=>p.name===name);
+  if(ex){ex.settings=snapshot;ex.updatedAt=Date.now();showToast("↑ Cập nhật \""+name+"\"");}
+  else{projects.unshift({id:"p_"+Date.now(),name,settings:snapshot,createdAt:Date.now(),updatedAt:Date.now()});showToast("💾 Đã lưu \""+name+"\"");}
+  saveStorage();renderProjList();
+}
+function applyProject(p){
+  if(!p.settings)return;
+  Object.assign(S,p.settings);
+  document.getElementById("projName").value=p.name;
+  const ta=document.getElementById("customPrompt");
+  if(ta)ta.value=p.settings.customPrompt||"";
+  buildMoodGrid();buildAllChips();switchMode(S.mode);updatePrompt();
+  showToast("✓ Áp dụng dự án \""+p.name+"\"");
+}
+function renderProjList(){
+  const list=document.getElementById("projList"); if(!list)return;
+  if(!projects.length){list.innerHTML='<div style="font-size:10px;color:var(--mu);padding:4px 0">Chưa có dự án</div>';return;}
+  list.innerHTML="";
+  projects.slice(0,5).forEach(p=>{
+    const item=document.createElement("div");
+    item.className="proj-item"+(p.id===activeProj?" on":"");
+    item.innerHTML=`<div class="proj-item-name">${esc(p.name)}</div><div class="proj-item-sub">${new Date(p.updatedAt).toLocaleDateString("vi-VN")}</div>`;
+    item.addEventListener("click",()=>{activeProj=p.id;applyProject(p);renderProjList();});
+    list.appendChild(item);
+  });
+}
+
+/* ═══════════════════════════════
+   VIEWER
+═══════════════════════════════ */
+function openViewer(src, imgs=null){
+  const v=document.getElementById("viewer");const img=document.getElementById("viewerImg");
+  if(!v||!img)return;
+  if(imgs&&imgs.length>0){viewerImgs=imgs;viewerIdx=Math.max(0,imgs.indexOf(src));}
+  else{viewerImgs=Array.from(document.querySelectorAll(".img-item img")).map(i=>i.src);viewerIdx=Math.max(0,viewerImgs.indexOf(src));}
+  viewerZoom=1;img.style.transform="scale(1)";img.src=src;
+  v.classList.add("on");
+  _viewerBindCurrent();
+}
+function _viewerBindCurrent(){
+  const src=viewerImgs[viewerIdx]||"";
+  const img=document.getElementById("viewerImg");if(img)img.src=src;
+  const c=document.getElementById("viewerCounter");if(c)c.textContent=viewerImgs.length>1?(viewerIdx+1)+" / "+viewerImgs.length:"";
+  const pr=document.getElementById("viewerPrev"),nx=document.getElementById("viewerNext");
+  if(pr)pr.style.display=viewerImgs.length>1?"flex":"none";
+  if(nx)nx.style.display=viewerImgs.length>1?"flex":"none";
+  const ext=getExt();
+  const dl=document.getElementById("viewerDl");
+  if(dl)dl.onclick=()=>dlImg(src,"nbox_render_"+(viewerIdx+1)+"."+ext);
+  const sh=document.getElementById("viewerSheet");
+  if(sh)sh.onclick=()=>{sheetImgs.push(src);showToast("+ Sheet ("+sheetImgs.length+" ảnh)");};
+  const cp=document.getElementById("viewerCopy");
+  if(cp)cp.onclick=()=>copyImgToClipboard(src);
+}
+function viewerNav(dir){
+  if(!viewerImgs.length)return;
+  viewerIdx=(viewerIdx+dir+viewerImgs.length)%viewerImgs.length;
+  viewerZoom=1;const img=document.getElementById("viewerImg");if(img)img.style.transform="scale(1)";
+  _viewerBindCurrent();
+}
+function viewerZoomFn(factor){
+  viewerZoom=Math.min(5,Math.max(0.2,viewerZoom*factor));
+  const img=document.getElementById("viewerImg");if(img)img.style.transform=`scale(${viewerZoom})`;
+}
+async function copyImgToClipboard(src){
+  try{
+    const resp=await fetch(src);const blob=await resp.blob();
+    await navigator.clipboard.write([new ClipboardItem({[blob.type]:blob})]);
+    showToast("📋 Đã copy ảnh vào clipboard!");
+  }catch{
+    try{await navigator.clipboard.writeText(src);showToast("📋 Copy base64 URL!");}
+    catch{showToast("Trình duyệt chưa hỗ trợ copy ảnh trực tiếp");}
+  }
+}
+function getExt(){return(S.outputFormat||"jpeg")==="jpeg"?"jpg":(S.outputFormat||"jpeg");}
+function setFormat(fmt){
+  S.outputFormat=fmt;
+  ["fmtJpeg","fmtPng","fmtWebp"].forEach(id=>document.getElementById(id)?.classList.remove("on"));
+  const idMap={jpeg:"fmtJpeg",png:"fmtPng",webp:"fmtWebp"};
+  document.getElementById(idMap[fmt])?.classList.add("on");
+  const pf=document.getElementById("pFormat");if(pf)pf.value=fmt;
+  showToast("Format: "+fmt.toUpperCase());
+}
+function buildNegPresets(){
+  const el=document.getElementById("negPresetChips");if(!el)return;
+  el.innerHTML="";
+  NEG_PRESETS.forEach(p=>{
+    const btn=document.createElement("button");btn.className="neg-chip";btn.textContent=p.l;
+    btn.addEventListener("click",()=>{
+      const ta=document.getElementById("negPrompt");if(!ta)return;
+      const cur=ta.value.trim();ta.value=(cur?cur+", ":"")+p.v;
+      showToast("+ Negative: "+p.l);
+    });
+    el.appendChild(btn);
+  });
+}
+function handleKeyboard(e){
+  if(e.key==="Escape"){
+    if(document.getElementById("viewer")?.classList.contains("on")){document.getElementById("viewer").classList.remove("on");return;}
+    if(document.getElementById("sheetModal")?.classList.contains("on")){document.getElementById("sheetModal").classList.remove("on");return;}
+  }
+  if(document.getElementById("viewer")?.classList.contains("on")){
+    if(e.key==="ArrowLeft"){viewerNav(-1);return;}
+    if(e.key==="ArrowRight"){viewerNav(1);return;}
+    if(e.key==="+"||e.key==="="){viewerZoomFn(1.25);return;}
+    if(e.key==="-"){viewerZoomFn(0.8);return;}
+    if(e.key==="0"){viewerZoom=1;const img=document.getElementById("viewerImg");if(img)img.style.transform="scale(1)";return;}
+  }
+  const tag=document.activeElement?.tagName?.toLowerCase();
+  if(tag==="input"||tag==="textarea"||tag==="select")return;
+  if((e.key==="g"||e.key==="G")&&!e.ctrlKey&&!e.metaKey){e.preventDefault();doGenerate();}
+  if(e.ctrlKey&&e.key==="Enter"){e.preventDefault();doGenerate();}
+  if(e.key===" "&&S.mode==="pipeline"){
+    e.preventDefault();
+    if(plRunning){plPaused=!plPaused;const b=document.getElementById("plPauseBtn");if(b)b.textContent=plPaused?"▶ Resume":"⏸ Pause";showToast(plPaused?"⏸ Pipeline paused":"▶ Pipeline resumed");}
+  }
+}
+
+/* ═══════════════════════════════
+   STORAGE
+═══════════════════════════════ */
+function saveStorage(){
+  try{
+    const extras={
+      negPrompt:document.getElementById("negPrompt")?.value||"",
+      cfgScale:document.getElementById("cfgScale")?.value||"7",
+      seedFixed:document.getElementById("seedFixed")?.checked||false,
+      seedVal:document.getElementById("seedVal")?.value||"",
+      autoEnhance:document.getElementById("chkAutoEnhance")?.checked??true,
+      outputFormat:S.outputFormat||"jpeg",
+    };
+    localStorage.setItem("nbox_s",JSON.stringify({...S,...extras}));
+    localStorage.setItem("nbox_h",JSON.stringify(history));
+    localStorage.setItem("nbox_p",JSON.stringify(projects));
+    const k=document.getElementById("apiKey")?.value?.trim();if(k)localStorage.setItem("nbox_k",k);
+    const pv=document.getElementById("apiProv")?.value;if(pv)localStorage.setItem("nbox_pv",pv);
+  }catch{}
+}
+function loadStorage(){
+  try{
+    const s=localStorage.getItem("nbox_s");
+    if(s){
+      const parsed=JSON.parse(s);Object.assign(S,parsed);
+      // Restore UI fields after DOM is ready
+      setTimeout(()=>{
+        const ta=document.getElementById("negPrompt");if(ta&&parsed.negPrompt)ta.value=parsed.negPrompt;
+        const cfg=document.getElementById("cfgScale");if(cfg&&parsed.cfgScale){cfg.value=parsed.cfgScale;const v=document.getElementById("cfgVal");if(v)v.textContent=parsed.cfgScale;}
+        const sf=document.getElementById("seedFixed");if(sf)sf.checked=!!parsed.seedFixed;
+        const sv=document.getElementById("seedVal");if(sv){sv.value=parsed.seedVal||"";sv.disabled=!parsed.seedFixed;}
+        const ae=document.getElementById("chkAutoEnhance");if(ae)ae.checked=parsed.autoEnhance!==false;
+        if(parsed.outputFormat)setFormat(parsed.outputFormat);
+        const pf=document.getElementById("pFormat");if(pf&&parsed.outputFormat)pf.value=parsed.outputFormat;
+      },50);
+    }
+    const h=localStorage.getItem("nbox_h");if(h)history=JSON.parse(h);
+    const p=localStorage.getItem("nbox_p");if(p)projects=JSON.parse(p);
+    const k=localStorage.getItem("nbox_k");if(k){const inp=document.getElementById("apiKey");if(inp){inp.value=k;updateApiDot(k);}}
+    const pv=localStorage.getItem("nbox_pv");if(pv){const sel=document.getElementById("apiProv");if(sel)sel.value=pv;}
+    const pn=localStorage.getItem("nbox_pn");if(pn){const inp=document.getElementById("projName");if(inp)inp.value=pn;}
+  }catch{}
+}
+function updateApiDot(k){
+  const d=document.getElementById("apiDot");if(!d)return;
+  d.className="api-dot"+(k&&k.length>20?" ok":k?" warn":"");
+}
+
+/* ═══════════════════════════════
+   HELPERS
+═══════════════════════════════ */
+function dlImg(src,name){const a=document.createElement("a");a.href=src;a.download=name||("nbox_render."+getExt());a.click();}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+async function b64Blob(b64,mime){const d=b64.includes(",")?b64.split(",")[1]:b64;const b=atob(d);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:mime});}
+function updateResInfo(){
+  const sz=document.getElementById("pSize")?.value||"1280x720";
+  const[w,h]=sz.split("x").map(Number);
+  const dpi=parseInt(document.querySelector(".qchip.on")?.dataset.dpi||150);
+  const wc=((w/dpi)*2.54).toFixed(1);const hc=((h/dpi)*2.54).toFixed(1);
+  const kb=Math.round(w*h*3/1024/4);
+  const m=document.getElementById("resMain");const s=document.getElementById("resSub");
+  if(m)m.textContent=w+"×"+h+"px";
+  if(s)s.textContent=dpi+"dpi · "+wc+"×"+hc+"cm · ~"+kb+"KB";
+}
+let toastT;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("on");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2400);
+}
+
+/* ═══════════════════════════════
+   BIND ALL EVENTS
+═══════════════════════════════ */
+function bindAll(){
+  // mode
+  document.getElementById("modeRow")?.querySelectorAll(".mchip").forEach(c=>{
+    c.addEventListener("click",()=>switchMode(c.dataset.mode));
+  });
+  // generate
+  document.getElementById("btnGen")?.addEventListener("click",doGenerate);
+  document.getElementById("btnGenTop")?.addEventListener("click",doGenerate);
+  document.getElementById("btnCancel")?.addEventListener("click",()=>{cancelFlag=true;hideGenOv();showToast("Đã huỷ");});
+  // api
+  document.getElementById("apiKey")?.addEventListener("input",e=>{updateApiDot(e.target.value);saveStorage();});
+  document.getElementById("apiProv")?.addEventListener("change",()=>saveStorage());
+  // prompt
+  document.getElementById("customPrompt")?.addEventListener("input",updatePrompt);
+  document.getElementById("btnClearP")?.addEventListener("click",()=>{const ta=document.getElementById("customPrompt");if(ta){ta.value="";updatePrompt();}});
+  document.getElementById("promptPreview")?.addEventListener("click",()=>{navigator.clipboard.writeText(buildPrompt()).catch(()=>{});showToast("📋 Copy prompt!");});
+  // params
+  document.getElementById("pSize")?.addEventListener("change",updateResInfo);
+  document.getElementById("pModel")?.addEventListener("change",()=>{});
+  // quality chips
+  document.querySelectorAll(".qchip").forEach(c=>{
+    c.addEventListener("click",()=>{document.querySelectorAll(".qchip").forEach(x=>x.classList.remove("on"));c.classList.add("on");updateResInfo();});
+  });
+  // projects
+  document.getElementById("btnSaveProj")?.addEventListener("click",saveProject);
+  document.getElementById("btnSaveProjRP")?.addEventListener("click",saveProject);
+  document.getElementById("projName")?.addEventListener("change",()=>localStorage.setItem("nbox_pn",document.getElementById("projName").value));
+  // history
+  document.getElementById("btnHist")?.addEventListener("click",()=>document.getElementById("histList")?.scrollIntoView({behavior:"smooth"}));
+  document.getElementById("btnClearHist")?.addEventListener("click",()=>{if(!confirm("Xóa lịch sử?"))return;history=[];saveStorage();renderHistoryUI();showToast("🗑 Đã xóa");});
+  // presentation sheet
+  document.getElementById("btnSheet")?.addEventListener("click",openSheetModal);
+  document.getElementById("sheetX")?.addEventListener("click",()=>document.getElementById("sheetModal")?.classList.remove("on"));
+  document.getElementById("sheetModal")?.addEventListener("click",e=>{if(e.target.id==="sheetModal")document.getElementById("sheetModal").classList.remove("on");});
+  document.getElementById("sheetExport")?.addEventListener("click",()=>exportSheet(false));
+  document.getElementById("sheetSlide")?.addEventListener("click",()=>exportSheet(true));
+  // viewer
+  document.getElementById("viewerX")?.addEventListener("click",()=>document.getElementById("viewer")?.classList.remove("on"));
+  document.getElementById("viewer")?.addEventListener("click",e=>{if(e.target.id==="viewer")document.getElementById("viewer").classList.remove("on");});
+  document.getElementById("viewerPrev")?.addEventListener("click",()=>viewerNav(-1));
+  document.getElementById("viewerNext")?.addEventListener("click",()=>viewerNav(1));
+  document.getElementById("viewerZoomIn")?.addEventListener("click",()=>viewerZoomFn(1.25));
+  document.getElementById("viewerZoomOut")?.addEventListener("click",()=>viewerZoomFn(0.8));
+  document.getElementById("viewerZoom1")?.addEventListener("click",()=>{viewerZoom=1;const img=document.getElementById("viewerImg");if(img)img.style.transform="scale(1)";});
+  document.getElementById("viewerImg")?.addEventListener("click",()=>viewerZoomFn(viewerZoom<2?1.5:1/viewerZoom));
+  // furniture
+  initUploadSlot("furnSpaceSlot","furnSpaceInp","furnSpace");
+  initUploadSlot("furnObjSlot","furnObjInp","furnObj");
+  document.getElementById("btnFurnGen")?.addEventListener("click",doFurnitureGen);
+  document.getElementById("furnBlend")?.addEventListener("input",e=>{const v=document.getElementById("furnBlendVal");if(v)v.textContent=e.target.value+"%";});
+  // char sync
+  initUploadSlot("charRefSlot","charRefInp","charRef");
+  document.getElementById("btnCharSync")?.addEventListener("click",doCharSync);
+  document.getElementById("btnAddCv")?.addEventListener("click",()=>{charViews.push({id:cvIdCnt++,b64:null,label:"View "+(charViews.length+1)});renderCharViewList();});
+  document.getElementById("charDesc")?.addEventListener("input",updatePrompt);
+  // floorplan / masterplan / before-after uploads
+  initUploadSlot("fpSlot","fpInp","fp");
+  initUploadSlot("mpSlot","mpInp","mp");
+  initUploadSlot("baSlot","baInp","ba");
+  document.getElementById("mpScale")?.addEventListener("change",updatePrompt);
+  // precision panel
+  ["chkStructural","chkPBR","chkShadow","chkNoDistort","chkScale"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("change",()=>{updatePrompt();updatePrecisionPreview();});
+  });
+  document.getElementById("matDetailSelect")?.addEventListener("change",()=>{updatePrompt();updatePrecisionPreview();});
+  updatePrecisionPreview();
+  // generation settings
+  document.getElementById("cfgScale")?.addEventListener("input",e=>{
+    const v=document.getElementById("cfgVal");if(v)v.textContent=e.target.value;
+    S.cfgScale=parseFloat(e.target.value);
+  });
+  document.getElementById("seedFixed")?.addEventListener("change",e=>{
+    S.seedFixed=e.target.checked;
+    const sv=document.getElementById("seedVal");if(sv)sv.disabled=!e.target.checked;
+    if(e.target.checked&&!document.getElementById("seedVal").value){
+      const rnd=Math.floor(Math.random()*999999999);
+      document.getElementById("seedVal").value=rnd;S.seedVal=rnd;
+    }
+  });
+  document.getElementById("seedVal")?.addEventListener("input",e=>{S.seedVal=parseInt(e.target.value)||null;});
+  document.getElementById("btnRandSeed")?.addEventListener("click",()=>{
+    const rnd=Math.floor(Math.random()*999999999);
+    const sv=document.getElementById("seedVal");if(sv){sv.value=rnd;sv.disabled=false;}
+    const sf=document.getElementById("seedFixed");if(sf)sf.checked=true;
+    S.seedFixed=true;S.seedVal=rnd;
+    showToast("🎲 Seed: "+rnd);
+  });
+  document.getElementById("pFormat")?.addEventListener("change",e=>setFormat(e.target.value));
+  document.getElementById("chkAutoEnhance")?.addEventListener("change",e=>{S.autoEnhance=e.target.checked;updatePrompt();});
+  // negative prompt
+  document.getElementById("negPrompt")?.addEventListener("input",updatePrompt);
+  document.getElementById("btnClearNeg")?.addEventListener("click",()=>{const ta=document.getElementById("negPrompt");if(ta)ta.value="";});
+  // batch
+  document.getElementById("btnBatch")?.addEventListener("click",doBatch);
+  // pipeline
+  document.getElementById("plRunBtn")?.addEventListener("click",runAllPipeline);
+  document.getElementById("plPauseBtn")?.addEventListener("click",()=>{
+    plPaused=!plPaused;
+    const b=document.getElementById("plPauseBtn");if(b)b.textContent=plPaused?"▶ Resume":"⏸ Pause";
+    showToast(plPaused?"⏸ Paused":"▶ Resumed");
+  });
+  document.getElementById("plClearBtn")?.addEventListener("click",()=>{
+    if(!confirm("Xóa toàn bộ kết quả pipeline?"))return;
+    pipeline.forEach(s=>{s.status="pending";s.results=[];s.error=null;});
+    renderPipeline();showToast("🗑 Cleared");
+  });
+  document.getElementById("plGStyle")?.addEventListener("change",renderPipeline);
+  document.getElementById("plGLight")?.addEventListener("change",renderPipeline);
+  document.getElementById("plSaveBtn")?.addEventListener("click",()=>{
+    const d=pipeline.map(s=>({type:s.type,name:s.name,settings:s.settings}));
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:"application/json"}));
+    a.download="nbox_pipeline_"+Date.now()+".json";a.click();showToast("💾 Pipeline saved!");
+  });
+  document.getElementById("plLoadBtn")?.addEventListener("click",()=>document.getElementById("plLoadInput")?.click());
+  document.getElementById("plLoadInput")?.addEventListener("change",async e=>{
+    const f=e.target.files?.[0];if(!f)return;
+    try{const t=await f.text();const d=JSON.parse(t);
+      pipeline=d.map(x=>{const s=createStep(x.type);s.name=x.name||s.name;Object.assign(s.settings,x.settings);return s;});
+      renderPipeline();showToast("📂 Loaded "+pipeline.length+" steps!");
+    }catch{showToast("Lỗi file");}
+    e.target.value="";
+  });
+  // auto-save
+  setInterval(saveStorage,5000);
+}
+</script>
+</body>
+</html>
