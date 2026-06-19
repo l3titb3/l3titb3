@@ -319,10 +319,16 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   <div class="mode-row" id="modeRow">
     <button class="mchip on" data-mode="exterior">🏠 Ngoại thất</button>
     <button class="mchip" data-mode="interior">🛋 Nội thất</button>
+    <button class="mchip" data-mode="landscape">🌿 Cảnh quan</button>
+    <button class="mchip" data-mode="material_swap">🎨 Vật liệu</button>
+    <button class="mchip" data-mode="sky_replace">☁️ Sky/BG</button>
+    <button class="mchip" data-mode="artistic">✏️ Nghệ thuật</button>
+    <button class="mchip" data-mode="section_persp">✂️ Mặt cắt</button>
+    <button class="mchip" data-mode="urban_context">🏙️ Đô thị</button>
     <button class="mchip" data-mode="floorplan">📐 Floorplan</button>
     <button class="mchip" data-mode="masterplan">🗺 Masterplan</button>
     <button class="mchip" data-mode="before_after">📷 Before/After</button>
-    <button class="mchip" data-mode="furniture">🪑 Ghép nội thất</button>
+    <button class="mchip" data-mode="furniture">🪑 Nội thất</button>
     <button class="mchip" data-mode="char_sync">👤 Nhân vật</button>
     <button class="mchip pl-chip" data-mode="pipeline">⚡ Pipeline</button>
   </div>
@@ -456,6 +462,112 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div class="chips" id="baTypeChips"></div>
       <span class="flbl">Phong cách mới</span>
       <div class="chips" id="baNewStyleChips"></div>
+    </div>
+  </div>
+
+  <!-- CẢNH QUAN & LANDSCAPE -->
+  <div class="acc hidden" id="accLandscape">
+    <div class="acc-head" onclick="toggleAcc('accLandscape')"><span class="acc-title">🌿 Cảnh Quan & Sân Vườn</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Upload mặt bằng / ảnh khu vực (tùy chọn)</span>
+      <div class="uslot" id="lsSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🌿</span><span>Mặt bằng cảnh quan · ảnh aerial · sketch</span></div></div>
+      <input type="file" id="lsInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Loại không gian cảnh quan</span>
+      <div class="chips" id="landscapeTypeChips"></div>
+      <span class="flbl">Cây xanh đặc trưng VN</span>
+      <div class="chips" id="landscapePlantChips"></div>
+      <span class="flbl">Yếu tố nước</span>
+      <div class="chips" id="landscapeWaterChips"></div>
+      <span class="flbl">Vật liệu sân (hardscape)</span>
+      <div class="chips" id="landscapeHardChips"></div>
+    </div>
+  </div>
+
+  <!-- THAY VẬT LIỆU & MÀU SẮC -->
+  <div class="acc hidden" id="accMatSwap">
+    <div class="acc-head" onclick="toggleAcc('accMatSwap')"><span class="acc-title">🎨 Thay Vật Liệu & Màu Sắc</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Ảnh công trình cần đổi vật liệu <span style="color:#f87171">*bắt buộc</span></span>
+      <div class="uslot" id="matSwapSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🏗</span><span>Upload ảnh render / ảnh thực</span></div></div>
+      <input type="file" id="matSwapInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Vật liệu mới</span>
+      <div class="chips" id="materialNewChips"></div>
+      <span class="flbl">Độ bóng / Finish</span>
+      <div class="chips" id="materialFinishChips"></div>
+      <span class="flbl">Áp dụng cho vùng</span>
+      <div class="chips" id="materialZoneChips"></div>
+      <span class="flbl">Màu / Tone tùy chỉnh</span>
+      <textarea class="fta" id="matColorDesc" placeholder="VD: warm grey beige, RAL 7044, #C4A882, off-white…" style="min-height:34px"></textarea>
+      <span class="flbl">Strength (mức độ thay đổi): <span id="matSwapStrVal" style="color:var(--ac)">72%</span></span>
+      <input type="range" id="matSwapStr" min="40" max="95" value="72" style="width:100%;accent-color:var(--ac);margin-bottom:8px"/>
+      <button class="gen-btn" id="btnMatSwap" style="width:100%;justify-content:center;padding:9px">🎨 Thay vật liệu</button>
+    </div>
+  </div>
+
+  <!-- SKY / BACKGROUND REPLACE -->
+  <div class="acc hidden" id="accSky">
+    <div class="acc-head" onclick="toggleAcc('accSky')"><span class="acc-title">☁️ Sky / Background Replace</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Ảnh ngoại thất gốc <span style="color:#f87171">*bắt buộc</span></span>
+      <div class="uslot" id="skySlot"><div class="uslot-ph"><span class="uslot-ph-icon">🏠</span><span>Upload ảnh render / ảnh chụp ngoại thất</span></div></div>
+      <input type="file" id="skyInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Bầu trời / Ánh sáng mới</span>
+      <div class="chips" id="skyPresetChips"></div>
+      <span class="flbl">Bối cảnh / Background</span>
+      <div class="chips" id="bgPresetChips"></div>
+      <span class="flbl">Strength blend: <span id="skyStrVal" style="color:var(--ac)">42%</span></span>
+      <input type="range" id="skyStr" min="15" max="75" value="42" style="width:100%;accent-color:var(--ac);margin-bottom:8px"/>
+      <div style="font-size:9px;color:var(--mu);line-height:1.5;margin-bottom:8px">💡 Strength thấp = giữ công trình, chỉ đổi trời/bg. Cao hơn = đổi mood toàn cảnh</div>
+      <button class="gen-btn" id="btnSkyGen" style="width:100%;justify-content:center;padding:9px">☁️ Thay bầu trời</button>
+    </div>
+  </div>
+
+  <!-- RENDER NGHỆ THUẬT -->
+  <div class="acc hidden" id="accArtistic">
+    <div class="acc-head" onclick="toggleAcc('accArtistic')"><span class="acc-title">✏️ Render Nghệ Thuật</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Upload ảnh / 3D / sketch gốc (tùy chọn)</span>
+      <div class="uslot" id="artSlot"><div class="uslot-ph"><span class="uslot-ph-icon">✏️</span><span>Ảnh render · 3D view · sketch tay</span></div></div>
+      <input type="file" id="artInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Phong cách nghệ thuật</span>
+      <div class="chips" id="artisticStyleChips"></div>
+      <span class="flbl">Màu nền / Giấy</span>
+      <div class="chips" id="artPaperChips"></div>
+      <span class="flbl" style="margin-top:4px">Strength (nếu có ảnh gốc): <span id="artStrVal" style="color:var(--ac)">55%</span></span>
+      <input type="range" id="artStr" min="20" max="90" value="55" style="width:100%;accent-color:var(--ac);margin-bottom:8px"/>
+      <button class="gen-btn" id="btnArtGen" style="width:100%;justify-content:center;padding:9px">✏️ Render nghệ thuật</button>
+    </div>
+  </div>
+
+  <!-- MẶT CẮT PHỐI CẢNH -->
+  <div class="acc hidden" id="accSection">
+    <div class="acc-head" onclick="toggleAcc('accSection')"><span class="acc-title">✂️ Mặt Cắt Phối Cảnh</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Upload mặt cắt 2D / 3D section (tùy chọn)</span>
+      <div class="uslot" id="secSlot"><div class="uslot-ph"><span class="uslot-ph-icon">✂️</span><span>Mặt cắt CAD · 3D section · sketch</span></div></div>
+      <input type="file" id="secInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Loại mặt cắt</span>
+      <div class="chips" id="sectionTypeChips"></div>
+      <span class="flbl">Phong cách thể hiện</span>
+      <div class="chips" id="sectionStyleChips"></div>
+      <span class="flbl" style="margin-top:4px">Độ chi tiết</span>
+      <div class="chips" id="sectionDetailChips"></div>
+    </div>
+  </div>
+
+  <!-- PHỐI CẢNH ĐÔ THỊ -->
+  <div class="acc hidden" id="accUrban">
+    <div class="acc-head" onclick="toggleAcc('accUrban')"><span class="acc-title">🏙️ Phối Cảnh Đô Thị</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <span class="flbl">Upload site photo / aerial (tùy chọn)</span>
+      <div class="uslot" id="urbanSlot"><div class="uslot-ph"><span class="uslot-ph-icon">🏙️</span><span>Ảnh site · aerial · street view</span></div></div>
+      <input type="file" id="urbanInp" accept="image/*" class="hidden"/>
+      <span class="flbl" style="margin-top:6px">Mật độ đô thị</span>
+      <div class="chips" id="urbanDensityChips"></div>
+      <span class="flbl">Bối cảnh thành phố</span>
+      <div class="chips" id="urbanCityChips"></div>
+      <span class="flbl">Góc nhìn đường phố</span>
+      <div class="chips" id="urbanViewChips"></div>
     </div>
   </div>
 
@@ -852,6 +964,23 @@ const CHIPS = {
     "85mm portrait (nội thất)",
     "Tilt-shift (chống méo)",
   ],
+  landscapeType:["Sân vườn nhà ở","Công viên cảnh quan","Resort hồ bơi","Vườn trên mái","Sân thượng","Lối đi dạo","Quảng trường"],
+  landscapePlant:["Dừa nhiệt đới","Tre trúc","Cây bàng","Cỏ đuôi chồn","Hoa đại","Phong VN","Sen / hoa nước","Chuối rừng"],
+  landscapeWater:["Không có","Hồ bơi ngoài trời","Hồ sen","Suối đá nhân tạo","Thác nước tường","Reflecting pool"],
+  landscapeHard:["Đá granit","Gỗ teak","Gạch đỏ VN","Bê tông kẻ","Sỏi trắng","Composite deck"],
+  materialNew:["Gỗ teak","Đá marble","Bê tông trần","Gạch nung đỏ","Kính cường lực","Thép Cor-ten","Nhôm anod","Đá bazan","Terrazzo","Stucco trắng"],
+  materialFinish:["Matte","Satin","Gloss","Bóng gương","Bề mặt thô","Rỉ sét tự nhiên","Xước chải"],
+  materialZone:["Mặt tiền toàn bộ","Tường trái","Tường phải","Mái","Sàn ngoài","Cổng / hàng rào","Cột & khung"],
+  skyPreset:["Golden hour rực","Blue hour","Cloudy dramatic","Trời xanh trong","Bình minh hồng","Đêm đô thị","Mây storm","Hoàng hôn cam"],
+  bgPreset:["Giữ nguyên nền","Thành phố xa","Rừng nhiệt đới","Núi xa","Bờ biển","Cánh đồng lúa VN","Khu đô thị VN","Trắng studio"],
+  artisticStyle:["Watercolor kiến trúc","Sketch tay mực","Colored pencil","Gouache","Ink line drawing","Linocut print","Blueprint line art","Charcoal sketch","Oil painting"],
+  artPaper:["Giấy trắng","Giấy vàng cũ","Giấy xám","Nền xanh dương","Nền đen","Giấy kraft"],
+  sectionType:["Mặt cắt dọc","Mặt cắt ngang","Mặt cắt 3/4 phối cảnh","Section perspective","Exploded axo"],
+  sectionStyle:["Photorealistic","Watercolor","Ink line","Colored plan","Technical BW","Hand-drawn"],
+  sectionDetail:["Cơ bản — hình khối","Trung bình — vật liệu","Chi tiết — nội thất + người","Ultra — full section render"],
+  urbanDensity:["Mật độ thấp","Khu dân cư","Khu đô thị trung","CBD mật độ cao","Siêu đô thị"],
+  urbanCity:["Hà Nội phố cổ","TP.HCM CBD","Đà Nẵng ven biển","Đô thị VN mới","Smart city tương lai","Thành phố châu Á"],
+  urbanView:["Street level","Góc nhìn bộ hành","Eye-level con phố","Perspective đường lớn","Aerial 45° khu phố"],
 };
 
 const BATCH_COMBOS=[
@@ -862,14 +991,20 @@ const BATCH_COMBOS=[
 ];
 
 const STEP_TYPES=[
-  {type:"exterior",  icon:"🏠",name:"Ngoại thất",   desc:"Exterior render"},
-  {type:"interior",  icon:"🛋",name:"Nội thất",     desc:"Interior render"},
-  {type:"masterplan",icon:"🗺",name:"Masterplan",   desc:"Aerial site view"},
-  {type:"floorplan", icon:"📐",name:"Floorplan 3D", desc:"Plan → 3D"},
-  {type:"before_after",icon:"📷",name:"Before/After",desc:"Renovation"},
-  {type:"furniture", icon:"🪑",name:"Ghép nội thất",desc:"Place furniture"},
-  {type:"char_sync", icon:"👤",name:"Nhân vật",     desc:"Character sync"},
-  {type:"seasonal",  icon:"🌦",name:"Seasonal Batch",desc:"Time/season"},
+  {type:"exterior",     icon:"🏠",name:"Ngoại thất",     desc:"Exterior render"},
+  {type:"interior",     icon:"🛋",name:"Nội thất",       desc:"Interior render"},
+  {type:"masterplan",   icon:"🗺",name:"Masterplan",     desc:"Aerial site view"},
+  {type:"floorplan",    icon:"📐",name:"Floorplan 3D",   desc:"Plan → 3D"},
+  {type:"before_after", icon:"📷",name:"Before/After",   desc:"Renovation"},
+  {type:"furniture",    icon:"🪑",name:"Ghép nội thất",  desc:"Place furniture"},
+  {type:"char_sync",    icon:"👤",name:"Nhân vật",       desc:"Character sync"},
+  {type:"seasonal",     icon:"🌦",name:"Seasonal Batch", desc:"Time/season"},
+  {type:"landscape",    icon:"🌿",name:"Cảnh quan",      desc:"Landscape render"},
+  {type:"material_swap",icon:"🎨",name:"Thay vật liệu",  desc:"Material swap"},
+  {type:"sky_replace",  icon:"☁️",name:"Sky/BG Replace", desc:"Sky replacement"},
+  {type:"artistic",     icon:"✏️",name:"Nghệ thuật",     desc:"Artistic render"},
+  {type:"section_persp",icon:"✂️",name:"Mặt cắt",        desc:"Section perspective"},
+  {type:"urban_context",icon:"🏙️",name:"Đô thị",         desc:"Urban context"},
 ];
 
 const MODEL_MAP={
@@ -910,11 +1045,18 @@ const S={
   seedFixed:false,
   seedVal:null,
   autoEnhance:true,
+  landscapeType:null, landscapePlant:null, landscapeWater:null, landscapeHard:null,
+  materialNew:null, materialFinish:null, materialZone:null,
+  skyPreset:null, bgPreset:null,
+  artisticStyle:null, artPaper:null,
+  sectionType:null, sectionStyle:null, sectionDetail:null,
+  urbanDensity:null, urbanCity:null, urbanView:null,
 };
 let history=[], projects=[], sheetImgs=[], activeProj=null;
 let cancelFlag=false;
 let furnSpaceB64=null, furnObjB64=null, charRefB64=null;
 let fpB64=null, mpB64=null, baB64=null, refB64=null;
+let lsB64=null, matSwapB64=null, skyB64=null, artB64=null, secB64=null, urbanB64=null;
 let charViews=[{id:1,b64:null,label:"View 1"},{id:2,b64:null,label:"View 2"}];
 let cvIdCnt=3;
 let pipeline=[], plRunning=false, plPaused=false, plIdCnt=1;
@@ -1009,6 +1151,24 @@ function buildAllChips(){
   buildChipGroup("precisionLevelChips","precisionLevel",CHIPS.precisionLevel);
   buildChipGroup("matFidelityChips","matFidelity",CHIPS.matFidelity);
   buildChipGroup("lensChips","lens",CHIPS.lens);
+  // 6 new modes
+  buildChipGroup("landscapeTypeChips","landscapeType",CHIPS.landscapeType);
+  buildChipGroup("landscapePlantChips","landscapePlant",CHIPS.landscapePlant);
+  buildChipGroup("landscapeWaterChips","landscapeWater",CHIPS.landscapeWater);
+  buildChipGroup("landscapeHardChips","landscapeHard",CHIPS.landscapeHard);
+  buildChipGroup("materialNewChips","materialNew",CHIPS.materialNew);
+  buildChipGroup("materialFinishChips","materialFinish",CHIPS.materialFinish);
+  buildChipGroup("materialZoneChips","materialZone",CHIPS.materialZone);
+  buildChipGroup("skyPresetChips","skyPreset",CHIPS.skyPreset);
+  buildChipGroup("bgPresetChips","bgPreset",CHIPS.bgPreset);
+  buildChipGroup("artisticStyleChips","artisticStyle",CHIPS.artisticStyle);
+  buildChipGroup("artPaperChips","artPaper",CHIPS.artPaper);
+  buildChipGroup("sectionTypeChips","sectionType",CHIPS.sectionType);
+  buildChipGroup("sectionStyleChips","sectionStyle",CHIPS.sectionStyle);
+  buildChipGroup("sectionDetailChips","sectionDetail",CHIPS.sectionDetail);
+  buildChipGroup("urbanDensityChips","urbanDensity",CHIPS.urbanDensity);
+  buildChipGroup("urbanCityChips","urbanCity",CHIPS.urbanCity);
+  buildChipGroup("urbanViewChips","urbanView",CHIPS.urbanView);
   // batch
   const bc=document.getElementById("batchChips"); if(!bc)return;
   bc.innerHTML="";
@@ -1050,7 +1210,15 @@ function switchMode(mode){
   document.getElementById("accFurn").classList.toggle("hidden",mode!=="furniture");
   document.getElementById("accChar").classList.toggle("hidden",mode!=="char_sync");
   document.getElementById("accInt").classList.toggle("hidden",!["interior"].includes(mode));
-  document.getElementById("accBatch").classList.toggle("hidden",isPL||["furniture","char_sync"].includes(mode));
+  const noDedicated=["furniture","char_sync","material_swap","sky_replace","artistic"];
+  document.getElementById("accBatch").classList.toggle("hidden",isPL||noDedicated.includes(mode));
+  // 6 new mode accordions
+  document.getElementById("accLandscape").classList.toggle("hidden",mode!=="landscape");
+  document.getElementById("accMatSwap").classList.toggle("hidden",mode!=="material_swap");
+  document.getElementById("accSky").classList.toggle("hidden",mode!=="sky_replace");
+  document.getElementById("accArtistic").classList.toggle("hidden",mode!=="artistic");
+  document.getElementById("accSection").classList.toggle("hidden",mode!=="section_persp");
+  document.getElementById("accUrban").classList.toggle("hidden",mode!=="urban_context");
 
   // Reference image accordion: show for text-based modes that benefit from img2img
   const refModes=["exterior","interior","seasonal","char_sync"];
@@ -1233,6 +1401,74 @@ function buildPrompt(){
       parts.push("natural human scale, integrated into architecture");
       break;
     }
+    case"landscape":
+      if(lsB64){
+        parts.push("photorealistic landscape architecture render based on uploaded site plan or aerial reference");
+        parts.push("preserve site layout and topography from reference");
+      }else{
+        parts.push("photorealistic landscape architecture render");
+      }
+      if(S.landscapeType)parts.push(S.landscapeType);
+      if(S.landscapePlant)parts.push(S.landscapePlant+" feature planting");
+      if(S.landscapeWater&&S.landscapeWater!=="Không có")parts.push(S.landscapeWater+" water feature");
+      if(S.landscapeHard)parts.push(S.landscapeHard+" hardscape paving");
+      parts.push("lush tropical greenery, Vietnamese landscape architecture, high detail");
+      break;
+    case"material_swap":
+      parts.push("architectural material swap render");
+      if(matSwapB64)parts.push("based on uploaded building reference, replace surface materials");
+      if(S.materialNew)parts.push("new material: "+S.materialNew);
+      if(S.materialFinish)parts.push(S.materialFinish+" finish");
+      if(S.materialZone)parts.push("applied to: "+S.materialZone);
+      {const mc=document.getElementById("matColorDesc")?.value?.trim();if(mc)parts.push("color: "+mc);}
+      parts.push("photorealistic, maintain original building form and structure");
+      break;
+    case"sky_replace":
+      if(skyB64){
+        parts.push("architectural exterior with replaced sky and background");
+        parts.push("preserve building structure and foreground elements exactly");
+      }else{
+        parts.push("photorealistic architectural exterior render");
+      }
+      if(S.skyPreset)parts.push(S.skyPreset+" sky lighting atmosphere");
+      if(S.bgPreset&&S.bgPreset!=="Giữ nguyên nền")parts.push("background: "+S.bgPreset);
+      parts.push("professional architectural photography, dramatic atmosphere");
+      break;
+    case"artistic":
+      if(artB64){
+        parts.push("artistic architectural illustration based on uploaded reference");
+      }else{
+        parts.push("artistic architectural illustration");
+      }
+      if(S.artisticStyle)parts.push(S.artisticStyle+" style");
+      if(S.artPaper)parts.push(S.artPaper+" background paper");
+      parts.push("high quality architectural art, professional illustration");
+      break;
+    case"section_persp":{
+      if(secB64){
+        parts.push("architectural section perspective render based on uploaded section drawing");
+        parts.push("preserve cut plane and floor levels from reference");
+      }else{
+        parts.push("architectural section perspective render");
+      }
+      if(S.sectionType)parts.push(S.sectionType);
+      if(S.sectionStyle)parts.push(S.sectionStyle+" rendering style");
+      if(S.sectionDetail)parts.push(S.sectionDetail);
+      parts.push("architectural section cut, interior volumes visible, correct scale");
+      break;
+    }
+    case"urban_context":
+      if(urbanB64){
+        parts.push("urban context rendering based on uploaded site photo or aerial view");
+        parts.push("integrate new architecture into existing urban fabric");
+      }else{
+        parts.push("photorealistic urban context architectural visualization");
+      }
+      if(S.urbanDensity)parts.push(S.urbanDensity+" urban density");
+      if(S.urbanCity)parts.push(S.urbanCity+" city context");
+      if(S.urbanView)parts.push(S.urbanView);
+      parts.push("professional urban architecture visualization, Vietnamese city context");
+      break;
   }
 
   // Common settings
@@ -1344,6 +1580,12 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
 async function doGenerate(){
   if(S.mode==="furniture"){doFurnitureGen();return;}
   if(S.mode==="char_sync"){doCharSync();return;}
+  if(S.mode==="material_swap"){doMatSwap();return;}
+  if(S.mode==="sky_replace"){doSkyGen();return;}
+  if(S.mode==="artistic"){doArtGen();return;}
+  if(S.mode==="landscape"){doLandscapeGen();return;}
+  if(S.mode==="section_persp"){doSectionGen();return;}
+  if(S.mode==="urban_context"){doUrbanGen();return;}
   const prompt=buildPrompt();
   const count=parseInt(document.getElementById("pCount")?.value||4);
   const model=document.getElementById("pModel")?.value||"flux-free";
@@ -1413,6 +1655,117 @@ async function doCharSync(){
   }
   hideGenOv();
   showToast("✅ Character Sync xong — "+charViews.length+" views!");
+}
+
+async function doLandscapeGen(){
+  const prompt=buildPrompt();
+  const count=parseInt(document.getElementById("pCount")?.value||2);
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value||"flux-dev";
+  const m=(lsB64&&MODEL_MAP[model]?.i2i===false)?"flux-dev":model;
+  cancelFlag=false;setBtnLoading(true);
+  const gid="rg_"+Date.now();
+  showGenOv("Đang render cảnh quan…");renderSkeletons(gid,count);
+  try{
+    const imgs=await callAPI(prompt,count,size,m,"28",lsB64,0.5);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"landscape",imgs);addHist(prompt,"landscape",imgs.length);showToast("✅ Cảnh quan xong!");}
+    else showToast("Không nhận được ảnh.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();setBtnLoading(false);
+}
+
+async function doMatSwap(){
+  if(!matSwapB64){showToast("Upload ảnh công trình cần đổi vật liệu!");return;}
+  const prompt=buildPrompt();
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value;
+  const m=(MODEL_MAP[model]?.i2i===false)?"flux-dev":model;
+  const strength=parseInt(document.getElementById("matSwapStr")?.value||72)/100;
+  cancelFlag=false;
+  const gid="rg_"+Date.now();
+  showGenOv("Đang thay vật liệu…");renderSkeletons(gid,1);
+  try{
+    const imgs=await callAPI(prompt,1,size,m,"28",matSwapB64,strength);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"material_swap",imgs);addHist(prompt,"material_swap",imgs.length);showToast("✅ Đã thay vật liệu!");}
+    else showToast("Không nhận được ảnh.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();
+}
+
+async function doSkyGen(){
+  if(!skyB64){showToast("Upload ảnh ngoại thất gốc trước!");return;}
+  const prompt=buildPrompt();
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value;
+  const m=(MODEL_MAP[model]?.i2i===false)?"flux-dev":model;
+  const strength=parseInt(document.getElementById("skyStr")?.value||42)/100;
+  cancelFlag=false;
+  const gid="rg_"+Date.now();
+  showGenOv("Đang thay bầu trời…");renderSkeletons(gid,1);
+  try{
+    const imgs=await callAPI(prompt,1,size,m,"25",skyB64,strength);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"sky_replace",imgs);addHist(prompt,"sky_replace",imgs.length);showToast("✅ Đã thay bầu trời!");}
+    else showToast("Không nhận được ảnh.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();
+}
+
+async function doArtGen(){
+  const prompt=buildPrompt();
+  const count=parseInt(document.getElementById("pCount")?.value||2);
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value||"flux-dev";
+  const strength=parseInt(document.getElementById("artStr")?.value||55)/100;
+  const m=(artB64&&MODEL_MAP[model]?.i2i===false)?"flux-dev":model;
+  cancelFlag=false;setBtnLoading(true);
+  const gid="rg_"+Date.now();
+  showGenOv("Đang render nghệ thuật…");renderSkeletons(gid,count);
+  try{
+    const imgs=await callAPI(prompt,count,size,m,"28",artB64,strength);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"artistic",imgs);addHist(prompt,"artistic",imgs.length);showToast("✅ Render nghệ thuật xong!");}
+    else showToast("Không nhận được ảnh.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();setBtnLoading(false);
+}
+
+async function doSectionGen(){
+  const prompt=buildPrompt();
+  const count=parseInt(document.getElementById("pCount")?.value||1);
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value||"flux-dev";
+  const m=(secB64&&MODEL_MAP[model]?.i2i===false)?"flux-dev":model;
+  cancelFlag=false;setBtnLoading(true);
+  const gid="rg_"+Date.now();
+  showGenOv("Đang render mặt cắt…");renderSkeletons(gid,count);
+  try{
+    const imgs=await callAPI(prompt,count,size,m,"28",secB64,0.5);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"section_persp",imgs);addHist(prompt,"section_persp",imgs.length);showToast("✅ Mặt cắt phối cảnh xong!");}
+    else showToast("Không nhận được ảnh.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();setBtnLoading(false);
+}
+
+async function doUrbanGen(){
+  const prompt=buildPrompt();
+  const count=parseInt(document.getElementById("pCount")?.value||2);
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const model=document.getElementById("pModel")?.value||"flux-dev";
+  const m=(urbanB64&&MODEL_MAP[model]?.i2i===false)?"flux-dev":model;
+  cancelFlag=false;setBtnLoading(true);
+  const gid="rg_"+Date.now();
+  showGenOv("Đang render phối cảnh đô thị…");renderSkeletons(gid,count);
+  try{
+    const imgs=await callAPI(prompt,count,size,m,"28",urbanB64,0.5);
+    removeEl(gid);
+    if(imgs?.length){renderGroup(prompt,"urban_context",imgs);addHist(prompt,"urban_context",imgs.length);showToast("✅ Phối cảnh đô thị xong!");}
+    else showToast("Không nhận được ảnh.");
+  }catch(e){removeEl(gid);showToast("❌ "+e.message);}
+  hideGenOv();setBtnLoading(false);
 }
 
 async function doBatch(){
@@ -1773,24 +2126,20 @@ function initUploadSlot(slotId,inputId,stateKey){
     const r=new FileReader();
     r.onload=e=>{
       const b64=e.target.result;
-      if(stateKey==="furnSpace")furnSpaceB64=b64;
-      else if(stateKey==="furnObj")furnObjB64=b64;
-      else if(stateKey==="charRef")charRefB64=b64;
-      else if(stateKey==="fp"){fpB64=b64;updatePrompt();}
-      else if(stateKey==="mp"){mpB64=b64;updatePrompt();}
-      else if(stateKey==="ba"){baB64=b64;updatePrompt();}
-      else if(stateKey==="ref"){refB64=b64;updatePrompt();}
+      const b64Map={furnSpace:()=>furnSpaceB64=b64,furnObj:()=>furnObjB64=b64,charRef:()=>charRefB64=b64,
+        fp:()=>{fpB64=b64;updatePrompt();},mp:()=>{mpB64=b64;updatePrompt();},ba:()=>{baB64=b64;updatePrompt();},ref:()=>{refB64=b64;updatePrompt();},
+        ls:()=>{lsB64=b64;updatePrompt();},matSwap:()=>{matSwapB64=b64;updatePrompt();},sky:()=>{skyB64=b64;updatePrompt();},
+        art:()=>{artB64=b64;updatePrompt();},sec:()=>{secB64=b64;updatePrompt();},urban:()=>{urbanB64=b64;updatePrompt();}};
+      (b64Map[stateKey]||function(){})();
       slot.innerHTML=`<img src="${b64}" alt="" style="max-height:90px;width:100%;object-fit:contain;border-radius:5px"/><button class="uclear">✕</button>`;
       slot.classList.add("has");
       slot.querySelector(".uclear").addEventListener("click",e=>{
         e.stopPropagation();
-        if(stateKey==="furnSpace")furnSpaceB64=null;
-        else if(stateKey==="furnObj")furnObjB64=null;
-        else if(stateKey==="charRef")charRefB64=null;
-        else if(stateKey==="fp"){fpB64=null;updatePrompt();}
-        else if(stateKey==="mp"){mpB64=null;updatePrompt();}
-        else if(stateKey==="ba"){baB64=null;updatePrompt();}
-        else if(stateKey==="ref"){refB64=null;updatePrompt();}
+        const clrMap={furnSpace:()=>furnSpaceB64=null,furnObj:()=>furnObjB64=null,charRef:()=>charRefB64=null,
+          fp:()=>{fpB64=null;updatePrompt();},mp:()=>{mpB64=null;updatePrompt();},ba:()=>{baB64=null;updatePrompt();},ref:()=>{refB64=null;updatePrompt();},
+          ls:()=>{lsB64=null;updatePrompt();},matSwap:()=>{matSwapB64=null;updatePrompt();},sky:()=>{skyB64=null;updatePrompt();},
+          art:()=>{artB64=null;updatePrompt();},sec:()=>{secB64=null;updatePrompt();},urban:()=>{urbanB64=null;updatePrompt();}};
+        (clrMap[stateKey]||function(){})();
         slot.innerHTML=ph;slot.classList.remove("has");
       });
       showToast("✅ Đã upload ảnh!");
@@ -2186,6 +2535,23 @@ function bindAll(){
   initUploadSlot("fpSlot","fpInp","fp");
   initUploadSlot("mpSlot","mpInp","mp");
   initUploadSlot("baSlot","baInp","ba");
+  // 6 new mode upload slots
+  initUploadSlot("lsSlot","lsInp","ls");
+  initUploadSlot("matSwapSlot","matSwapInp","matSwap");
+  initUploadSlot("skySlot","skyInp","sky");
+  initUploadSlot("artSlot","artInp","art");
+  initUploadSlot("secSlot","secInp","sec");
+  initUploadSlot("urbanSlot","urbanInp","urban");
+  // new mode dedicated action buttons
+  document.getElementById("btnMatSwap")?.addEventListener("click",doMatSwap);
+  document.getElementById("btnSkyGen")?.addEventListener("click",doSkyGen);
+  document.getElementById("btnArtGen")?.addEventListener("click",doArtGen);
+  // new mode strength sliders
+  document.getElementById("matSwapStr")?.addEventListener("input",e=>{const v=document.getElementById("matSwapStrVal");if(v)v.textContent=e.target.value+"%";});
+  document.getElementById("skyStr")?.addEventListener("input",e=>{const v=document.getElementById("skyStrVal");if(v)v.textContent=e.target.value+"%";});
+  document.getElementById("artStr")?.addEventListener("input",e=>{const v=document.getElementById("artStrVal");if(v)v.textContent=e.target.value+"%";});
+  // matColorDesc triggers prompt update
+  document.getElementById("matColorDesc")?.addEventListener("input",updatePrompt);
   document.getElementById("mpScale")?.addEventListener("change",updatePrompt);
   // precision panel
   ["chkStructural","chkPBR","chkShadow","chkNoDistort","chkScale"].forEach(id=>{
