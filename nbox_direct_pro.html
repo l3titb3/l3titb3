@@ -335,6 +335,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     </select>
     <div class="sep"></div>
     <input class="api-key" id="apiKey" type="password" placeholder="API key… (together.ai miễn phí)"/>
+    <button id="btnToggleKey" title="Hiện/ẩn API key" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:13px;padding:0 4px;flex-shrink:0">👁</button>
+    <span id="apiKeyLen" style="font-size:9px;color:var(--mu);font-family:'Space Mono',monospace;flex-shrink:0" title="Số ký tự hợp lệ trong key"></span>
     <div class="api-dot" id="apiDot"></div>
   </div>
   <input class="proj-in" id="projName" placeholder="Tên dự án…"/>
@@ -2686,14 +2688,26 @@ function loadStorage(){
     const h=localStorage.getItem("nbox_h");if(h)history=JSON.parse(h);
     const p=localStorage.getItem("nbox_p");if(p)projects=JSON.parse(p);
     const sn=localStorage.getItem("nbox_snaps");if(sn){snapshots=JSON.parse(sn);snapIdCnt=snapshots.reduce((m,s)=>Math.max(m,s.id||0),0)+1;}
-    const k=localStorage.getItem("nbox_k");if(k){const inp=document.getElementById("apiKey");if(inp){inp.value=k;updateApiDot(k);}}
+    const k=localStorage.getItem("nbox_k");if(k){const inp=document.getElementById("apiKey");if(inp){inp.value=k;updateApiDot(k);updateApiKeyLen(k);}}
     const pv=localStorage.getItem("nbox_pv");if(pv){const sel=document.getElementById("apiProv");if(sel)sel.value=pv;}
     const pn=localStorage.getItem("nbox_pn");if(pn){const inp=document.getElementById("projName");if(inp)inp.value=pn;}
   }catch{}
 }
 function updateApiDot(k){
   const d=document.getElementById("apiDot");if(!d)return;
-  d.className="api-dot"+(k&&k.length>20?" ok":k?" warn":"");
+  // count only valid ASCII chars after trim (matches what callAPI uses)
+  const clean=(k||"").replace(/[^\x20-\x7E]/g,"").trim();
+  d.className="api-dot"+(clean.length>20?" ok":clean?" warn":"");
+  d.title=clean.length>20?"Key hợp lệ ("+clean.length+" ký tự)":clean?"⚠️ Key quá ngắn / có ký tự lạ ("+clean.length+" ký tự hợp lệ)":"Chưa nhập key";
+}
+function updateApiKeyLen(k){
+  const el=document.getElementById("apiKeyLen");if(!el)return;
+  const raw=(k||"").length;
+  const clean=(k||"").replace(/[^\x20-\x7E]/g,"").trim().length;
+  if(!raw){el.textContent="";return;}
+  // flag when bullet/masked characters were pasted (raw > clean)
+  el.textContent=clean+(raw!==clean?"⚠":"");
+  el.style.color=raw!==clean?"#f87171":(clean>20?"var(--gr)":"var(--ac2)");
 }
 
 /* ═══════════════════════════════
@@ -3072,7 +3086,14 @@ function bindAll(){
   document.getElementById("btnGenTop")?.addEventListener("click",doGenerate);
   document.getElementById("btnCancel")?.addEventListener("click",()=>{cancelFlag=true;hideGenOv();showToast("Đã huỷ");});
   // api
-  document.getElementById("apiKey")?.addEventListener("input",e=>{updateApiDot(e.target.value);saveStorage();});
+  document.getElementById("apiKey")?.addEventListener("input",e=>{updateApiDot(e.target.value);updateApiKeyLen(e.target.value);saveStorage();});
+  document.getElementById("btnToggleKey")?.addEventListener("click",()=>{
+    const inp=document.getElementById("apiKey");const btn=document.getElementById("btnToggleKey");
+    if(!inp)return;
+    const show=inp.type==="password";
+    inp.type=show?"text":"password";
+    if(btn)btn.textContent=show?"🙈":"👁";
+  });
   document.getElementById("apiProv")?.addEventListener("change",()=>saveStorage());
   // prompt
   document.getElementById("customPrompt")?.addEventListener("input",updatePrompt);
