@@ -57,6 +57,13 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .sb-mode-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.2}
 .sb-mode-desc{font-size:9px;color:var(--mu);margin-top:1px}
 
+/* multi-view panel */
+.mv-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px}
+.mv-item{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:6px;background:var(--bg4);cursor:pointer;font-size:10px;color:var(--mu);border:1px solid transparent;transition:.12s;user-select:none}
+.mv-item:hover{border-color:var(--bd);color:var(--text)}
+.mv-item.on{background:rgba(255,107,43,.12);border-color:rgba(255,107,43,.4);color:var(--text)}
+.mv-item input[type=checkbox]{accent-color:var(--ac);width:11px;height:11px;flex-shrink:0;cursor:pointer}
+
 .sb-scroll{flex:1;overflow-y:auto;padding:12px}
 
 /* mode chips */
@@ -1027,6 +1034,19 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     </div>
   </div>
 
+  <!-- MULTI-VIEW RENDER -->
+  <div class="acc hidden" id="accMultiView">
+    <div class="acc-head" onclick="toggleAcc('accMultiView')"><span class="acc-title">📷 Góc nhìn — Multi-view</span><span class="acc-arr">▾</span></div>
+    <div class="acc-body">
+      <div id="mvGrid" class="mv-grid"></div>
+      <div style="display:flex;gap:5px;margin-bottom:6px">
+        <button class="chip" onclick="mvSelectAll(true)" style="flex:1;font-size:9px;padding:3px 0;text-align:center">Chọn tất cả</button>
+        <button class="chip" onclick="mvSelectAll(false)" style="flex:1;font-size:9px;padding:3px 0;text-align:center">Bỏ hết</button>
+      </div>
+      <button class="gen-btn" id="btnMvRender" style="width:100%;font-size:11px;padding:9px" disabled>▶ Render <span id="mvCount">0</span> góc đã chọn</button>
+    </div>
+  </div>
+
   <!-- VIDEO WALKTHROUGH (D5 / Lumion style) -->
   <div class="acc hidden" id="accVideo">
     <div class="acc-head" onclick="toggleAcc('accVideo')"><span class="acc-title">🎬 Video Walkthrough</span><span class="acc-arr">▾</span></div>
@@ -1548,6 +1568,100 @@ const TL_PHASES=[
 ];
 
 /* ═══════════════════════════════
+   MULTI-VIEW VIEWPOINTS
+═══════════════════════════════ */
+const MULTI_VIEWS={
+  exterior:[
+    {id:"mv_front",   label:"Mặt tiền",     prompt:", front elevation view, symmetrical frontal perspective facing main facade, architectural photography"},
+    {id:"mv_side_l",  label:"Mặt hông T",   prompt:", left side elevation view, left side facade perspective, architectural photography"},
+    {id:"mv_side_r",  label:"Mặt hông P",   prompt:", right side elevation view, right side facade perspective, architectural photography"},
+    {id:"mv_rear",    label:"Mặt sau",      prompt:", rear facade view, back elevation, service area and garden visible"},
+    {id:"mv_aerial",  label:"Aerial 45°",   prompt:", aerial bird-eye 45 degree view, drone photography, full building and site visible from above"},
+    {id:"mv_street",  label:"Eye-level",    prompt:", eye-level street view, pedestrian height perspective, foreground sidewalk and greenery"},
+    {id:"mv_night",   label:"Buổi tối",     prompt:", nighttime exterior view, facade and landscape lighting illuminated, dark sky, warm glow from windows"},
+    {id:"mv_golden",  label:"Hoàng hôn",    prompt:", golden hour sunset lighting, warm orange amber sky, long shadows, cinematic atmosphere"},
+  ],
+  interior:[
+    {id:"mv_living",  label:"Phòng khách",  prompt:", living room wide angle view, comfortable seating, coffee table, natural daylight through windows"},
+    {id:"mv_kitchen", label:"Bếp & ăn",    prompt:", kitchen and dining area view, modern cabinetry, dining table with chairs, pendant lighting overhead"},
+    {id:"mv_bed",     label:"Phòng ngủ",   prompt:", master bedroom view, king bed with pillows, bedside tables, wardrobe doors"},
+    {id:"mv_bath",    label:"Phòng tắm",   prompt:", bathroom interior view, shower enclosure, vanity mirror, contemporary tiles and fixtures"},
+    {id:"mv_entry",   label:"Lối vào",     prompt:", entrance foyer hallway view, front door interior, welcoming entrance space"},
+    {id:"mv_detail",  label:"Chi tiết",    prompt:", interior detail close-up, material textures and finishes, decorative objects, soft natural light"},
+  ],
+  landscape:[
+    {id:"mv_aerl",    label:"Aerial toàn cảnh",  prompt:", aerial top-down drone view, entire landscape garden layout visible from above"},
+    {id:"mv_walkl",   label:"Lối đi bộ",         prompt:", pedestrian walkway eye-level perspective, garden path with plants on both sides"},
+    {id:"mv_seatl",   label:"Khu ngồi",          prompt:", garden seating area, outdoor furniture, lawn and flowering planting beds"},
+    {id:"mv_water",   label:"Hồ nước",           prompt:", water feature or swimming pool view, reflections, surrounding tropical plants"},
+    {id:"mv_gate",    label:"Cổng vào",          prompt:", entrance gate and driveway view, boundary wall, front garden, approaching perspective"},
+  ],
+  section_persp:[
+    {id:"mv_sec_h",   label:"Mặt cắt ngang",     prompt:", horizontal cross-section perspective, interior rooms and spaces revealed, structural elements exposed"},
+    {id:"mv_sec_v",   label:"Mặt cắt dọc",       prompt:", longitudinal section perspective, floor levels and vertical circulation exposed, staircase visible"},
+    {id:"mv_axo",     label:"Axonometric",        prompt:", isometric axonometric 3D projection, all facades and roof visible simultaneously"},
+  ],
+  urban_context:[
+    {id:"mv_str_u",   label:"Street level",       prompt:", street level pedestrian view, building in urban context, sidewalk and street furniture foreground"},
+    {id:"mv_aer_u",   label:"Aerial đô thị",      prompt:", aerial view showing surrounding urban fabric, neighbourhood context, nearby buildings visible"},
+    {id:"mv_plaza",   label:"Quảng trường",       prompt:", public plaza or square view, people gathering, urban open space and landscape"},
+    {id:"mv_corner",  label:"Góc phố",            prompt:", corner street view showing two building facades, street intersection perspective"},
+  ],
+};
+
+function buildMultiViewPanel(mode){
+  const views=MULTI_VIEWS[mode];
+  const grid=document.getElementById("mvGrid");
+  if(!grid)return;
+  if(!views){document.getElementById("accMultiView")?.classList.add("hidden");return;}
+  grid.innerHTML=views.map(v=>`<label class="mv-item" id="mvItem_${v.id}"><input type="checkbox" id="mvChk_${v.id}" value="${v.id}" onchange="updateMvCount()"/>${v.label}</label>`).join("");
+  updateMvCount();
+}
+
+function mvSelectAll(state){
+  document.querySelectorAll("#mvGrid input[type=checkbox]").forEach(c=>{c.checked=state;c.closest(".mv-item")?.classList.toggle("on",state);});
+  updateMvCount();
+}
+
+function updateMvCount(){
+  const checked=document.querySelectorAll("#mvGrid input[type=checkbox]:checked").length;
+  const el=document.getElementById("mvCount");if(el)el.textContent=checked;
+  const btn=document.getElementById("btnMvRender");if(btn)btn.disabled=checked===0;
+  document.querySelectorAll("#mvGrid input[type=checkbox]").forEach(c=>c.closest(".mv-item")?.classList.toggle("on",c.checked));
+}
+
+async function doMultiViewRender(){
+  const mode=S.mode;
+  const views=MULTI_VIEWS[mode];if(!views)return;
+  const selected=views.filter(v=>document.getElementById("mvChk_"+v.id)?.checked);
+  if(!selected.length){showToast("Chọn ít nhất 1 góc nhìn!");return;}
+  const basePrompt=buildPrompt();
+  const model=document.getElementById("pModel")?.value||"pollinations-flux";
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const quality=document.getElementById("pQuality")?.value||"30";
+  cancelFlag=false;setBtnLoading(true);
+  showToast("🔁 Multi-view: "+selected.length+" góc…");
+  for(let i=0;i<selected.length;i++){
+    if(cancelFlag)break;
+    const view=selected[i];
+    const prompt=basePrompt+view.prompt;
+    const gid="rg_"+Date.now();
+    showGenOv(`Góc ${i+1}/${selected.length}: ${view.label}…`);
+    renderSkeletons(gid,1);
+    try{
+      const imgs=await callAPI(prompt,1,size,model,quality);
+      removeEl(gid);
+      if(imgs?.length){renderGroup(prompt,mode+" · "+view.label,imgs);addHist(prompt,mode,imgs.length);}
+      else{removeEl(gid);showToast("⚠️ "+view.label+": không nhận được ảnh");}
+    }catch(e){removeEl(gid);showToast("❌ "+view.label+": "+e.message);}
+    if(i<selected.length-1)await sleep(500);
+  }
+  hideGenOv();setBtnLoading(false);
+  const n=selected.length;
+  showToast("✅ Multi-view xong — "+n+" góc!");
+}
+
+/* ═══════════════════════════════
    INIT
 ═══════════════════════════════ */
 window.addEventListener("DOMContentLoaded",()=>{
@@ -1700,14 +1814,14 @@ function toggleAcc(id){
 ═══════════════════════════════ */
 /* ── MODE SECTION MAP: each mode shows only its relevant accordions ── */
 const MODE_SECTIONS={
-  exterior:     ['accMood','accStyle','accRef','accAtm','accSun','accSea','accEnt','accEntDetail','accDOF','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps'],
-  interior:     ['accInt','accStyle','accRef','accAtm','accDOF','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps'],
-  landscape:    ['accLandscape','accStyle','accAtm','accSun','accSea','accEnt','accPrecision','accGenSet','accPrompt','accNeg'],
+  exterior:     ['accMood','accStyle','accRef','accAtm','accSun','accSea','accEnt','accEntDetail','accDOF','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps','accMultiView'],
+  interior:     ['accInt','accStyle','accRef','accAtm','accDOF','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps','accMultiView'],
+  landscape:    ['accLandscape','accStyle','accAtm','accSun','accSea','accEnt','accPrecision','accGenSet','accPrompt','accNeg','accMultiView'],
   material_swap:['accMatSwap','accPrompt','accNeg'],
   sky_replace:  ['accSky','accPrompt'],
   artistic:     ['accArtistic','accPrompt','accNeg'],
-  section_persp:['accSection','accPrecision','accPrompt','accNeg'],
-  urban_context:['accUrban','accStyle','accAtm','accPrecision','accPrompt','accNeg'],
+  section_persp:['accSection','accPrecision','accPrompt','accNeg','accMultiView'],
+  urban_context:['accUrban','accStyle','accAtm','accPrecision','accPrompt','accNeg','accMultiView'],
   floorplan:    ['accFloorplan','accPrecision','accPrompt','accNeg'],
   masterplan:   ['accMasterplan','accPrecision','accPrompt','accNeg'],
   before_after: ['accBeforeAfter','accStyle','accPrecision','accPrompt','accNeg'],
@@ -1717,7 +1831,7 @@ const MODE_SECTIONS={
   timeline:     ['accTimeline'],
   pipeline:     [],
 };
-const ALL_ACC_IDS=['accMood','accStyle','accRef','accInt','accEnt','accSea','accFloorplan','accMasterplan','accBeforeAfter','accLandscape','accMatSwap','accSky','accArtistic','accSection','accUrban','accFurn','accChar','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accDOF','accSun','accAtm','accEntDetail','accPostFX','accSnaps','accVideo','accTimeline'];
+const ALL_ACC_IDS=['accMood','accStyle','accRef','accInt','accEnt','accSea','accFloorplan','accMasterplan','accBeforeAfter','accLandscape','accMatSwap','accSky','accArtistic','accSection','accUrban','accFurn','accChar','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accDOF','accSun','accAtm','accEntDetail','accPostFX','accSnaps','accMultiView','accVideo','accTimeline'];
 const MODE_META={
   exterior:     {icon:'🏠',name:'Ngoại thất',desc:'Exterior photorealistic render'},
   interior:     {icon:'🛋',name:'Nội thất',desc:'Interior visualization'},
@@ -1776,6 +1890,9 @@ function switchMode(mode){
 
   // Scroll sidebar to top on mode switch
   document.getElementById("sbScroll")?.scrollTo(0,0);
+
+  // ── Rebuild multi-view panel for current mode ──
+  buildMultiViewPanel(mode);
 
   updateRefModelWarn();
   updatePrompt();
@@ -4111,6 +4228,9 @@ function bindAll(){
   // Video generation
   initUploadSlot("vidSrcSlot","vidSrcInp","vidSrc");
   document.getElementById("btnVideoGen")?.addEventListener("click",doVideoGen);
+  // Multi-view
+  document.getElementById("btnMvRender")?.addEventListener("click",doMultiViewRender);
+  buildMultiViewPanel(S.mode);
   // Construction Timeline
   initTimeline();
   document.getElementById("btnVidFromLast")?.addEventListener("click",()=>{
