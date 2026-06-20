@@ -1139,9 +1139,10 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 
       <span class="flbl">Video Model</span>
       <select class="fsel" id="videoModel">
-        <option value="kling-v2">🏆 Kling v2 Master — chất lượng cao nhất ($0.12/5s)</option>
-        <option value="kling-std" selected>⚡ Kling Standard — nhanh & tốt ($0.05/5s)</option>
-        <option value="luma-i2v">🎭 Luma Dream Machine ($0.06/5s)</option>
+        <option value="google-veo2">🤖 Google Veo 2 — chất lượng AI tốt nhất (Google AI key)</option>
+        <option value="kling-v2">🏆 Kling v2 Master — chất lượng cao ($0.12/5s · Fal.ai key)</option>
+        <option value="kling-std" selected>⚡ Kling Standard — nhanh & tốt ($0.05/5s · Fal.ai key)</option>
+        <option value="luma-i2v">🎭 Luma Dream Machine ($0.06/5s · Fal.ai key)</option>
       </select>
 
       <span class="flbl">Mô tả chuyển động tuỳ chỉnh</span>
@@ -1623,6 +1624,7 @@ const MODEL_MAP={
   "fal-recraft-v3":    {prov:"fal",       model:"fal-ai/recraft-v3",                       steps:28, price:0.04,  cfg:false, i2i:false},
   // ControlNet: dedicated FLUX Pro Canny endpoint (stable, official)
   "fal-flux-ctrl":     {prov:"fal-ctrl",  model:"fal-ai/flux-pro/v1/canny",               steps:28, price:0.05,  cfg:true,  i2i:false, ctrl:true},
+  "google-veo2":       {prov:"google-video", model:"veo-2.0-generate-001",                          steps:0, price:0.35, cfg:false, i2i:false, video:true},
   "kling-v2":          {prov:"fal-video", model:"fal-ai/kling-video/v2/master/image-to-video",     steps:0, price:0.12, cfg:false, i2i:false, video:true},
   "kling-std":         {prov:"fal-video", model:"fal-ai/kling-video/v1.6/standard/image-to-video", steps:0, price:0.05, cfg:false, i2i:false, video:true},
   "luma-i2v":          {prov:"fal-video", model:"fal-ai/luma-dream-machine/image-to-video",        steps:0, price:0.06, cfg:false, i2i:false, video:true},
@@ -3425,7 +3427,7 @@ function updateApiKeyLen(k){
   el.style.color=raw!==clean?"#f87171":(clean>20?"var(--gr)":"var(--ac2)");
 }
 function getProviderKey(prov){
-  const provKeyId={together:"apiKeyTogether",fal:"apiKeyFal","fal-ctrl":"apiKeyFal","fal-video":"apiKeyFal",stability:"apiKeyStability",google:"apiKeyGoogle"};
+  const provKeyId={together:"apiKeyTogether",fal:"apiKeyFal","fal-ctrl":"apiKeyFal","fal-video":"apiKeyFal",stability:"apiKeyStability",google:"apiKeyGoogle","google-video":"apiKeyGoogle"};
   const specificId=provKeyId[prov];
   if(specificId){
     const v=(document.getElementById(specificId)?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
@@ -3540,12 +3542,13 @@ function showVideoResult(videoUrl){
   ov.classList.add("on");
 }
 async function doVideoGen(){
-  const key=getProviderKey("fal-video");
-  if(!key){showToast("❌ Cần Fal.ai API key — nhập trong ⚙️ Cài Đặt Render → API Keys!");return;}
-  const src=vidSrcB64||getLastRenderedSrc();
-  if(!src){showToast("Upload ảnh nguồn hoặc render ảnh tĩnh trước!");return;}
   const modelKey=document.getElementById("videoModel")?.value||"kling-std";
   const cfg=MODEL_MAP[modelKey];if(!cfg){showToast("Model video không hợp lệ");return;}
+  const isGoogle=cfg.prov==="google-video";
+  const key=getProviderKey(cfg.prov);
+  if(!key){showToast("❌ Cần "+(isGoogle?"Google AI Studio":"Fal.ai")+" API key — nhập trong ⚙️ Cài Đặt Render → API Keys!");return;}
+  const src=vidSrcB64||getLastRenderedSrc();
+  if(!src){showToast("Upload ảnh nguồn hoặc render ảnh tĩnh trước!");return;}
   const motion=VIDEO_MOTIONS.find(m=>m.id===S.videoMotion)||VIDEO_MOTIONS[0];
   const customMotion=document.getElementById("videoCustomMotion")?.value?.trim()||"";
   const basePrompt=buildVideoPrompt(motion.v);
@@ -3561,9 +3564,52 @@ async function doVideoGen(){
   if(sub)sub.textContent="Resize về max 1280×720 để tối ưu tốc độ...";
   setBtnLoading(true);
 
-  // Resize source image to max 1280×720 before sending (keeps payload under 500KB)
   const resizedSrc=await resizeForVideo(src,1280,720);
 
+  // ── Google Veo 2 branch ──
+  if(isGoogle){
+    const resizedB64=resizedSrc.includes(",")?resizedSrc.split(",")[1]:resizedSrc;
+    try{
+      if(lbl)lbl.textContent="🤖 Đang gửi job lên Google Veo 2...";
+      if(sub)sub.textContent="veo-2.0-generate-001 · "+duration+"s · "+ar;
+      const veoBody={instances:[{prompt:finalPrompt,image:{bytesBase64Encoded:resizedB64,mimeType:"image/jpeg"}}],parameters:{aspectRatio:ar,sampleCount:1,durationSeconds:parseInt(duration)}};
+      const qr=await fetchTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:predictLongRunning?key=${encodeURIComponent(key)}`,
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(veoBody)},30000);
+      if(!qr.ok){const e=await qr.json().catch(()=>({}));throw new Error(e?.error?.message||"Google Veo error "+qr.status);}
+      const qd=await qr.json();
+      const opName=qd.name;
+      if(!opName)throw new Error("Veo: không nhận được operation name");
+      if(lbl)lbl.textContent="🎬 Google Veo 2 đang render video...";
+      let videoUrl=null;
+      for(let i=0;i<96;i++){
+        if(cancelFlag)throw new Error("Đã hủy bởi người dùng");
+        await sleep(5000);
+        const sr=await fetchTimeout(`https://generativelanguage.googleapis.com/v1beta/${opName}?key=${encodeURIComponent(key)}`,{},15000).catch(()=>null);
+        if(!sr||!sr.ok)continue;
+        const sd=await sr.json().catch(()=>({}));
+        if(sub)sub.textContent=`${sd.done?"Done":"Đang render"} · ${(i+1)*5}s / ~120–300s`;
+        if(sd.done){
+          const sample=sd.response?.generatedSamples?.[0]||sd.response?.predictions?.[0];
+          if(sample?.video?.uri){videoUrl=sample.video.uri;}
+          else if(sample?.video?.encodedVideo){
+            const bytes=atob(sample.video.encodedVideo);
+            const arr=new Uint8Array(bytes.length);
+            for(let j=0;j<bytes.length;j++)arr[j]=bytes.charCodeAt(j);
+            const blob=new Blob([arr],{type:"video/mp4"});
+            videoUrl=URL.createObjectURL(blob);
+          }
+          break;
+        }
+      }
+      if(!videoUrl)throw new Error("Timeout — Veo 2 thường mất 2-5 phút. Thử lại sau.");
+      showVideoResult(videoUrl);
+      showToast("✅ Google Veo 2 video xong!");
+    }catch(e){showToast("❌ Veo 2 lỗi: "+e.message);}
+    hideGenOv();setBtnLoading(false);
+    return;
+  }
+
+  // ── Fal.ai branch (Kling / Luma) ──
   const body={image_url:resizedSrc,prompt:finalPrompt};
   if(cfg.model.includes("luma")){body.loop=false;}
   else{body.duration=duration;body.aspect_ratio=ar;}
