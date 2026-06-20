@@ -508,6 +508,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   <div class="acc open" id="accStyle">
     <div class="acc-head" onclick="toggleAcc('accStyle')"><span class="acc-title">🏗 Phong cách & Ánh sáng</span><span class="acc-arr">▾</span></div>
     <div class="acc-body">
+      <span class="flbl">Loại công trình VN</span>
+      <div class="chips" id="vietBuildingTypeChips"></div>
       <span class="flbl">Phong cách KT</span>
       <div class="chips" id="archStyleChips"></div>
       <span class="flbl">Ánh sáng</span>
@@ -1068,6 +1070,12 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <button class="chip" onclick="mvSelectAll(true)" style="flex:1;font-size:9px;padding:3px 0;text-align:center">Chọn tất cả</button>
         <button class="chip" onclick="mvSelectAll(false)" style="flex:1;font-size:9px;padding:3px 0;text-align:center">Bỏ hết</button>
       </div>
+      <label class="ae-toggle" style="margin-bottom:8px">
+        <input type="checkbox" id="mvStyleLock"/> Style Lock — giữ nhất quán màu & vật liệu giữa các góc
+      </label>
+      <div id="mvStyleLockNote" class="hidden" style="font-size:9px;color:var(--mu);line-height:1.5;padding:5px 7px;background:var(--bg4);border-radius:5px;margin-bottom:6px">
+        🔒 Góc đầu tiên render xong → dùng làm Style DNA cho các góc sau (img2img strength 15%). Cần model có I2I (Fal FLUX Dev hoặc Stability Ultra).
+      </div>
       <button class="gen-btn" id="btnMvRender" style="width:100%;font-size:11px;padding:9px" disabled>▶ Render <span id="mvCount">0</span> góc đã chọn</button>
     </div>
   </div>
@@ -1367,6 +1375,7 @@ const MOODS=[
 
 const CHIPS = {
   archStyle:["Tropical Modern","Nhà phố VN","Resort cao cấp","Green Architecture","Japandi","Brutalist","Neo-Vietnamese","Minimalist","Luxury","Industrial","Wabi-sabi","Indochine"],
+  vietBuildingType:["Nhà phố 2-3T","Nhà phố 4-5T","Nhà ống phố cổ","Biệt thự đơn lập","Biệt thự liền kề","Nhà vườn","Chung cư mini","Mini hotel","Villa resort","Shophouse TM"],
   light:["Golden hour","Overcast mềm","Ban đêm","Sương sáng","Sau mưa","Studio","Bình minh","Blue hour","Trưa nhiệt đới"],
   camera:["Eye-level wide","Bird's eye 45°","Street level","Low angle","Drone aerial","Interior perspective","Isometric"],
   intRoom:["Phòng khách","Phòng ngủ master","Bếp & ăn","WC / Spa","Ban công","Phòng làm việc"],
@@ -1431,6 +1440,19 @@ const CHIPS = {
   entVehicle:["Không có","Xe đạp","Xe máy điện","Ô tô hiện đại","Grab/taxi","Mix các loại"],
 };
 
+const VIET_BLDG_PROMPTS={
+  "Nhà phố 2-3T":     "Vietnamese urban shophouse 2-3 storeys, narrow 4-6 metre wide facade, ground floor commercial with roll-up shutters, upper residential floors with iron-railed balconies, colourful painted stucco facade, dense Ho Chi Minh City street with motorbikes",
+  "Nhà phố 4-5T":     "Vietnamese shophouse 4-5 storeys tall and narrow, ornamental balconies on each floor, mix of ground floor retail and upper apartments, typical Vietnamese urban street congested with motorbikes, colourful painted render facade, tropical overhead wires and signage context",
+  "Nhà ống phố cổ":   "Vietnamese tube house Old Quarter Hanoi style, extremely narrow 2-3 metre street frontage, deep elongated plan extending far back, aged red brick and lime plaster facade, wooden louvred shutters, historic merchant house, narrow alley with ancient banyan tree",
+  "Biệt thự đơn lập": "Vietnamese standalone detached villa, generous private tropical garden with mature coconut palms and frangipani, perimeter boundary wall with ornamental wrought-iron electric gate, private paved driveway, 2-3 storey luxury residence with balconies",
+  "Biệt thự liền kề": "Vietnamese luxury terraced villa compound, row of attached premium houses sharing party walls, individual front garden with decorative gate, uniform contemporary architectural language, gated residential estate context, suburban Vietnamese city",
+  "Nhà vườn":         "Vietnamese garden house, generous setback from road, lush tropical garden with banana trees bamboo and flowering shrubs, open shaded veranda and terrace, natural cross-ventilation design, rural or suburban Vietnamese countryside setting",
+  "Chung cư mini":    "Vietnamese self-built mini apartment building 3-5 storeys, narrow urban plot, aluminium sliding windows on every floor, rooftop water tank and satellite dishes, simple white render facade, Ho Chi Minh City or Hanoi alley context with parked motorbikes",
+  "Mini hotel":       "Vietnamese mini hotel 4-6 storeys, large painted hotel name signboard on fascia, central urban location, tiled lobby visible through glass entrance, neat modern facade with LED signage, busy Vietnamese city centre street",
+  "Villa resort":     "Tropical resort villa, private freeform infinity pool with pool deck, open-air pavilion with soaring thatched or flat concrete roof, lush resort landscaping with coconut palms bougainvillea and tropical ferns, luxury resort atmosphere",
+  "Shophouse TM":     "Vietnamese commercial shophouse ground floor retail, floor-to-ceiling glass display window, business signage banner in Vietnamese script, covered pedestrian arcade walkway with tiled floor, busy urban commercial district street",
+};
+
 const BATCH_COMBOS=[
   {id:"day3",  l:"Ngày·Hoàng hôn·Đêm",  v:[{l:"Ngày",i:"bright sunny daytime"},{l:"Hoàng hôn",i:"golden hour sunset"},{l:"Đêm",i:"dramatic night lighting"}]},
   {id:"arch4", l:"4 Phong cách KT",      v:[{l:"Tropical",i:"Tropical Modern style"},{l:"Japandi",i:"Japandi style"},{l:"Luxury",i:"Luxury Contemporary"},{l:"Minimal",i:"Minimalist style"}]},
@@ -1490,7 +1512,7 @@ const NEG_PRESETS=[
 ═══════════════════════════════ */
 const S={
   mode:"exterior", mood:null,
-  archStyle:null, light:null, camera:null,
+  archStyle:null, light:null, camera:null, vietBuildingType:null,
   intRoom:null, intStyle:null,
   entPeople:null, entTraffic:null, entTree:null,
   season:null, tod:null,
@@ -1665,26 +1687,36 @@ async function doMultiViewRender(){
   const model=document.getElementById("pModel")?.value||"pollinations-flux";
   const size=document.getElementById("pSize")?.value||"1280x720";
   const quality=document.getElementById("pQuality")?.value||"30";
+  const styleLock=document.getElementById("mvStyleLock")?.checked&&MODEL_MAP[model]?.i2i;
+  if(document.getElementById("mvStyleLock")?.checked&&!MODEL_MAP[model]?.i2i){
+    showToast("⚠️ Style Lock cần model I2I (Fal FLUX Dev/Stability Ultra) — tiếp tục không có lock");
+  }
+  let mvDna=null; // style DNA captured from first viewpoint
   cancelFlag=false;setBtnLoading(true);
-  showToast("🔁 Multi-view: "+selected.length+" góc…");
+  showToast("🔁 Multi-view: "+selected.length+" góc"+(styleLock?" · Style Lock ON":"")+"…");
   for(let i=0;i<selected.length;i++){
     if(cancelFlag)break;
     const view=selected[i];
     const prompt=basePrompt+view.prompt;
     const gid="rg_"+Date.now();
-    showGenOv(`Góc ${i+1}/${selected.length}: ${view.label}…`);
+    const lockLabel=styleLock&&i>0?" 🔒":"";
+    showGenOv(`Góc ${i+1}/${selected.length}: ${view.label}${lockLabel}…`);
     renderSkeletons(gid,1);
     try{
-      const imgs=await callAPI(prompt,1,size,model,quality);
+      // Style Lock: use first render as DNA reference for subsequent views at very low strength
+      const refDna=(styleLock&&mvDna&&i>0)?mvDna:null;
+      const imgs=await callAPI(prompt,1,size,model,quality,refDna,0.15);
       removeEl(gid);
-      if(imgs?.length){renderGroup(prompt,mode+" · "+view.label,imgs);addHist(prompt,mode,imgs.length);}
-      else{removeEl(gid);showToast("⚠️ "+view.label+": không nhận được ảnh");}
+      if(imgs?.length){
+        renderGroup(prompt,mode+" · "+view.label,imgs);
+        addHist(prompt,mode,imgs.length);
+        if(styleLock&&i===0&&!mvDna)mvDna=imgs[0]; // capture first result as style DNA
+      }else{removeEl(gid);showToast("⚠️ "+view.label+": không nhận được ảnh");}
     }catch(e){removeEl(gid);showToast("❌ "+view.label+": "+e.message);}
     if(i<selected.length-1)await sleep(500);
   }
   hideGenOv();setBtnLoading(false);
-  const n=selected.length;
-  showToast("✅ Multi-view xong — "+n+" góc!");
+  showToast("✅ Multi-view xong — "+selected.length+" góc"+(styleLock?" · Style Lock":" · độc lập")+"!");
 }
 
 /* ═══════════════════════════════
@@ -1758,6 +1790,7 @@ function buildChipGroup(containerId, stateKey, items){
 }
 
 function buildAllChips(){
+  buildChipGroup("vietBuildingTypeChips","vietBuildingType",CHIPS.vietBuildingType);
   buildChipGroup("archStyleChips","archStyle",CHIPS.archStyle);
   buildChipGroup("lightChips","light",CHIPS.light);
   buildChipGroup("cameraChips","camera",CHIPS.camera);
@@ -2025,6 +2058,7 @@ function buildPrompt(){
       }else{
         parts.push("photorealistic architectural photograph");
       }
+      if(S.vietBuildingType&&VIET_BLDG_PROMPTS[S.vietBuildingType])parts.push(VIET_BLDG_PROMPTS[S.vietBuildingType]);
       if(S.archStyle)parts.push(S.archStyle+" architecture style");
       if(S.camera)parts.push(S.camera);
       break;
@@ -4279,6 +4313,9 @@ function bindAll(){
   document.getElementById("btnVideoGen")?.addEventListener("click",doVideoGen);
   // Multi-view
   document.getElementById("btnMvRender")?.addEventListener("click",doMultiViewRender);
+  document.getElementById("mvStyleLock")?.addEventListener("change",e=>{
+    document.getElementById("mvStyleLockNote")?.classList.toggle("hidden",!e.target.checked);
+  });
   buildMultiViewPanel(S.mode);
   // Construction Timeline
   initTimeline();
