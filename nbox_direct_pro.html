@@ -1149,8 +1149,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <textarea class="fta" id="videoCustomMotion" placeholder="VD: slow dolly push forward revealing the main entrance…" style="min-height:36px"></textarea>
 
       <div style="font-size:9px;color:var(--mu);line-height:1.7;padding:7px 8px;background:var(--bg4);border-radius:6px;margin:8px 0">
-        ⏱ Kling: <b>~60–120 giây</b> render / clip<br/>
-        🔑 Cần <b>Fal.ai API key</b> (fal.ai/dashboard)<br/>
+        🤖 Google Veo 2: <b>~2–5 phút</b> · Cần <b>Google AI Studio key</b><br/>
+        ⏱ Kling/Luma: <b>~60–120 giây</b> · Cần <b>Fal.ai API key</b><br/>
         📥 Tải về dạng <b>MP4</b> + xem preview trong app
       </div>
       <button class="gen-btn" id="btnVideoGen" style="width:100%;font-size:12px;padding:10px">🎬 RENDER VIDEO</button>
@@ -1223,7 +1223,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
     <div style="text-align:center;padding:40px 20px">
       <div style="font-size:56px;margin-bottom:16px;line-height:1">🎬</div>
       <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Video Walkthrough</div>
-      <div style="font-size:12px;color:var(--mu);line-height:1.8">Chọn ảnh nguồn + Camera Motion bên trái<br/>Bấm <b>RENDER VIDEO</b> để tạo clip MP4<br/><span style="color:var(--ac2)">Cần Fal.ai API key · Kling ~60–120s/clip</span></div>
+      <div style="font-size:12px;color:var(--mu);line-height:1.8">Chọn ảnh nguồn + Camera Motion bên trái<br/>Bấm <b>RENDER VIDEO</b> để tạo clip MP4<br/><span style="color:var(--ac2)">Google Veo 2 (AI Studio key) · Kling/Luma (Fal.ai key)</span></div>
     </div>
   </div>
 
@@ -1566,6 +1566,60 @@ const TONE_MAU_PROMPTS={
   "Pastel nhẹ":"soft pastel colour palette, muted blush sage and powder blue, gentle diffused light, romantic delicate mood",
   "Hoàng hôn rực":"golden hour sunset colour grading, blazing amber orange sky, long warm shadows, dramatic backlit silhouette",
   "Đen trắng":"black and white fine art photography, dramatic high contrast monochrome, silver gelatin tones, timeless classic",
+};
+
+const INT_SEATING_MAP={
+  "Sofa da":"luxurious leather sofa with premium leather upholstery, deep button tufting",
+  "Sofa vải linen":"linen fabric sofa, natural undyed textile upholstery, relaxed organic texture",
+  "Ghế bành velvet":"plush velvet accent armchair in rich jewel tone velvet fabric",
+  "Đệm ngồi thấp":"low-slung Japanese floor cushion seating, layered woven floor pillows",
+  "Ghế mây rattan":"handwoven rattan wicker lounge chair, natural cane weave",
+  "Ghế Wabi-sabi":"wabi-sabi rough-hewn clay-finish stool, asymmetric artisan handcrafted seat",
+};
+const INT_TABLE_MAP={
+  "Bàn gỗ tự nhiên":"solid natural wood coffee table with live edge grain, raw timber surface",
+  "Bàn đá cẩm thạch":"Calacatta marble stone coffee table, white veined marble slab top",
+  "Bàn kính khung đen":"matte black metal frame glass coffee table, minimalist industrial",
+  "Bàn Bouclé tròn":"round bouclé upholstered side table, curved creamy boucle texture",
+  "Không có bàn":"",
+};
+const INT_LIGHTING_MAP={
+  "Đèn thả trần thủ công":"artisan handcrafted pendant light hanging from ceiling, bespoke sculptural pendant",
+  "Đèn sàn đứng":"tall arc floor lamp with fabric shade, warm ambient glow",
+  "Đèn tường sconce":"decorative wall sconce light fixtures flanking the wall, wall-mounted lighting",
+  "Đèn LED âm trần ẩn":"concealed recessed LED downlights in ceiling, hidden LED strip cove lighting",
+  "Ánh sáng tự nhiên ban ngày":"abundant natural daylight flooding through large windows, soft diffused sunlight",
+};
+const INT_FLOORING_MAP={
+  "Sàn gỗ teak":"rich dark teak hardwood floor planks, warm honey-brown timber grain",
+  "Gạch terrazzo":"speckled aggregate terrazzo floor tiles, polished composite surface",
+  "Gạch đất nung thủ công":"handmade artisan terracotta tile flooring, warm fired clay tiles with variation",
+  "Thảm lông dày":"deep pile plush area rug, thick soft carpet underfoot",
+  "Sàn bê tông mài":"smooth polished concrete floor, burnished grey concrete surface",
+  "Đá marble trắng":"polished white Carrara marble floor slabs, bright reflective stone",
+};
+const INT_COLOR_MAP={
+  "Trắng kem & be ấm":"cream white and warm beige colour palette, soft warm neutrals, ivory tones",
+  "Xanh sage & gỗ tự nhiên":"sage green and natural wood palette, earthy botanical tones, muted organic greens",
+  "Đen & vàng đồng":"black and brushed brass gold palette, dramatic high-contrast sophisticated scheme",
+  "Xanh navy & be":"navy blue and beige palette, sophisticated classic contrast, deep indigo with sand",
+  "Nâu ấm & cam đất":"warm brown and terracotta palette, earthy autumn tones, burnt sienna and umber",
+  "Pastel nhẹ & trắng":"soft pastel and white palette, gentle blush sage and powder tones, airy and light",
+};
+const INT_PLANTS_MAP={
+  "Không có cây":"no indoor plants",
+  "Cây nhỏ để bàn":"small potted succulents and plants on tabletop, tiny decorative greenery",
+  "Cây lớn góc phòng":"large statement floor plant in corner, tall Monstera deliciosa or Fiddle Leaf Fig",
+  "Tường xanh thực vật":"dramatic living green wall of plants covering entire wall, vertical garden",
+  "Nhiều cây nhiệt đới":"abundant tropical indoor plants throughout room, lush verdant jungle interior",
+};
+const INT_DECOR_MAP={
+  "Gương tròn lớn":"large round decorative wall mirror, oversized circular mirror as focal point",
+  "Tranh nghệ thuật canvas":"large-scale canvas artwork paintings on wall, framed fine art prints",
+  "Gốm thủ công":"handcrafted artisan ceramic vases and pottery as sculptural accents on shelf",
+  "Kệ sách nổi":"floating wall-mounted bookshelves with curated books and decorative objects",
+  "Rèm linen dài":"floor-to-ceiling long linen curtains, flowing natural fabric drapes to floor",
+  "Thảm trải sàn handwoven":"handwoven artisan area rug on floor, textured woven textile carpet",
 };
 
 const PRESET_PROMPTS={
@@ -2219,13 +2273,13 @@ function buildPrompt(){
         const isp=INT_STYLE_PROMPTS[S.intStyle];
         parts.push(isp||S.intStyle+" interior design style");
       }
-      if(S.intSeating)parts.push("seating furniture: "+S.intSeating);
-      if(S.intTable)parts.push("table surface: "+S.intTable);
-      if(S.intLighting)parts.push("lighting: "+S.intLighting+", carefully designed interior lighting");
-      if(S.intFlooring)parts.push("flooring: "+S.intFlooring);
-      if(S.intColorPalette)parts.push("colour palette: "+S.intColorPalette);
-      if(S.intPlants)parts.push("indoor greenery: "+S.intPlants);
-      if(S.intDecor)parts.push("decorative elements: "+S.intDecor);
+      if(S.intSeating){const t=INT_SEATING_MAP[S.intSeating];if(t)parts.push("seating: "+t);}
+      if(S.intTable){const t=INT_TABLE_MAP[S.intTable];if(t)parts.push("coffee table: "+t);}
+      if(S.intLighting){const t=INT_LIGHTING_MAP[S.intLighting];if(t)parts.push("lighting design: "+t);}
+      if(S.intFlooring){const t=INT_FLOORING_MAP[S.intFlooring];if(t)parts.push("floor material: "+t);}
+      if(S.intColorPalette){const t=INT_COLOR_MAP[S.intColorPalette];if(t)parts.push("colour scheme: "+t);}
+      if(S.intPlants){const t=INT_PLANTS_MAP[S.intPlants];if(t&&!t.includes("no indoor"))parts.push("indoor plants: "+t);}
+      if(S.intDecor){const t=INT_DECOR_MAP[S.intDecor];if(t)parts.push("decor accents: "+t);}
       break;
     case"floorplan":{
       const fpRender=S.fpRender||"3D Photorealistic";
@@ -2426,7 +2480,7 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         // Free & keyless. GET request returns the image directly.
         const params=new URLSearchParams({width:w,height:h,seed:usedSeed,model:cfg.model,nologo:"true",enhance:"false",safe:"false"});
         const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params.toString()}`;
-        const resp=await fetch(url);
+        const resp=await fetchTimeout(url,{},60000);
         if(!resp.ok)throw new Error("Pollinations error "+resp.status);
         const blob=await resp.blob();
         if(!blob.type.startsWith("image/"))throw new Error("Pollinations: phản hồi không phải ảnh");
@@ -2438,7 +2492,7 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         if(negPrompt)body.negative_prompt=negPrompt;
         if(cfg.cfg)body.guidance_scale=cfgScale;
         // Together AI FLUX models do not support img2img — omit image params
-        const resp=await fetch("https://api.together.xyz/v1/images/generations",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body)});
+        const resp=await fetchTimeout("https://api.together.xyz/v1/images/generations",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body)},90000);
         if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.message||"Together API error "+resp.status);}
         const d=await resp.json();
         const b=d.data?.[0]?.b64_json;
@@ -2449,7 +2503,7 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         fd.append("prompt",prompt);fd.append("output_format",fmt==="jpeg"?"jpeg":"png");
         if(negPrompt)fd.append("negative_prompt",negPrompt);
         if(imgB64){const blob=await b64Blob(imgB64,"image/jpeg");fd.append("image",blob,"img.jpg");fd.append("strength",(1-strength).toFixed(2));}
-        const resp=await fetch("https://api.stability.ai/v2beta/stable-image/generate/ultra",{method:"POST",headers:{authorization:"Bearer "+key,accept:"application/json"},body:fd});
+        const resp=await fetchTimeout("https://api.stability.ai/v2beta/stable-image/generate/ultra",{method:"POST",headers:{authorization:"Bearer "+key,accept:"application/json"},body:fd},90000);
         if(!resp.ok)throw new Error("Stability AI error "+resp.status);
         const d=await resp.json();
         if(d.image)imgSrc=`data:image/${fmt};base64,`+d.image;
@@ -2463,14 +2517,17 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         if(negPrompt)falBody.negative_prompt=negPrompt;
         if(cfg.cfg)falBody.guidance_scale=cfgScale;
         if(useI2I){falBody.image_url=imgB64;falBody.strength=strength;}
-        const resp=await fetch(`https://fal.run/${falEndpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(falBody)});
+        const resp=await fetchTimeout(`https://fal.run/${falEndpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(falBody)},90000);
         if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.detail||e?.error||"Fal.ai error "+resp.status);}
         const d=await resp.json();
         if(d.images?.[0]?.url){
-          const ir=await fetch(d.images[0].url);
-          if(!ir.ok)throw new Error("Fal image fetch failed");
-          const blob=await ir.blob();
-          imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+          // Try to convert to base64 for local ops; fall back to direct URL if CORS blocks
+          try{
+            const ir=await fetchTimeout(d.images[0].url,{},30000);
+            if(!ir.ok)throw new Error("fetch failed");
+            const blob=await ir.blob();
+            imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+          }catch{imgSrc=d.images[0].url;}
         }
       }else if(cfg.prov==="fal-ctrl"){
         // FLUX Pro Canny — dedicated ControlNet endpoint for structural accuracy
@@ -2486,14 +2543,16 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
           output_format:fmt==="jpeg"?"jpeg":"png"
         };
         if(negPrompt)falCtrlBody.negative_prompt=negPrompt;
-        const cresp=await fetch(`https://fal.run/${cfg.model}`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(falCtrlBody)});
+        const cresp=await fetchTimeout(`https://fal.run/${cfg.model}`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Key "+key},body:JSON.stringify(falCtrlBody)},90000);
         if(!cresp.ok){const e=await cresp.json().catch(()=>({}));throw new Error(e?.detail||e?.error||"Fal ControlNet error "+cresp.status);}
         const cd=await cresp.json();
         if(cd.images?.[0]?.url){
-          const ir=await fetch(cd.images[0].url);
-          if(!ir.ok)throw new Error("Fal ControlNet image fetch failed");
-          const blob=await ir.blob();
-          imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+          try{
+            const ir=await fetchTimeout(cd.images[0].url,{},30000);
+            if(!ir.ok)throw new Error("fetch failed");
+            const blob=await ir.blob();
+            imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});
+          }catch{imgSrc=cd.images[0].url;}
         }
       }else if(cfg.prov==="google"){
         // Google AI Studio — Imagen 3 via Generative Language API
@@ -2505,8 +2564,8 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         else if(ratio<=0.625) ar="9:16";
         else ar="3:4";
         const gbody={instances:[{prompt}],parameters:{sampleCount:1,aspectRatio:ar,safetyFilterLevel:"BLOCK_ONLY_HIGH",personGeneration:"allow_all"}};
-        const gresp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:predict?key=${encodeURIComponent(key)}`,
-          {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(gbody)});
+        const gresp=await fetchTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:predict?key=${encodeURIComponent(key)}`,
+          {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(gbody)},60000);
         if(!gresp.ok){const e=await gresp.json().catch(()=>({}));throw new Error(e?.error?.message||"Google AI error "+gresp.status);}
         const gd=await gresp.json();
         const gb=gd.predictions?.[0]?.bytesBase64Encoded;
@@ -3442,9 +3501,9 @@ function reflectKeylessModel(modelKey){
   const dot=document.getElementById("apiDot");
   let ph="API key… (together.ai / fal.ai)";
   if(keyless) ph="🆓 Pollinations — không cần API key!";
-  else if(prov==="google") ph="Google AI Studio key — aistudio.google.com/apikey";
+  else if(prov==="google"||prov==="google-video") ph="Google AI Studio key — aistudio.google.com/apikey";
   else if(prov==="stability") ph="Stability AI API key (platform.stability.ai)";
-  else if(prov==="fal"||prov==="fal-ctrl") ph="Fal.ai API key (fal.ai/dashboard)";
+  else if(prov==="fal"||prov==="fal-ctrl"||prov==="fal-video") ph="Fal.ai API key (fal.ai/dashboard)";
   if(inp)inp.placeholder=ph;
   if(keyless&&dot){dot.className="api-dot ok";dot.title="Pollinations free — không cần key";}
   else if(dot){updateApiDot(inp?.value||"");}
