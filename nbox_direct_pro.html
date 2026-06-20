@@ -1843,19 +1843,19 @@ const MODE_SECTIONS={
   exterior:     ['accMood','accStyle','accRef','accAtm','accSun','accSea','accEnt','accEntDetail','accDOF','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps','accMultiView'],
   interior:     ['accInt','accStyle','accRef','accAtm','accDOF','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accPostFX','accSnaps','accMultiView'],
   landscape:    ['accLandscape','accStyle','accAtm','accSun','accSea','accEnt','accPrecision','accGenSet','accPrompt','accNeg','accMultiView'],
-  material_swap:['accMatSwap','accPrompt','accNeg'],
-  sky_replace:  ['accSky','accPrompt'],
-  artistic:     ['accArtistic','accPrompt','accNeg'],
-  section_persp:['accSection','accPrecision','accPrompt','accNeg','accMultiView'],
-  urban_context:['accUrban','accStyle','accAtm','accPrecision','accPrompt','accNeg','accMultiView'],
-  floorplan:    ['accFloorplan','accPrecision','accPrompt','accNeg'],
-  masterplan:   ['accMasterplan','accPrecision','accPrompt','accNeg'],
-  before_after: ['accBeforeAfter','accStyle','accPrecision','accPrompt','accNeg'],
-  furniture:    ['accFurn','accPrompt'],
-  char_sync:    ['accChar','accPrompt'],
-  video:        ['accVideo'],
-  timeline:     ['accTimeline'],
-  pipeline:     [],
+  material_swap:['accMatSwap','accGenSet','accPrompt','accNeg'],
+  sky_replace:  ['accSky','accGenSet','accPrompt'],
+  artistic:     ['accArtistic','accGenSet','accPrompt','accNeg'],
+  section_persp:['accSection','accPrecision','accGenSet','accPrompt','accNeg','accMultiView'],
+  urban_context:['accUrban','accStyle','accAtm','accPrecision','accGenSet','accPrompt','accNeg','accMultiView'],
+  floorplan:    ['accFloorplan','accPrecision','accGenSet','accPrompt','accNeg'],
+  masterplan:   ['accMasterplan','accPrecision','accGenSet','accPrompt','accNeg'],
+  before_after: ['accBeforeAfter','accStyle','accPrecision','accGenSet','accPrompt','accNeg'],
+  furniture:    ['accFurn','accGenSet','accPrompt'],
+  char_sync:    ['accChar','accGenSet','accPrompt'],
+  video:        ['accVideo','accGenSet'],
+  timeline:     ['accTimeline','accGenSet'],
+  pipeline:     ['accGenSet'],
 };
 const ALL_ACC_IDS=['accMood','accStyle','accRef','accInt','accEnt','accSea','accFloorplan','accMasterplan','accBeforeAfter','accLandscape','accMatSwap','accSky','accArtistic','accSection','accUrban','accFurn','accChar','accBatch','accPrecision','accGenSet','accPrompt','accNeg','accDNA','accDOF','accSun','accAtm','accEntDetail','accPostFX','accSnaps','accMultiView','accVideo','accTimeline'];
 const MODE_META={
@@ -2800,8 +2800,8 @@ async function runPLStep(step,model,count,size){
 
 async function runAllPipeline(){
   const plModel=document.getElementById("plGModel")?.value||"flux-free";
-  const key=document.getElementById("apiKey")?.value?.trim();
-  if(MODEL_MAP[plModel]?.prov!=="pollinations"&&!key){showToast("Nhập API key trước! (hoặc chọn model 🆓 Pollinations)");return;}
+  const key=getProviderKey(MODEL_MAP[plModel]?.prov||"together");
+  if(MODEL_MAP[plModel]?.prov!=="pollinations"&&!key){showToast("Nhập API key trong ⚙️ Cài Đặt Render → API Keys! (hoặc chọn model 🆓 Pollinations)");return;}
   if(!pipeline.length){showToast("Thêm ít nhất 1 bước vào pipeline!");return;}
   plActive=true;plPaused=false;
   const runBtn=document.getElementById("plRunBtn");
@@ -3351,8 +3351,8 @@ function showVideoResult(videoUrl){
   ov.classList.add("on");
 }
 async function doVideoGen(){
-  const key=(document.getElementById("apiKey")?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
-  if(!key){showToast("❌ Cần Fal.ai API key cho video render!");return;}
+  const key=getProviderKey("fal-video");
+  if(!key){showToast("❌ Cần Fal.ai API key — nhập trong ⚙️ Cài Đặt Render → API Keys!");return;}
   const src=vidSrcB64||getLastRenderedSrc();
   if(!src){showToast("Upload ảnh nguồn hoặc render ảnh tĩnh trước!");return;}
   const modelKey=document.getElementById("videoModel")?.value||"kling-std";
@@ -3955,8 +3955,8 @@ function resetPostFX(){
    UPSCALE (Fal.ai aura-sr)
 ═══════════════════════════════ */
 async function doUpscale(imgSrc, factor){
-  const key=document.getElementById("apiKey")?.value?.replace(/[^\x20-\x7E]/g,"").trim();
-  if(!key){showToast("Nhập Fal.ai API key để upscale!");return;}
+  const key=getProviderKey("fal");
+  if(!key){showToast("Cần Fal.ai API key để upscale — nhập trong ⚙️ Cài Đặt Render → API Keys!");return;}
   const scaleFactor=factor===4?4:2;
   showGenOv("Upscaling "+scaleFactor+"×… (fal.ai aura-sr)");
   setBtnLoading(true);
