@@ -561,6 +561,20 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div class="chips" id="intRoomChips"></div>
       <span class="flbl">Phong cách nội thất</span>
       <div class="chips" id="intStyleChips"></div>
+      <span class="flbl">Ghế / Sofa</span>
+      <div class="chips" id="intSeatingChips"></div>
+      <span class="flbl">Bàn / Mặt bàn</span>
+      <div class="chips" id="intTableChips"></div>
+      <span class="flbl">Đèn chiếu sáng</span>
+      <div class="chips" id="intLightingChips"></div>
+      <span class="flbl">Sàn nhà</span>
+      <div class="chips" id="intFlooringChips"></div>
+      <span class="flbl">Bảng màu không gian</span>
+      <div class="chips" id="intColorPaletteChips"></div>
+      <span class="flbl">Cây xanh</span>
+      <div class="chips" id="intPlantsChips"></div>
+      <span class="flbl">Trang trí / Decor</span>
+      <div class="chips" id="intDecorChips"></div>
     </div>
   </div>
 
@@ -1380,6 +1394,13 @@ const CHIPS = {
   camera:["Eye-level wide","Bird's eye 45°","Street level","Low angle","Drone aerial","Interior perspective","Isometric"],
   intRoom:["Phòng khách","Phòng ngủ master","Bếp & ăn","WC / Spa","Ban công","Phòng làm việc"],
   intStyle:["Japandi","Tropical Modern","Minimalist","Luxury","Scandinavian","Wabi-sabi","Tân cổ điển","Industrial"],
+  intSeating:["Sofa da","Sofa vải linen","Ghế bành velvet","Đệm ngồi thấp","Ghế mây rattan","Ghế Wabi-sabi"],
+  intTable:["Bàn gỗ tự nhiên","Bàn đá cẩm thạch","Bàn kính khung đen","Bàn Bouclé tròn","Không có bàn"],
+  intLighting:["Đèn thả trần thủ công","Đèn sàn đứng","Đèn tường sconce","Đèn LED âm trần ẩn","Ánh sáng tự nhiên ban ngày"],
+  intFlooring:["Sàn gỗ teak","Gạch terrazzo","Gạch đất nung thủ công","Thảm lông dày","Sàn bê tông mài","Đá marble trắng"],
+  intColorPalette:["Trắng kem & be ấm","Xanh sage & gỗ tự nhiên","Đen & vàng đồng","Xanh navy & be","Nâu ấm & cam đất","Pastel nhẹ & trắng"],
+  intPlants:["Không có cây","Cây nhỏ để bàn","Cây lớn góc phòng","Tường xanh thực vật","Nhiều cây nhiệt đới"],
+  intDecor:["Gương tròn lớn","Tranh nghệ thuật canvas","Gốm thủ công","Kệ sách nổi","Rèm linen dài","Thảm trải sàn handwoven"],
   entPeople:["Không có người","Vài người thưa thớt","Đông — gia đình VN","Đông — văn phòng"],
   entTraffic:["Không có xe","Xe máy đỗ VN","Traffic nhẹ","Giờ cao điểm VN"],
   entTree:["Mặc định","Dừa nhiệt đới","Phượng đỏ","Tre trúc","Bàng / Me","Cây cảnh cắt tỉa"],
@@ -1453,6 +1474,32 @@ const VIET_BLDG_PROMPTS={
   "Shophouse TM":     "Vietnamese commercial shophouse ground floor retail, floor-to-ceiling glass display window, business signage banner in Vietnamese script, covered pedestrian arcade walkway with tiled floor, busy urban commercial district street",
 };
 
+const ARCH_STYLE_PROMPTS={
+  "Tropical Modern":"Tropical Modern architecture: clean concrete and glass volumes, deep horizontal overhangs protecting from tropical rain, open louvred facades for natural cross-ventilation, outdoor-indoor sliding glass doors, lush tropical planting integrated into structure, infinity pool terrace, natural teak wood screens and planters, warm humid climate design, ultra-photorealistic",
+  "Nhà phố VN":"Vietnamese shophouse urban architecture, narrow 4-5 metre frontage, ground floor commercial open to street, upper residential floors with decorative iron railings and balconies, painted stucco facade in pastel tones, tropical overhead wire context, colourful awnings, dense Ho Chi Minh City streetscape, photorealistic",
+  "Resort cao cấp":"Luxury resort architecture, grand open-air lobby pavilion with soaring 8-metre ceiling, natural stone cladding in travertine and slate, freeform infinity pool with pool deck, lush resort landscaping with bougainvillea and coconut palms, private villa clusters, Balinese-influenced thatched or flat concrete roof, premium spa aesthetic, ultra-photorealistic",
+  "Green Architecture":"Green sustainable architecture, living vegetation walls with vertical garden systems, photovoltaic solar panels integrated into roof and facade, reclaimed timber structural elements, rainwater collection visible in design, permeable ground surfaces, LEED-inspired biophilic design, abundant natural light and cross-ventilation louvers, ultra-photorealistic",
+  "Japandi":"Japandi architecture, Japanese-Scandinavian fusion: raw concrete shear walls paired with wide-grain blonde timber cladding, minimalist sliding shoji-inspired screens, deep roof overhang with clean fascia line, restrained palette of warm white off-white grey and timber, gravel zen garden, precise refined detailing, no ornamentation, ultra-photorealistic",
+  "Brutalist":"Brutalist architecture, monolithic exposed board-formed raw concrete structure, cantilevering volumetric masses, deeply recessed punched window openings, brise-soleil concrete sunshade fins, board-marked formwork texture visible, heavy geometric sculptural massing, dramatic shadow play on rough concrete surface, ultra-photorealistic",
+  "Neo-Vietnamese":"Neo-Vietnamese contemporary architecture, reinterpreted traditional Vietnamese architectural motifs in modern materials, ornamental terracotta louver screens inspired by traditional lattice patterns, sloping glazed roof referencing communal house silhouette, Vietnamese red brick accents, contemporary floor-to-ceiling glazing, lush courtyard garden with banana trees, ultra-photorealistic",
+  "Minimalist":"Minimalist architecture, pure white monolithic form, flat roof with invisible drainage, flush frameless windows in perfect grid, no visible downpipes or gutters, smooth seamless render finish, single-material palette of white lime stucco, shadow gaps replacing all mouldings, immaculate minimal landscaping of gravel and specimen trees, ultra-photorealistic",
+  "Luxury":"Ultra-luxury contemporary architecture, large-format natural stone cladding in warm beige limestone, floor-to-ceiling frameless glass curtain wall with custom hardware, polished terrazzo and marble exterior surfaces, private automated gate with intercom, manicured topiary and formal landscaping, dramatic exterior uplighting at night, prestige and exclusivity, ultra-photorealistic",
+  "Industrial":"Industrial architecture, raw exposed structural steel I-beams and columns painted matte black, corrugated Corten weathering steel cladding panels, polished concrete floor slab, oversized factory-style steel pivot door, large undivided warehouse glazing, exposed mechanical services and drainage, gritty urban industrial context, ultra-photorealistic",
+  "Wabi-sabi":"Wabi-sabi Japanese aesthetic architecture, intentionally weathered unpainted clay plaster walls with organic texture and hairline cracks, aged timber posts and beams showing natural grain, raw ceramic tile handmade roof, imperfect asymmetrical form, natural moss growing on stone path, refined imperfection and transience, serene quiet garden with water basin, ultra-photorealistic",
+  "Indochine":"French Indochine architecture, symmetrical colonial villa facade with ornamental stucco pilasters and capitals, terracotta barrel-tile hip roof, louvred full-height shuttered windows and French doors with wrought-iron juliette balconies, wide shaded arcaded verandah, tropical garden with frangipani and bougainvillea, aged ochre and white painted plaster walls, ultra-photorealistic",
+};
+
+const INT_STYLE_PROMPTS={
+  "Japandi":"Japandi interior design, Japanese-Scandinavian fusion: warm bleached oak timber floor, handmade ceramic wabi-sabi vessels, low-profile platform sofa in neutral linen fabric, shoji paper diffused ambient lighting, woven rush tatami mat accent, ikebana floral arrangement, muted palette of warm white blond timber grey and sage green, minimalist restraint with warmth, ultra-photorealistic 8K",
+  "Tropical Modern":"Tropical Modern interior: natural rattan and wicker furniture with cushions in earthy terracotta and sage, large Monstera and Fiddle Leaf Fig plants beside full-height sliding glass doors, woven bamboo ceiling pendant lights, teak timber floorboards, indoor-outdoor connection with garden view, breezy sheer white linen curtains, raw concrete accent wall, ultra-photorealistic 8K",
+  "Minimalist":"Minimalist interior design: all-white room with smooth plaster walls and polished concrete floor, monolithic floating timber shelf, single sculptural pendant light, clean-lined sofa in cream linen, strict mono-material palette, concealed storage with flush push-to-open cabinetry, negative space as design element, no clutter, ultra-photorealistic 8K",
+  "Luxury":"Ultra-luxury interior design: large-format Calacatta marble floor and feature wall, custom bespoke millwork cabinetry with brushed brass hardware, velvet deep teal sofa with contrast piping, crystal chandelier, full-height back-lit onyx stone panel, handwoven silk area rug, rich deep colour palette, immaculate precision, ultra-photorealistic 8K",
+  "Scandinavian":"Scandinavian interior: wide-plank white-oiled pine floor, light grey linen sofa with woollen throw and scatter cushions, clean functional design with birch plywood shelving, white walls with warm undertone, large undressed window with garden view outside, ceramic pendant in matte white, hygge cosy layered textiles, ultra-photorealistic 8K",
+  "Wabi-sabi":"Wabi-sabi interior: raw hand-trowelled lime plaster wall with organic variation, reclaimed timber plank floor with natural knots and patina, vintage Japanese pottery with drip glaze, torn handmade washi paper lamp shade, unfinished iron candle holder, neutral palette of off-white sand umber and charcoal, aged linen curtains, dried pampas grass bouquet, ultra-photorealistic 8K",
+  "Tân cổ điển":"Neoclassical interior design: ornate plaster cornice and ceiling rose, panel wall mouldings in eggshell white with gilded highlights, French parquet herringbone floor in rich walnut, tufted velvet chaise longue in deep navy, crystal sconce wall lights, oil painting in gilded frame, marble fireplace surround, heavy silk drapes with tassel trim, ultra-photorealistic 8K",
+  "Industrial":"Industrial interior design: exposed brick wall with raw mortar joints, polished concrete floor with visible aggregate, black metal open pipe-and-timber shelving, factory pendant lights with wire cage and Edison bulb, Chesterfield leather sofa in aged tan, exposed galvanised ductwork at ceiling, steel-frame warehouse windows, black iron stair with open timber treads, ultra-photorealistic 8K",
+};
+
 const BATCH_COMBOS=[
   {id:"day3",  l:"Ngày·Hoàng hôn·Đêm",  v:[{l:"Ngày",i:"bright sunny daytime"},{l:"Hoàng hôn",i:"golden hour sunset"},{l:"Đêm",i:"dramatic night lighting"}]},
   {id:"arch4", l:"4 Phong cách KT",      v:[{l:"Tropical",i:"Tropical Modern style"},{l:"Japandi",i:"Japandi style"},{l:"Luxury",i:"Luxury Contemporary"},{l:"Minimal",i:"Minimalist style"}]},
@@ -1514,6 +1561,7 @@ const S={
   mode:"exterior", mood:null,
   archStyle:null, light:null, camera:null, vietBuildingType:null,
   intRoom:null, intStyle:null,
+  intSeating:null, intTable:null, intLighting:null, intFlooring:null, intColorPalette:null, intPlants:null, intDecor:null,
   entPeople:null, entTraffic:null, entTree:null,
   season:null, tod:null,
   furnPos:"Trung tâm", furnType:"Sofa",
@@ -1796,6 +1844,13 @@ function buildAllChips(){
   buildChipGroup("cameraChips","camera",CHIPS.camera);
   buildChipGroup("intRoomChips","intRoom",CHIPS.intRoom);
   buildChipGroup("intStyleChips","intStyle",CHIPS.intStyle);
+  buildChipGroup("intSeatingChips","intSeating",CHIPS.intSeating);
+  buildChipGroup("intTableChips","intTable",CHIPS.intTable);
+  buildChipGroup("intLightingChips","intLighting",CHIPS.intLighting);
+  buildChipGroup("intFlooringChips","intFlooring",CHIPS.intFlooring);
+  buildChipGroup("intColorPaletteChips","intColorPalette",CHIPS.intColorPalette);
+  buildChipGroup("intPlantsChips","intPlants",CHIPS.intPlants);
+  buildChipGroup("intDecorChips","intDecor",CHIPS.intDecor);
   buildChipGroup("entPeopleChips","entPeople",CHIPS.entPeople);
   buildChipGroup("entTrafficChips","entTraffic",CHIPS.entTraffic);
   buildChipGroup("entTreeChips","entTree",CHIPS.entTree);
@@ -2059,19 +2114,32 @@ function buildPrompt(){
         parts.push("photorealistic architectural photograph");
       }
       if(S.vietBuildingType&&VIET_BLDG_PROMPTS[S.vietBuildingType])parts.push(VIET_BLDG_PROMPTS[S.vietBuildingType]);
-      if(S.archStyle)parts.push(S.archStyle+" architecture style");
+      if(S.archStyle){
+        const asp=ARCH_STYLE_PROMPTS[S.archStyle];
+        parts.push(asp||S.archStyle+" architecture style");
+      }
       if(S.camera)parts.push(S.camera);
       break;
     case"interior":
       if(refB64){
-        parts.push("photorealistic interior design render based on provided reference space");
+        parts.push("ultra-photorealistic interior design render based on provided reference space, 8K resolution");
         parts.push("preserve exact room layout, proportions and spatial structure from reference");
         parts.push("add photorealistic materials, furnishings and lighting");
       }else{
-        parts.push("photorealistic interior design photograph");
+        parts.push("ultra-photorealistic interior design photograph, 8K resolution, professional interior photography, sharp focus, high detail");
       }
-      if(S.intRoom)parts.push(S.intRoom);
-      if(S.intStyle)parts.push(S.intStyle+" style");
+      if(S.intRoom)parts.push(S.intRoom+" interior space");
+      if(S.intStyle){
+        const isp=INT_STYLE_PROMPTS[S.intStyle];
+        parts.push(isp||S.intStyle+" interior design style");
+      }
+      if(S.intSeating)parts.push("seating furniture: "+S.intSeating);
+      if(S.intTable)parts.push("table surface: "+S.intTable);
+      if(S.intLighting)parts.push("lighting: "+S.intLighting+", carefully designed interior lighting");
+      if(S.intFlooring)parts.push("flooring: "+S.intFlooring);
+      if(S.intColorPalette)parts.push("colour palette: "+S.intColorPalette);
+      if(S.intPlants)parts.push("indoor greenery: "+S.intPlants);
+      if(S.intDecor)parts.push("decorative elements: "+S.intDecor);
       break;
     case"floorplan":{
       const fpRender=S.fpRender||"3D Photorealistic";
