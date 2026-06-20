@@ -594,6 +594,9 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <span class="flbl">Upload mặt bằng 2D (CAD / sketch / ảnh chụp)</span>
       <div class="uslot" id="fpSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Kéo thả hoặc click để upload</span></div></div>
       <input type="file" id="fpInp" accept="image/*" class="hidden"/>
+      <div style="font-size:9px;color:var(--ac2);line-height:1.5;margin:5px 0;padding:5px 7px;background:var(--bg4);border-radius:5px">
+        💡 Để render bám sát bản vẽ: chọn <b>FLUX Pro Canny</b> (ControlNet) hoặc <b>Fal FLUX Dev</b> (img2img) trong thanh model phía trên
+      </div>
       <span class="flbl" style="margin-top:6px">Kiểu render output</span>
       <div class="chips" id="fpRenderChips"></div>
       <span class="flbl">Góc nhìn</span>
@@ -878,6 +881,28 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <label class="ae-toggle">
         <input type="checkbox" id="chkAutoEnhance" checked/> Tự động tăng chất lượng prompt
       </label>
+      <div style="margin-top:10px">
+        <span class="flbl">🔑 API Keys theo Provider</span>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:5px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:9px;color:var(--mu);width:82px;flex-shrink:0">Together AI</span>
+            <input class="finp" id="apiKeyTogether" type="password" placeholder="Bắt đầu bằng..." style="flex:1;font-size:10px;padding:4px 7px"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:9px;color:var(--mu);width:82px;flex-shrink:0">Fal.ai</span>
+            <input class="finp" id="apiKeyFal" type="password" placeholder="Bắt đầu bằng..." style="flex:1;font-size:10px;padding:4px 7px"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:9px;color:var(--mu);width:82px;flex-shrink:0">Stability AI</span>
+            <input class="finp" id="apiKeyStability" type="password" placeholder="sk-..." style="flex:1;font-size:10px;padding:4px 7px"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:9px;color:var(--mu);width:82px;flex-shrink:0">Google AI Studio</span>
+            <input class="finp" id="apiKeyGoogle" type="password" placeholder="AIza..." style="flex:1;font-size:10px;padding:4px 7px"/>
+          </div>
+        </div>
+        <div style="font-size:9px;color:var(--mu);margin-top:5px;line-height:1.5">Mỗi provider dùng key riêng. Bỏ trống → dùng key phía trên (thanh công cụ).</div>
+      </div>
     </div>
   </div>
 
@@ -1101,8 +1126,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <option value="stability-ultra">Stability Ultra · $0.08/ảnh</option>
       </select>
 
-      <span class="flbl">Bản vẽ (optional — ControlNet bám cấu trúc)</span>
-      <div class="uslot" id="tlDrawSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Upload mặt bằng / mặt đứng · chỉ dùng khi chọn FLUX Canny</span></div></div>
+      <span class="flbl">Bản vẽ kiến trúc (mặt bằng / mặt đứng)</span>
+      <div class="uslot" id="tlDrawSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Upload bản vẽ → AI bám theo thiết kế cho TẤT CẢ phases</span></div></div>
       <input type="file" id="tlDrawInp" accept="image/*" class="hidden"/>
 
       <span class="flbl">Render hoàn thiện (optional — dùng thẳng cho Phase 8)</span>
@@ -1112,7 +1137,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <button class="gen-btn" id="btnTlGenAll" style="width:100%;font-size:11px;padding:9px;margin-top:6px">🚀 Generate tất cả 8 phases</button>
 
       <div style="font-size:9px;color:var(--mu);line-height:1.7;padding:7px 8px;background:var(--bg4);border-radius:6px;margin-top:8px">
-        📐 Upload bản vẽ → AI bám cấu trúc chính xác hơn<br/>
+        📐 Upload bản vẽ + chọn <b>FLUX Canny</b> → bám sát layout nhất<br/>
+        📐 Upload bản vẽ + chọn <b>Fal FLUX Dev</b> → tham chiếu img2img mọi phase<br/>
         ✨ Upload render hoàn thiện → dùng thẳng cho phase cuối<br/>
         🎬 Export timelapse video MP4 — không cần API thêm
       </div>
@@ -1434,14 +1460,14 @@ const MODEL_MAP={
   "google-imagen3":    {prov:"google",    model:"imagen-3.0-generate-002",                 steps:0,  price:0,     cfg:false, i2i:false},
   "google-imagen3f":   {prov:"google",    model:"imagen-3.0-fast-generate-002",            steps:0,  price:0,     cfg:false, i2i:false},
   // Together AI: text-to-image only — no img2img support via their API
-  "flux-free":         {prov:"together",  model:"black-forest-labs/FLUX.1-schnell-Free",   steps:4,  price:0,     cfg:false, i2i:false},
+  "flux-free":         {prov:"together",  model:"black-forest-labs/FLUX.1-schnell-Free",   steps:4,  maxSteps:4,  price:0,     cfg:false, i2i:false},
   "flux-dev":          {prov:"together",  model:"black-forest-labs/FLUX.1-dev",            steps:28, price:0.02,  cfg:true,  i2i:false},
   "flux-pro":          {prov:"together",  model:"black-forest-labs/FLUX.1.1-pro",          steps:25, price:0.04,  cfg:true,  i2i:false},
   "flux-ultra":        {prov:"together",  model:"black-forest-labs/FLUX.1-ultra",          steps:25, price:0.06,  cfg:true,  i2i:false},
   // Stability AI: best reliable i2i support
   "stability-ultra":   {prov:"stability", model:"ultra",                                    steps:0,  price:0.08,  cfg:false, i2i:true},
   // Fal.ai: separate t2i/i2i endpoints
-  "fal-flux-schnell":  {prov:"fal",       model:"fal-ai/flux/schnell",                     steps:4,  price:0.003, cfg:false, i2i:false},
+  "fal-flux-schnell":  {prov:"fal",       model:"fal-ai/flux/schnell",                     steps:4,  maxSteps:4,  price:0.003, cfg:false, i2i:false},
   "fal-flux-dev":      {prov:"fal",       model:"fal-ai/flux/dev",       i2iModel:"fal-ai/flux/dev/image-to-image", steps:28, price:0.025, cfg:true,  i2i:true},
   "fal-flux-pro":      {prov:"fal",       model:"fal-ai/flux-pro/v1.1",                    steps:28, price:0.04,  cfg:false, i2i:false},
   "fal-recraft-v3":    {prov:"fal",       model:"fal-ai/recraft-v3",                       steps:28, price:0.04,  cfg:false, i2i:false},
@@ -2188,10 +2214,8 @@ function updatePrompt(){
 ═══════════════════════════════ */
 async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, strength=0.65){
   const cfg=MODEL_MAP[modelKey]||MODEL_MAP["flux-free"];
-  const rawKey=document.getElementById("apiKey")?.value||"";
-  const key=rawKey.replace(/[^\x20-\x7E]/g,"").trim();
-  // Pollinations is free & keyless — every other provider needs a key
-  if(cfg.prov!=="pollinations"&&!key){showToast("Nhập API key trước! (hoặc chọn model 🆓 Pollinations)");return null;}
+  const key=getProviderKey(cfg.prov);
+  if(cfg.prov!=="pollinations"&&!key){showToast("Nhập API key cho "+({together:"Together AI",fal:"Fal.ai","fal-ctrl":"Fal.ai","fal-video":"Fal.ai",stability:"Stability AI",google:"Google AI Studio"}[cfg.prov]||cfg.prov)+" trong ⚙️ Cài Đặt Render → API Keys");return null;}
   const [w,h]=sizeStr.split("x").map(Number);
   const fmt=S.outputFormat||"jpeg";
   const negPrompt=document.getElementById("negPrompt")?.value?.trim()||"";
@@ -2219,10 +2243,11 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         imgSrc=await new Promise((res,rej)=>{const r=new FileReader();r.onload=ev=>res(ev.target.result);r.onerror=rej;r.readAsDataURL(blob);});
 
       }else if(cfg.prov==="together"){
-        const body={model:cfg.model,prompt,width:w,height:h,steps:parseInt(quality)||cfg.steps,n:1,response_format:"b64_json",seed:usedSeed};
+        const steps=Math.min(parseInt(quality)||cfg.steps, cfg.maxSteps||999);
+        const body={model:cfg.model,prompt,width:w,height:h,steps,n:1,response_format:"b64_json",seed:usedSeed};
         if(negPrompt)body.negative_prompt=negPrompt;
         if(cfg.cfg)body.guidance_scale=cfgScale;
-        if(imgB64){body.image_base64=imgB64.includes(",")?imgB64.split(",")[1]:imgB64;body.image_strength=1-strength;}
+        // Together AI FLUX models do not support img2img — omit image params
         const resp=await fetch("https://api.together.xyz/v1/images/generations",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body)});
         if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.message||"Together API error "+resp.status);}
         const d=await resp.json();
@@ -2243,7 +2268,8 @@ async function callAPI(prompt, count, sizeStr, modelKey, quality, imgB64=null, s
         // Route i2i to dedicated endpoint when model has one
         const useI2I=imgB64&&cfg.i2i;
         const falEndpoint=useI2I&&cfg.i2iModel?cfg.i2iModel:cfg.model;
-        const falBody={prompt,image_size:{width:w,height:h},num_images:1,num_inference_steps:parseInt(quality)||cfg.steps,seed:usedSeed,enable_safety_checker:false};
+        const falSteps=Math.min(parseInt(quality)||cfg.steps, cfg.maxSteps||999);
+        const falBody={prompt,image_size:{width:w,height:h},num_images:1,num_inference_steps:falSteps,seed:usedSeed,enable_safety_checker:false};
         if(negPrompt)falBody.negative_prompt=negPrompt;
         if(cfg.cfg)falBody.guidance_scale=cfgScale;
         if(useI2I){falBody.image_url=imgB64;falBody.strength=strength;}
@@ -2333,8 +2359,19 @@ async function doGenerate(){
   // img2img source image based on mode
   let srcB64=null, srcStrength=0.55;
   const refStrPct=parseInt(document.getElementById("refStrength")?.value||55)/100;
-  if(S.mode==="floorplan"&&fpB64){srcB64=fpB64;srcStrength=0.5;}
-  else if(S.mode==="masterplan"&&mpB64){srcB64=mpB64;srcStrength=0.45;}
+  if(S.mode==="floorplan"&&fpB64){
+    srcB64=fpB64;srcStrength=0.5;
+    const m=document.getElementById("pModel")?.value||"flux-free";
+    if(!MODEL_MAP[m]?.i2i&&!MODEL_MAP[m]?.ctrl){
+      showToast("💡 Dùng FLUX Pro Canny hoặc Fal FLUX Dev để bám sát bản vẽ. Model hiện tại không hỗ trợ img2img → bản vẽ bị bỏ qua.");
+      srcB64=null;
+    }
+  }
+  else if(S.mode==="masterplan"&&mpB64){
+    srcB64=mpB64;srcStrength=0.45;
+    const m=document.getElementById("pModel")?.value||"flux-free";
+    if(!MODEL_MAP[m]?.i2i&&!MODEL_MAP[m]?.ctrl){srcB64=null;}
+  }
   else if(S.mode==="before_after"&&baB64){srcB64=baB64;srcStrength=0.6;}
   else if((S.mode==="exterior"||S.mode==="interior"||S.mode==="char_sync")&&refB64){
     srcB64=refB64;srcStrength=refStrPct;
@@ -3148,6 +3185,7 @@ function saveStorage(){
     try{localStorage.setItem("nbox_snaps",JSON.stringify(snapshots.map(s=>({...s,state:{...s.state}}))));}catch{}
     const k=document.getElementById("apiKey")?.value?.trim();if(k)localStorage.setItem("nbox_k",k);
     const pv=document.getElementById("apiProv")?.value;if(pv)localStorage.setItem("nbox_pv",pv);
+    ["Together","Fal","Stability","Google"].forEach(p=>{const v=document.getElementById("apiKey"+p)?.value?.trim();if(v)localStorage.setItem("nbox_k"+p,v);else localStorage.removeItem("nbox_k"+p);});
   }catch{}
 }
 function loadStorage(){
@@ -3176,6 +3214,7 @@ function loadStorage(){
     const p=localStorage.getItem("nbox_p");if(p)projects=JSON.parse(p);
     const sn=localStorage.getItem("nbox_snaps");if(sn){snapshots=JSON.parse(sn);snapIdCnt=snapshots.reduce((m,s)=>Math.max(m,s.id||0),0)+1;}
     const k=localStorage.getItem("nbox_k");if(k){const inp=document.getElementById("apiKey");if(inp){inp.value=k;updateApiDot(k);updateApiKeyLen(k);}}
+    ["Together","Fal","Stability","Google"].forEach(p=>{const v=localStorage.getItem("nbox_k"+p);if(v){const el=document.getElementById("apiKey"+p);if(el)el.value=v;}});
     const pv=localStorage.getItem("nbox_pv");if(pv){const sel=document.getElementById("apiProv");if(sel)sel.value=pv;}
     const pn=localStorage.getItem("nbox_pn");if(pn){const inp=document.getElementById("projName");if(inp)inp.value=pn;}
   }catch{}
@@ -3195,6 +3234,15 @@ function updateApiKeyLen(k){
   // flag when bullet/masked characters were pasted (raw > clean)
   el.textContent=clean+(raw!==clean?"⚠":"");
   el.style.color=raw!==clean?"#f87171":(clean>20?"var(--gr)":"var(--ac2)");
+}
+function getProviderKey(prov){
+  const provKeyId={together:"apiKeyTogether",fal:"apiKeyFal","fal-ctrl":"apiKeyFal","fal-video":"apiKeyFal",stability:"apiKeyStability",google:"apiKeyGoogle"};
+  const specificId=provKeyId[prov];
+  if(specificId){
+    const v=(document.getElementById(specificId)?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
+    if(v)return v;
+  }
+  return (document.getElementById("apiKey")?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
 }
 function reflectKeylessModel(modelKey){
   const prov=MODEL_MAP[modelKey]?.prov;
@@ -3523,8 +3571,8 @@ async function tlGenPhase(idx){
     showToast("⚠️ Chưa upload bản vẽ → dùng FLUX Pro thay ControlNet");
   }
   const cfg=MODEL_MAP[modelKey];
-  const key=(document.getElementById("apiKey")?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
-  if(cfg.prov!=="pollinations"&&!key){showToast("❌ Cần nhập API key cho model này!");return;}
+  const key=getProviderKey(cfg.prov);
+  if(cfg.prov!=="pollinations"&&!key){showToast("❌ Cần nhập API key cho model này trong ⚙️ Cài Đặt Render → API Keys!");return;}
   const styleNote=document.getElementById("tlStyle")?.value?.trim()||"";
   const buildingType=document.getElementById("tlBuildingType")?.value?.trim()||"";
   const prompt=[
@@ -3533,7 +3581,8 @@ async function tlGenPhase(idx){
     styleNote?"architecture style: "+styleNote:"",
     "ultra sharp detail, photorealistic, professional photography, 8K resolution"
   ].filter(Boolean).join(", ");
-  const useRef=(modelKey==="fal-flux-ctrl"&&tlDrawB64)?tlDrawB64:null;
+  // Pass floor plan to any model that supports img2img or ControlNet
+  const useRef=(tlDrawB64&&(cfg?.i2i||cfg?.ctrl||cfg?.prov==="fal-ctrl"))?tlDrawB64:null;
   tlGenerating=true;
   tlPhaseData[idx].status="generating";
   buildTlPhaseGrid();
