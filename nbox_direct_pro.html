@@ -1785,7 +1785,7 @@ function updateRefModelWarn(){
   const model=document.getElementById("pModel")?.value||"flux-free";
   const cfg=MODEL_MAP[model]||MODEL_MAP["flux-free"];
   const isCtrl=cfg.ctrl===true;
-  const refModes=["exterior","interior","seasonal","char_sync"];
+  const refModes=["exterior","interior","char_sync"];
   const warn=document.getElementById("refModelWarn");
   const ctrlWrap=document.getElementById("ctrlStrengthWrap");
   const refStrWrap=document.getElementById("refStrengthWrap");
@@ -2219,7 +2219,7 @@ async function doGenerate(){
   if(S.mode==="floorplan"&&fpB64){srcB64=fpB64;srcStrength=0.5;}
   else if(S.mode==="masterplan"&&mpB64){srcB64=mpB64;srcStrength=0.45;}
   else if(S.mode==="before_after"&&baB64){srcB64=baB64;srcStrength=0.6;}
-  else if((S.mode==="exterior"||S.mode==="interior"||S.mode==="seasonal"||S.mode==="char_sync")&&refB64){
+  else if((S.mode==="exterior"||S.mode==="interior"||S.mode==="char_sync")&&refB64){
     srcB64=refB64;srcStrength=refStrPct;
     const m=document.getElementById("pModel")?.value||"flux-free";
     if(!MODEL_MAP[m]?.i2i&&!MODEL_MAP[m]?.ctrl){showToast("⚠️ Model này không hỗ trợ img2img. Ảnh ref bị bỏ qua.");srcB64=null;}
@@ -3309,6 +3309,16 @@ async function tlCallAPI(prompt,modelKey,key,refB64=null){
     const mt=d.predictions?.[0]?.mimeType||"image/png";
     if(!b)throw new Error("Google AI: không nhận được dữ liệu ảnh");
     return `data:${mt};base64,`+b;
+  }
+  if(cfg.prov==="stability"){
+    const fd=new FormData();
+    fd.append("prompt",prompt);fd.append("output_format","jpeg");
+    const r=await fetchTimeout("https://api.stability.ai/v2beta/stable-image/generate/ultra",
+      {method:"POST",headers:{authorization:"Bearer "+key,accept:"application/json"},body:fd},90000);
+    if(!r.ok)throw new Error("Stability AI error "+r.status);
+    const d=await r.json();
+    if(!d.image)throw new Error("Stability: không nhận được ảnh");
+    return "data:image/jpeg;base64,"+d.image;
   }
   throw new Error("Model không được hỗ trợ cho Timeline: "+modelKey);
 }
