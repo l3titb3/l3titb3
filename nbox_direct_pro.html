@@ -1065,26 +1065,29 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   <div class="acc hidden" id="accTimeline">
     <div class="acc-head" onclick="toggleAcc('accTimeline')"><span class="acc-title">🏗 Tiến độ Xây dựng</span><span class="acc-arr">▾</span></div>
     <div class="acc-body">
-      <span class="flbl">Bản vẽ thiết kế (ControlNet reference)</span>
-      <div class="uslot" id="tlDrawSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Upload mặt bằng / mặt đứng / mặt cắt</span></div></div>
-      <input type="file" id="tlDrawInp" accept="image/*" class="hidden"/>
+      <span class="flbl">Loại công trình</span>
+      <input type="text" class="finp" id="tlBuildingType" placeholder="VD: nhà phố 4 tầng, biệt thự hiện đại, chung cư mini, nhà xưởng..."/>
 
-      <span class="flbl">Render hoàn thiện (Phase cuối)</span>
-      <div class="uslot" id="tlFinalSlot"><div class="uslot-ph"><span class="uslot-ph-icon">✨</span><span>Upload ảnh render hoàn thiện</span></div></div>
-      <input type="file" id="tlFinalInp" accept="image/*" class="hidden"/>
-
-      <span class="flbl">Mô tả công trình</span>
-      <input type="text" class="finp" id="tlStyle" placeholder="VD: Biệt thự 3 tầng, mặt tiền kính, phong cách hiện đại..."/>
+      <span class="flbl">Phong cách / ghi chú thêm</span>
+      <input type="text" class="finp" id="tlStyle" placeholder="VD: mặt tiền kính, phong cách hiện đại, màu trắng chủ đạo..."/>
 
       <span class="flbl">Model AI</span>
       <select class="fsel" id="tlModel">
-        <option value="pollinations-flux">🆓 Pollinations (Free · không cần key)</option>
-        <option value="google-imagen3">🤖 Google Imagen 3 (AI Studio)</option>
-        <option value="fal-flux-dev">Fal FLUX Dev · I2I ✓ ($0.025/ảnh)</option>
-        <option value="fal-flux-pro">Fal FLUX Pro 1.1 ($0.04/ảnh)</option>
-        <option value="fal-flux-ctrl" selected>🔬 FLUX Pro Canny · bám bản vẽ ($0.05/ảnh)</option>
-        <option value="stability-ultra">Stability Ultra · I2I ✓ ($0.08/ảnh)</option>
+        <option value="pollinations-flux" selected>🆓 Pollinations (Free · không cần key)</option>
+        <option value="google-imagen3">🤖 Google Imagen 3 (AI Studio key)</option>
+        <option value="fal-flux-dev">Fal FLUX Dev · $0.025/ảnh</option>
+        <option value="fal-flux-pro">Fal FLUX Pro 1.1 · $0.04/ảnh ★</option>
+        <option value="fal-flux-ctrl">🔬 FLUX Pro Canny · $0.05/ảnh (cần bản vẽ)</option>
+        <option value="stability-ultra">Stability Ultra · $0.08/ảnh</option>
       </select>
+
+      <span class="flbl">Bản vẽ (optional — ControlNet bám cấu trúc)</span>
+      <div class="uslot" id="tlDrawSlot"><div class="uslot-ph"><span class="uslot-ph-icon">📐</span><span>Upload mặt bằng / mặt đứng · chỉ dùng khi chọn FLUX Canny</span></div></div>
+      <input type="file" id="tlDrawInp" accept="image/*" class="hidden"/>
+
+      <span class="flbl">Render hoàn thiện (optional — dùng thẳng cho Phase 8)</span>
+      <div class="uslot" id="tlFinalSlot"><div class="uslot-ph"><span class="uslot-ph-icon">✨</span><span>Upload ảnh render hoàn thiện</span></div></div>
+      <input type="file" id="tlFinalInp" accept="image/*" class="hidden"/>
 
       <button class="gen-btn" id="btnTlGenAll" style="width:100%;font-size:11px;padding:9px;margin-top:6px">🚀 Generate tất cả 8 phases</button>
 
@@ -1526,22 +1529,22 @@ const VIDEO_MOTIONS=[
 ];
 
 const TL_PHASES=[
-  {id:"drawings",   icon:"📐", name:"Bản vẽ thiết kế",
-   prompt:"architectural design blueprint, technical floor plan and elevation drawing, precise 2D drafting line work, clean white background, professional architectural drawing, construction document"},
-  {id:"clearing",   icon:"🌱", name:"San lấp mặt bằng",
-   prompt:"construction site clearing and land grading, empty plot preparation, yellow bulldozers and excavators, marked foundation grid lines on raw earth, site survey stakes, aerial view"},
-  {id:"foundation", icon:"🏗",  name:"Thi công móng",
-   prompt:"building foundation construction in progress, deep concrete footings, rebar steel reinforcement cage in trenches, concrete mixer trucks, workers in hard hats and safety vests, early excavation stage"},
-  {id:"structure",  icon:"🧱", name:"Phần thô — Kết cấu",
-   prompt:"structural frame under construction, reinforced concrete columns and beams, brick masonry walls being laid, bamboo scaffolding, construction workers, building skeleton taking shape, concrete curing"},
-  {id:"roofing",    icon:"🔧", name:"Mái + MEP thô",
-   prompt:"roofing structure installation, roof trusses and waterproof membrane, MEP rough-in works, electrical conduit runs, plumbing pipes, wall plastering in progress, building shell nearly complete"},
-  {id:"exterior",   icon:"🏠", name:"Hoàn thiện ngoại thất",
-   prompt:"building exterior finishing, facade plastering complete and fresh paint, windows and doors fully installed, tile cladding and coping works, polished clean exterior, walkway paving beginning"},
-  {id:"interior",   icon:"🛋", name:"Hoàn thiện nội thất",
-   prompt:"interior finishing works complete, polished flooring, suspended ceiling, LED lighting fixtures installed, built-in cabinetry, modern furnished living spaces, clean contemporary interior design"},
-  {id:"complete",   icon:"✨", name:"Hoàn công — Bàn giao",
-   prompt:"completed architectural project exterior and interior, fully finished building, mature landscaping trees and plants, people enjoying the outdoor terrace, golden hour warm lighting, professional architectural photography"},
+  {id:"drawings",  icon:"📐", name:"Bản vẽ thiết kế",
+   prompt:"professional architectural drawing set on white background, precise technical floor plan with room labels and dimension annotations, front elevation and side elevation views, black ink line drawings, CAD drafting style, construction document, grid lines, north arrow, scale bar, title block, clean white paper"},
+  {id:"clearing",  icon:"🌱", name:"San lấp mặt bằng",
+   prompt:"construction site clearing and earthwork grading, aerial wide-angle view, large yellow Caterpillar bulldozer and tracked excavator moving red-brown earth, bare compacted soil ground, wooden survey stakes with bright orange string lines marking building footprint grid, site perimeter chain-link fencing, construction workers in orange safety vests and yellow hard hats, bright sunny day, photorealistic construction site photography"},
+  {id:"foundation",icon:"🏗",  name:"Thi công móng",
+   prompt:"building foundation construction, deep rectangular trenches excavated into earth showing soil layers, dense rebar steel bar reinforcement cage tied and assembled inside foundation pits, concrete mixer truck chute pouring fresh grey concrete, construction workers guiding pour with vibrator rod, timber formwork planks lining trench walls, muddy site ground with puddles, safety barriers, realistic construction photography, daylight"},
+  {id:"structure", icon:"🧱", name:"Phần thô — Kết cấu",
+   prompt:"multi-storey reinforced concrete structural frame under construction, grey concrete columns and horizontal beams forming structural grid skeleton, workers laying red brick masonry walls between columns, bamboo and steel pipe scaffolding surrounding building on all sides, concrete block pallets on ground, cement mixer on site, workers in hard hats carrying materials, realistic construction site, overcast sky, photorealistic photography"},
+  {id:"roofing",   icon:"🔧", name:"Mái + MEP thô",
+   prompt:"building under construction roofing stage, flat concrete roof slab with grey waterproofing membrane being rolled out by workers, exposed PVC electrical conduit runs embedded in walls, visible copper plumbing pipes roughed in bathrooms, rough cement plaster being applied on exterior walls, window openings with precast concrete lintels, scaffolding still surrounding upper floors, rooftop water tank installed, realistic construction photography"},
+  {id:"exterior",  icon:"🏠", name:"Hoàn thiện ngoại thất",
+   prompt:"building exterior finishing stage complete, freshly painted smooth white render facade, aluminium-framed glass windows and balcony doors fully installed, decorative stone cladding tiles on ground floor plinth, clean modern facade architecture, workers laying clay paving bricks in front driveway, ornamental shrubs planted in garden beds along boundary wall, scaffolding fully removed, clear blue sky, bright daylight, realistic architectural photography"},
+  {id:"interior",  icon:"🛋", name:"Hoàn thiện nội thất",
+   prompt:"modern residential interior finishing complete, large-format polished porcelain floor tiles, plasterboard suspended ceiling with recessed LED downlights, freshly painted walls in warm off-white, custom lacquered kitchen cabinetry with granite countertop, stainless steel appliances, wooden wardrobe doors in bedroom, bathroom with wall-hung toilet and frameless glass rainfall shower, clean contemporary interior design, professional interior photography, bright natural light"},
+  {id:"complete",  icon:"✨", name:"Hoàn công — Bàn giao",
+   prompt:"fully completed modern Vietnamese residential house exterior, immaculate white painted facade with stone cladding accent strips, mature tropical garden with palm trees cycads and colourful flowering plants, stone-paved driveway with parked car, covered outdoor terrace with rattan furniture, family of four standing at front entrance smiling for handover photo, golden late-afternoon sunlight casting long shadows, architectural photography, ultra detailed, masterpiece quality"},
 ];
 
 /* ═══════════════════════════════
@@ -3275,8 +3278,9 @@ async function tlCallAPI(prompt,modelKey,key,refB64=null){
   if(cfg.prov==="fal"||cfg.prov==="fal-ctrl"){
     let body,endpoint;
     if(cfg.prov==="fal-ctrl"){
+      if(!refB64)throw new Error("FLUX Pro Canny cần ảnh bản vẽ tham chiếu — upload bản vẽ hoặc chọn model khác");
       // FLUX Pro Canny: dedicated structural conditioning endpoint
-      body={prompt,control_image_url:refB64||"",image_size:{width:w,height:h},num_images:1,num_inference_steps:cfg.steps||28,seed,guidance_scale:30,output_format:"jpeg"};
+      body={prompt,control_image_url:refB64,image_size:{width:w,height:h},num_images:1,num_inference_steps:cfg.steps||28,seed,guidance_scale:30,output_format:"jpeg"};
       endpoint=`https://fal.run/${cfg.model}`;
     }else{
       const useI2I=refB64&&cfg.i2i;
@@ -3385,15 +3389,22 @@ async function tlGenPhase(idx){
     tlPhaseData[idx].img=tlFinalB64;tlPhaseData[idx].status="done";
     buildTlPhaseGrid();showToast("✅ Phase 8: Dùng render hoàn thiện đã upload!");return;
   }
-  const modelKey=document.getElementById("tlModel")?.value||"pollinations-flux";
+  let modelKey=document.getElementById("tlModel")?.value||"pollinations-flux";
+  // ControlNet requires a reference drawing — fall back to FLUX Pro if none uploaded
+  if(modelKey==="fal-flux-ctrl"&&!tlDrawB64){
+    modelKey="fal-flux-pro";
+    showToast("⚠️ Chưa upload bản vẽ → dùng FLUX Pro thay ControlNet");
+  }
   const cfg=MODEL_MAP[modelKey];
   const key=(document.getElementById("apiKey")?.value||"").replace(/[^\x20-\x7E]/g,"").trim();
   if(cfg.prov!=="pollinations"&&!key){showToast("❌ Cần nhập API key cho model này!");return;}
   const styleNote=document.getElementById("tlStyle")?.value?.trim()||"";
+  const buildingType=document.getElementById("tlBuildingType")?.value?.trim()||"";
   const prompt=[
+    buildingType?"["+buildingType+"]":"",
     phase.prompt,
     styleNote?"architecture style: "+styleNote:"",
-    "ultra sharp detail, professional architectural CGI, photorealistic render, masterpiece quality, 8K resolution"
+    "ultra sharp detail, photorealistic, professional photography, 8K resolution"
   ].filter(Boolean).join(", ");
   const useRef=(modelKey==="fal-flux-ctrl"&&tlDrawB64)?tlDrawB64:null;
   tlGenerating=true;
