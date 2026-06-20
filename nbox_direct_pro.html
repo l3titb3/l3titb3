@@ -340,6 +340,11 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 /* ── VIDEO PLAYER OVERLAY ── */
 .vid-ov{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .vid-ov.on{display:flex}
+/* ── RE-ANGLE OVERLAY ── */
+.reangle-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:800;display:none;align-items:center;justify-content:center}
+.reangle-ov.on{display:flex}
+.reangle-panel{background:var(--bg2);border:1px solid var(--bd2);border-radius:12px;padding:18px;width:340px;max-width:94vw}
+.reangle-title{font-size:12px;font-weight:700;color:var(--ac);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .vid-canvas{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;color:var(--mu)}
 .vid-canvas.on{display:flex}
 /* ── CONSTRUCTION TIMELINE ── */
@@ -516,6 +521,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
       <div class="chips" id="lightChips"></div>
       <span class="flbl">Camera</span>
       <div class="chips" id="cameraChips"></div>
+      <span class="flbl">Bối cảnh / Môi trường</span>
+      <div class="chips" id="boiCanhChips"></div>
     </div>
   </div>
 
@@ -925,6 +932,25 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   <div class="acc open" id="accPrompt">
     <div class="acc-head" onclick="toggleAcc('accPrompt')"><span class="acc-title">✏️ Prompt Tuỳ Chỉnh</span><span class="acc-arr">▾</span></div>
     <div class="acc-body">
+      <span class="flbl">Prompt mẫu có sẵn</span>
+      <select class="fsel" id="presetPrompt" style="margin-bottom:8px">
+        <option value="">Chọn mẫu để điền nhanh…</option>
+        <optgroup label="🛋 Nội thất">
+          <option value="int_luxury_bedroom">Phòng ngủ Luxury tối & sang trọng</option>
+          <option value="int_japandi_living">Phòng khách Japandi yên tĩnh</option>
+          <option value="int_tropical_dining">Bếp & Ăn Tropical mở vườn</option>
+          <option value="int_spa_bathroom">WC / Spa resort cao cấp</option>
+          <option value="int_wfh_office">Phòng làm việc Minimalist ban ngày</option>
+          <option value="int_industrial_cafe">Không gian cafe Industrial</option>
+        </optgroup>
+        <optgroup label="🏠 Ngoại thất">
+          <option value="ext_tropical_villa">Biệt thự Tropical Modern sân vườn</option>
+          <option value="ext_shophouse_hcm">Nhà phố HCM ban ngày sầm uất</option>
+          <option value="ext_resort_pool">Resort pool villa hoàng hôn</option>
+          <option value="ext_minimalist_night">Công trình Minimalist ban đêm</option>
+          <option value="ext_indochine">Biệt thự Indochine cổ điển</option>
+        </optgroup>
+      </select>
       <textarea class="fta" id="customPrompt" placeholder="Mô tả chi tiết, yêu cầu đặc biệt…"></textarea>
       <button class="chip" id="btnClearP" style="font-size:10px">✕ Xóa</button>
     </div>
@@ -1028,6 +1054,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
         <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)"><input type="checkbox" id="chkWetRoad" style="accent-color:var(--ac)"/> Mặt đường ướt / Wet reflections</label>
         <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--text)"><input type="checkbox" id="chkBloom" style="accent-color:var(--ac)"/> Bloom / Lens glow</label>
       </div>
+      <span class="flbl">Tone màu</span>
+      <div class="chips" id="toneMauChips"></div>
     </div>
   </div>
 
@@ -1366,6 +1394,21 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   </div>
 </div>
 
+<!-- RE-ANGLE OVERLAY -->
+<div class="reangle-ov" id="reAngleOv">
+  <div class="reangle-panel">
+    <div class="reangle-title">🎥 Đổi Góc Chụp</div>
+    <span class="flbl">Góc có sẵn</span>
+    <div class="chips" id="reAngleChips" style="margin-bottom:10px"></div>
+    <span class="flbl">Hoặc mô tả góc chụp tự do</span>
+    <textarea class="fta" id="reAngleText" placeholder="VD: Góc từ trên cao nhìn xuống 45°, nhìn từ sân vào…" style="min-height:52px;margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="tbtn" id="btnReAngleCancel" style="flex:1">Huỷ</button>
+      <button class="tbtn tbtn-p" id="btnDoReAngle" style="flex:2">🎥 Tạo Góc Mới</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1392,6 +1435,8 @@ const CHIPS = {
   vietBuildingType:["Nhà phố 2-3T","Nhà phố 4-5T","Nhà ống phố cổ","Biệt thự đơn lập","Biệt thự liền kề","Nhà vườn","Chung cư mini","Mini hotel","Villa resort","Shophouse TM"],
   light:["Golden hour","Overcast mềm","Ban đêm","Sương sáng","Sau mưa","Studio","Bình minh","Blue hour","Trưa nhiệt đới"],
   camera:["Eye-level wide","Bird's eye 45°","Street level","Low angle","Drone aerial","Interior perspective","Isometric"],
+  boiCanh:["Đô thị HCM","Phố cổ Hà Nội","Ven biển & Resort","Ngoại ô VN","Trên đồi & Núi","Khu dân cư cao cấp","Rừng nhiệt đới","Không bối cảnh"],
+  toneMau:["Ấm vàng","Lạnh xanh","Đất tự nhiên","Tối mờ Moody","Sáng thoáng","Pastel nhẹ","Hoàng hôn rực","Đen trắng"],
   intRoom:["Phòng khách","Phòng ngủ master","Bếp & ăn","WC / Spa","Ban công","Phòng làm việc"],
   intStyle:["Japandi","Tropical Modern","Minimalist","Luxury","Scandinavian","Wabi-sabi","Tân cổ điển","Industrial"],
   intSeating:["Sofa da","Sofa vải linen","Ghế bành velvet","Đệm ngồi thấp","Ghế mây rattan","Ghế Wabi-sabi"],
@@ -1500,6 +1545,42 @@ const INT_STYLE_PROMPTS={
   "Industrial":"Industrial interior design: exposed brick wall with raw mortar joints, polished concrete floor with visible aggregate, black metal open pipe-and-timber shelving, factory pendant lights with wire cage and Edison bulb, Chesterfield leather sofa in aged tan, exposed galvanised ductwork at ceiling, steel-frame warehouse windows, black iron stair with open timber treads, ultra-photorealistic 8K",
 };
 
+const BOI_CANH_PROMPTS={
+  "Đô thị HCM":"dense Ho Chi Minh City urban street context, tropical overhead wires, colourful Vietnamese shop signage, motorbikes and pedestrians on busy street",
+  "Phố cổ Hà Nội":"historic Hanoi Old Quarter street context, narrow ancient alley, aged French colonial architecture backdrop, mature banyan trees, quiet nostalgic atmosphere",
+  "Ven biển & Resort":"coastal beachfront setting, turquoise sea visible in background, white sand beach, swaying coconut palms, tropical resort atmosphere",
+  "Ngoại ô VN":"Vietnamese suburban setting, wide residential road, sparse low-rise neighbours, rice field or plantation visible in distance, peaceful semi-rural character",
+  "Trên đồi & Núi":"elevated hillside setting, panoramic mountain valley view in background, cooler misty highland atmosphere, lush green slopes surrounding",
+  "Khu dân cư cao cấp":"upscale residential estate setting, manicured tree-lined boulevard, gated community, premium neighbourhood, quiet affluent atmosphere",
+  "Rừng nhiệt đới":"tropical jungle forest setting, dense lush vegetation surrounding the building, towering tropical trees, birdsong greenery atmosphere",
+  "Không bối cảnh":"clean minimal neutral backdrop, no distracting background context, focus on the building only",
+};
+
+const TONE_MAU_PROMPTS={
+  "Ấm vàng":"warm golden colour grading, amber honey tones, warm 3200K tungsten lighting, cosy inviting atmosphere",
+  "Lạnh xanh":"cool blue-silver colour grading, desaturated cool tones, 6500K daylight crisp clarity, clean modern atmosphere",
+  "Đất tự nhiên":"earthy natural colour palette, terracotta ochre and forest green, organic warm neutrals, raw material warmth",
+  "Tối mờ Moody":"moody dark colour grading, deep dramatic shadows, rich contrast, cinematic film look, emotional depth",
+  "Sáng thoáng":"bright airy colour grading, high key soft diffused light, pure whites and light greys, fresh clean modern atmosphere",
+  "Pastel nhẹ":"soft pastel colour palette, muted blush sage and powder blue, gentle diffused light, romantic delicate mood",
+  "Hoàng hôn rực":"golden hour sunset colour grading, blazing amber orange sky, long warm shadows, dramatic backlit silhouette",
+  "Đen trắng":"black and white fine art photography, dramatic high contrast monochrome, silver gelatin tones, timeless classic",
+};
+
+const PRESET_PROMPTS={
+  int_luxury_bedroom:"ultra-photorealistic master bedroom interior, dark luxury design, charcoal grey and deep navy walls with polished marble feature panel, platform bed with Italian linen upholstery, recessed LED cove lighting with warm glow, large artwork canvas, bedside pendant lights, wide-plank dark walnut floor, floor-to-ceiling sheer curtains, hotel suite atmosphere, 8K",
+  int_japandi_living:"ultra-photorealistic Japandi living room, natural light from large shoji-screened window, low-profile teak platform sofa in undyed linen, bleached oak floor, wabi-sabi ceramic vessels on floating shelf, single sculptural rattan pendant light, muted palette of warm white sand and sage, potted Monstera in corner, zen minimalist warmth, 8K",
+  int_tropical_dining:"ultra-photorealistic open-plan kitchen and dining room, tropical modern style, sliding glass wall open to lush garden, teak dining table with rattan chairs, stone waterfall island bench, pendant lights in woven bamboo, Fiddle Leaf Fig plant, natural light flooding in, indoor-outdoor living, 8K",
+  int_spa_bathroom:"ultra-photorealistic luxury spa bathroom interior, large-format marble floor and walls, deep soaking freestanding bathtub, rain shower with frameless glass enclosure, floating double vanity in brushed walnut, recessed LED lighting warm glow, folded white towels, orchid arrangement, resort hotel quality, 8K",
+  int_wfh_office:"ultra-photorealistic home office interior, minimalist design, bright natural daylight from full-height window with city view, white oak desk with slim monitor, Eames chair in warm tan leather, floating timber shelves with books, subtle wall art, clean mono-material palette, focused productive atmosphere, 8K",
+  int_industrial_cafe:"ultra-photorealistic industrial cafe interior, exposed red brick wall with raw mortar, concrete floor, black pipe-and-timber shelving, Edison bulb pendant lights on wire, worn leather bar stools at marble counter, chalkboard menu, moody warm-cool contrast, atmospheric and inviting, 8K",
+  ext_tropical_villa:"ultra-photorealistic Tropical Modern villa exterior, generous tropical garden with mature coconut palms frangipani and Monstera, infinity pool reflecting sky, deep cantilevered roof overhang, natural teak wood louvres and planters, floor-to-ceiling glass walls, golden hour warm light, luxury resort-style living, 8K",
+  ext_shophouse_hcm:"ultra-photorealistic Vietnamese shophouse exterior, narrow 4-storey facade in central Ho Chi Minh City, ornamental iron railings on each balcony, ground floor retail open to street, colourful painted stucco, tropical signage and awnings overhead, busy morning street with motorbikes, vivid urban energy, 8K",
+  ext_resort_pool:"ultra-photorealistic luxury resort pool villa exterior, private infinity pool at golden hour, open-air pavilion with flat concrete roof, lush tropical landscaping of bougainvillea and coconut palms, warm amber reflection on pool surface, dramatic sunset sky, ultra-luxury atmosphere, 8K",
+  ext_minimalist_night:"ultra-photorealistic Minimalist architecture exterior at night, white monolithic concrete form dramatically up-lit, precise shadow lines, landscape uplighting on specimen trees, subtle warm interior glow through frameless glass walls, pure clean geometry, luxury residential, 8K",
+  ext_indochine:"ultra-photorealistic French Indochine colonial villa exterior, symmetrical ochre plaster facade with ornamental pilasters and capitals, terracotta barrel-tile hip roof, full-height louvred shutters on French doors, wide arcaded verandah with potted frangipani, tropical garden with mature banyan tree, nostalgic golden afternoon light, 8K",
+};
+
 const BATCH_COMBOS=[
   {id:"day3",  l:"Ngày·Hoàng hôn·Đêm",  v:[{l:"Ngày",i:"bright sunny daytime"},{l:"Hoàng hôn",i:"golden hour sunset"},{l:"Đêm",i:"dramatic night lighting"}]},
   {id:"arch4", l:"4 Phong cách KT",      v:[{l:"Tropical",i:"Tropical Modern style"},{l:"Japandi",i:"Japandi style"},{l:"Luxury",i:"Luxury Contemporary"},{l:"Minimal",i:"Minimalist style"}]},
@@ -1559,7 +1640,7 @@ const NEG_PRESETS=[
 ═══════════════════════════════ */
 const S={
   mode:"exterior", mood:null,
-  archStyle:null, light:null, camera:null, vietBuildingType:null,
+  archStyle:null, light:null, camera:null, vietBuildingType:null, boiCanh:null, toneMau:null,
   intRoom:null, intStyle:null,
   intSeating:null, intTable:null, intLighting:null, intFlooring:null, intColorPalette:null, intPlants:null, intDecor:null,
   entPeople:null, entTraffic:null, entTree:null,
@@ -1842,6 +1923,8 @@ function buildAllChips(){
   buildChipGroup("archStyleChips","archStyle",CHIPS.archStyle);
   buildChipGroup("lightChips","light",CHIPS.light);
   buildChipGroup("cameraChips","camera",CHIPS.camera);
+  buildChipGroup("boiCanhChips","boiCanh",CHIPS.boiCanh);
+  buildChipGroup("toneMauChips","toneMau",CHIPS.toneMau);
   buildChipGroup("intRoomChips","intRoom",CHIPS.intRoom);
   buildChipGroup("intStyleChips","intStyle",CHIPS.intStyle);
   buildChipGroup("intSeatingChips","intSeating",CHIPS.intSeating);
@@ -2118,6 +2201,7 @@ function buildPrompt(){
         const asp=ARCH_STYLE_PROMPTS[S.archStyle];
         parts.push(asp||S.archStyle+" architecture style");
       }
+      if(S.boiCanh&&BOI_CANH_PROMPTS[S.boiCanh])parts.push(BOI_CANH_PROMPTS[S.boiCanh]);
       if(S.camera)parts.push(S.camera);
       break;
     case"interior":
@@ -2294,6 +2378,8 @@ function buildPrompt(){
   const entP=buildEntourageVNPrompt();if(entP)parts.push(entP);
   // ── TONE MAP (for prompt guidance) ──
   const toneMap=TONE_MAPS.find(t=>t.id===activeToneMap);if(toneMap&&toneMap.v)parts.push(toneMap.v);
+  // ── TONE MÀU (colour grading) ──
+  if(S.toneMau&&TONE_MAU_PROMPTS[S.toneMau])parts.push(TONE_MAU_PROMPTS[S.toneMau]);
 
   const cp=document.getElementById("customPrompt")?.value?.trim();
   if(cp)parts.push(cp);
@@ -2721,11 +2807,12 @@ function renderGroup(prompt,type,imgs){
   const grid=g.querySelector(".img-grid");
   imgs.forEach((src,i)=>{
     const item=document.createElement("div");item.className="img-item";item.title="🔍 Click để xem · "+new Date().toLocaleTimeString("vi-VN");
-    item.innerHTML=`<img src="${src}" alt="Render ${i+1}" loading="lazy"/><div class="img-actions"><button class="iab" data-zoom>🔍</button><button class="iab" data-dl>⬇</button><button class="iab" data-copy>📋</button><button class="iab" data-sheet>📌</button></div>`;
+    item.innerHTML=`<img src="${src}" alt="Render ${i+1}" loading="lazy"/><div class="img-actions"><button class="iab" data-zoom>🔍</button><button class="iab" data-dl>⬇</button><button class="iab" data-copy>📋</button><button class="iab" data-sheet>📌</button><button class="iab" data-reangle title="Đổi Góc Chụp">🎥</button></div>`;
     item.querySelector("[data-zoom]").addEventListener("click",()=>openViewer(src,imgs));
     item.querySelector("[data-dl]").addEventListener("click",()=>dlImg(src,"nbox_render_"+Date.now()+"."+getExt()));
     item.querySelector("[data-copy]").addEventListener("click",()=>copyImgToClipboard(src));
     item.querySelector("[data-sheet]").addEventListener("click",()=>{sheetImgs.push(src);showToast("+ Sheet ("+sheetImgs.length+" ảnh)");});
+    item.querySelector("[data-reangle]").addEventListener("click",e=>{e.stopPropagation();openReAngle(src);});
     grid.appendChild(item);
   });
 }
@@ -4043,6 +4130,52 @@ function applyPostFX(){
   document.querySelectorAll(".img-item img").forEach(img=>{img.style.filter=filter;});
   showToast("✅ Post FX applied to "+document.querySelectorAll(".img-item img").length+" ảnh!");
 }
+/* ═══════════════════════════════
+   RE-ANGLE (ĐỔI GÓC CHỤP)
+═══════════════════════════════ */
+let reAngleSrc=null;
+const RE_ANGLE_PRESETS=["Eye-level wide","Bird's eye 45°","Street level","Low angle","Drone aerial","Isometric 3/4","Overhead top-down","Từ trong nhìn ra","Góc thấp ngước nhìn","Panoramic sweep","Góc nghiêng 30°","Phối cảnh 1 điểm tụ"];
+
+function openReAngle(src){
+  reAngleSrc=src;
+  const ov=document.getElementById("reAngleOv");if(!ov)return;
+  ov.classList.add("on");
+  const ta=document.getElementById("reAngleText");if(ta)ta.value="";
+  buildReAngleChips();
+}
+function buildReAngleChips(){
+  const c=document.getElementById("reAngleChips");if(!c)return;
+  c.innerHTML="";
+  RE_ANGLE_PRESETS.forEach(a=>{
+    const b=document.createElement("button");b.className="chip";b.textContent=a;
+    b.addEventListener("click",()=>{
+      c.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      const ta=document.getElementById("reAngleText");if(ta)ta.value=a;
+    });
+    c.appendChild(b);
+  });
+}
+async function doReAngle(){
+  if(!reAngleSrc){document.getElementById("reAngleOv")?.classList.remove("on");return;}
+  const angleDesc=(document.getElementById("reAngleText")?.value||"").trim();
+  if(!angleDesc){showToast("Chọn hoặc nhập góc chụp!");return;}
+  document.getElementById("reAngleOv")?.classList.remove("on");
+  const model=document.getElementById("pModel")?.value||"fal-flux-dev";
+  const useModel=MODEL_MAP[model]?.i2i?model:"fal-flux-dev";
+  const size=document.getElementById("pSize")?.value||"1280x720";
+  const quality=document.getElementById("pQuality")?.value||"28";
+  const basePrompt=buildPrompt();
+  const anglePrompt=basePrompt+", "+angleDesc+", same building same materials same lighting, angle view changed";
+  const b64=reAngleSrc.includes(",")?reAngleSrc.split(",")[1]:reAngleSrc;
+  showGenOv("🎥 Đang render góc chụp mới…");
+  try{
+    const imgs=await callAPI(anglePrompt,1,size,useModel,quality,b64,0.55);
+    if(imgs?.length)addResultGroup("🎥 Góc mới",anglePrompt,imgs);
+  }catch(e){showToast("Lỗi: "+e.message);}
+  finally{hideGenOv();}
+}
+
 function resetPostFX(){
   [["pfxBright","pfxBrightV","100"],["pfxContrast","pfxContrastV","100"],["pfxSat","pfxSatV","100"],
    ["pfxHue","pfxHueV","0°"],["pfxSepia","pfxSepiaV","0"]].forEach(([rid,vid,dv])=>{
@@ -4200,6 +4333,17 @@ function bindAll(){
   document.getElementById("customPrompt")?.addEventListener("input",updatePrompt);
   document.getElementById("btnClearP")?.addEventListener("click",()=>{const ta=document.getElementById("customPrompt");if(ta){ta.value="";updatePrompt();}});
   document.getElementById("promptPreview")?.addEventListener("click",()=>{navigator.clipboard.writeText(buildPrompt()).catch(()=>{});showToast("📋 Copy prompt!");});
+  // preset prompts
+  document.getElementById("presetPrompt")?.addEventListener("change",e=>{
+    const v=e.target.value;if(!v)return;
+    const ta=document.getElementById("customPrompt");
+    if(ta){ta.value=PRESET_PROMPTS[v]||"";updatePrompt();}
+    e.target.value="";
+  });
+  // re-angle overlay
+  document.getElementById("btnReAngleCancel")?.addEventListener("click",()=>document.getElementById("reAngleOv")?.classList.remove("on"));
+  document.getElementById("btnDoReAngle")?.addEventListener("click",doReAngle);
+  document.getElementById("reAngleOv")?.addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove("on");});
   // params
   document.getElementById("pSize")?.addEventListener("change",updateResInfo);
   // quality chips
