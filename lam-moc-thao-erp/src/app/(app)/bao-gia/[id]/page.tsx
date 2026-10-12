@@ -63,39 +63,40 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         }
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <Card title={q.title ?? 'Hạng mục báo giá'} badge={<Badge tone="gray">{q.segment.name}</Badge>}>
+        <Table>
+          <thead>
+            <tr><Th>STT</Th><Th>Hạng mục / Quy cách</Th><Th>ĐVT</Th><Th className="text-right">SL</Th><Th className="text-right">Đơn giá</Th><Th className="text-right">Thành tiền</Th><Th className="text-right">Giá vốn</Th><Th className="text-right">Biên</Th></tr>
+          </thead>
+          <tbody>
+            {q.lines.map((l, i) => {
+              const m = grossMarginPercent(l.amount, l.costAmount)
+              return (
+                <tr key={l.id}>
+                  <Td>{i + 1}</Td>
+                  <Td className="min-w-48">{l.name}{l.spec && <div className="text-xs text-muted">{l.spec}</div>}</Td>
+                  <Td>{l.unit}</Td>
+                  <Td className="num text-right">{l.quantity.toLocaleString('vi-VN')}</Td>
+                  <Td className="num text-right">{formatVnd(l.unitPrice)}</Td>
+                  <Td className="num text-right font-medium">{formatVnd(l.amount)}</Td>
+                  <Td className="num text-right text-muted">{formatVnd(l.costAmount)}</Td>
+                  <Td className={`num text-right ${floor !== null && m < floor ? 'font-semibold text-red-700' : 'text-muted'}`}>{formatPercent(m)}</Td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </Table>
+        <dl className="ml-auto mt-4 max-w-sm space-y-1.5 text-sm">
+          <Line label="Cộng tiền hàng" value={formatVnd(q.subtotal)} />
+          <Line label={`Thuế GTGT ${q.vatRate}%`} value={formatVnd(q.vatAmount)} />
+          <Line label="Tổng cộng" value={formatVnd(q.total)} strong />
+          <Line label="Giá vốn dự kiến (nội bộ)" value={formatVnd(q.costTotal)} />
+          <Line label="Biên LN gộp" value={`${formatPercent(q.grossMargin)}${floor !== null ? ` (sàn ${floor}%)` : ''}`} warn={floor !== null && q.grossMargin < floor} />
+        </dl>
+      </Card>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
-          <Card title={q.title ?? 'Hạng mục báo giá'} badge={<Badge tone="gray">{q.segment.name}</Badge>}>
-            <Table>
-              <thead>
-                <tr><Th>STT</Th><Th>Hạng mục / Quy cách</Th><Th>ĐVT</Th><Th className="text-right">SL</Th><Th className="text-right">Đơn giá</Th><Th className="text-right">Thành tiền</Th><Th className="text-right">Giá vốn</Th><Th className="text-right">Biên</Th></tr>
-              </thead>
-              <tbody>
-                {q.lines.map((l, i) => {
-                  const m = grossMarginPercent(l.amount, l.costAmount)
-                  return (
-                    <tr key={l.id}>
-                      <Td>{i + 1}</Td>
-                      <Td>{l.name}{l.spec && <div className="text-xs text-muted">{l.spec}</div>}</Td>
-                      <Td>{l.unit}</Td>
-                      <Td className="num text-right">{l.quantity.toLocaleString('vi-VN')}</Td>
-                      <Td className="num text-right">{formatVnd(l.unitPrice)}</Td>
-                      <Td className="num text-right font-medium">{formatVnd(l.amount)}</Td>
-                      <Td className="num text-right text-muted">{formatVnd(l.costAmount)}</Td>
-                      <Td className={`num text-right ${floor !== null && m < floor ? 'font-semibold text-red-700' : 'text-muted'}`}>{formatPercent(m)}</Td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </Table>
-            <dl className="ml-auto mt-4 max-w-sm space-y-1.5 text-sm">
-              <Line label="Cộng tiền hàng" value={formatVnd(q.subtotal)} />
-              <Line label={`Thuế GTGT ${q.vatRate}%`} value={formatVnd(q.vatAmount)} />
-              <Line label="Tổng cộng" value={formatVnd(q.total)} strong />
-              <Line label="Giá vốn dự kiến (nội bộ)" value={formatVnd(q.costTotal)} />
-              <Line label="Biên LN gộp" value={`${formatPercent(q.grossMargin)}${floor !== null ? ` (sàn ${floor}%)` : ''}`} warn={floor !== null && q.grossMargin < floor} />
-            </dl>
-          </Card>
 
           <Card title="Điều kiện báo giá">
             <DescList
