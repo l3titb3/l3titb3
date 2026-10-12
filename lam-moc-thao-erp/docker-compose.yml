@@ -1,0 +1,48 @@
+# Triển khai trên máy chủ: xem docs/TRIEN-KHAI.md
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lmt
+      POSTGRES_USER: lmt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Đặt POSTGRES_PASSWORD trong file .env}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lmt -d lmt']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Chạy tay: docker compose run --rm tools (migration) hoặc docker compose run --rm tools npm run db:seed
+  tools:
+    build:
+      context: .
+      target: tools
+    profiles: ['tools']
+    environment:
+      DATABASE_URL: postgresql://lmt:${POSTGRES_PASSWORD}@db:5432/lmt
+      SEED_PASSWORD: ${SEED_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://lmt:${POSTGRES_PASSWORD}@db:5432/lmt
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - '${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
