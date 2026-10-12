@@ -1,0 +1,533 @@
+// Cơ sở dữ liệu phần mềm quản trị Công ty TNHH Lâm Mộc Thảo - Giai đoạn 1
+// Quy ước: tiền VND lưu dạng số nguyên (Float nhưng luôn làm tròn bằng roundVnd),
+// tỷ lệ % lưu dạng số thập phân theo đơn vị phần trăm (ví dụ 25 = 25%).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Vai trò theo cơ cấu Ban Giám đốc tại Quy chế tổ chức và hoạt động v3.0
+enum Role {
+  GIAM_DOC
+  PGD_KINH_DOANH
+  PGD_KY_THUAT
+  KE_TOAN
+  NV_KINH_DOANH
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String
+  title              String
+  role               Role
+  /// Chủ tịch HĐTV: phê duyệt hợp đồng từ 500 triệu đồng (Điều 9 Quy chế tổ chức)
+  isChairman         Boolean   @default(false)
+  phone              String?
+  passwordHash       String
+  mustChangePassword Boolean   @default(true)
+  failedLogins       Int       @default(0)
+  lockedUntil        DateTime?
+  active             Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  sessions           Session[]
+  ownedCustomers     Customer[]    @relation("CustomerOwner")
+  ownedOpportunities Opportunity[] @relation("OpportunityOwner")
+  ownedContracts     Contract[]    @relation("ContractOwner")
+  ownedReceivables   Receivable[]  @relation("ReceivableOwner")
+  assignedActivities Activity[]    @relation("ActivityAssignee")
+  createdQuotes      Quote[]       @relation("QuoteCreator")
+  approvedQuotes     Quote[]       @relation("QuoteApprover")
+  reviewedContracts  Contract[]    @relation("ContractReviewer")
+  approvedContracts  Contract[]    @relation("ContractApprover")
+  proposedContracts  Contract[]    @relation("ContractProposer")
+  surveys            Survey[]
+  auditLogs          AuditLog[]
+}
+
+model Session {
+  /// sha256 của mã phiên lưu trong cookie
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Thông tin doanh nghiệp và tham số chung (một dòng duy nhất, id = 1)
+model CompanySetting {
+  id                Int      @id @default(1)
+  name              String
+  shortName         String
+  taxCode           String
+  address           String
+  phone             String
+  email             String
+  bankAccount       String?
+  bankName          String?
+  legalRep          String
+  legalRepTitle     String
+  director          String
+  /// Thuế suất GTGT mặc định khi lập báo giá (%). Kế toán xác nhận theo từng mặt hàng, thời kỳ.
+  defaultVatRate    Float    @default(8)
+  /// Ngưỡng báo giá phải trình Giám đốc (QT-KD-01 bước 5), tính trên tổng gồm VAT
+  quoteGdThreshold  Float    @default(100000000)
+  /// Hạn mức ký hợp đồng của PGĐ Kinh doanh (GUQ 02/2026/GUQ-LMT)
+  pgdSignLimit      Float    @default(200000000)
+  /// Hạn mức ký hợp đồng của Giám đốc (GUQ 01/2026/GUQ-LMT); từ mức này CT HĐTV phê duyệt
+  gdSignLimit       Float    @default(500000000)
+  /// Hạn mức cho nợ PGĐ Kinh doanh được duyệt cho một khách hàng tổ chức
+  pgdCreditLimit    Float    @default(30000000)
+  /// Ngưỡng tỷ lệ nợ quá hạn trên 30 ngày (Điều 9a Quy chế phân bổ lợi nhuận)
+  overdueRatioLimit Float    @default(15)
+  quoteValidDays    Int      @default(15)
+  /// Đang chứa dữ liệu mẫu để chạy thử
+  demoData          Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+}
+
+/// Mảng kinh doanh: biên lợi nhuận gộp mục tiêu (QT-KD-01 mục 3) và tham số phân bổ lợi nhuận (Quy chế 05.1)
+model Segment {
+  id                  String  @id
+  name                String
+  sortOrder           Int
+  targetMarginMin     Float?
+  targetMarginMax     Float?
+  /// Biên LN gộp sàn; null = chưa quy định, báo giá phải trình Giám đốc
+  floorMargin         Float?
+  /// Thuộc 06 mảng phân bổ lợi nhuận (cấp mã công trình)
+  allocatesProfit     Boolean @default(false)
+  /// Giá trị hợp đồng tối thiểu (chưa VAT) để cấp mã công trình
+  projectCodeMinValue Float?
+  /// Biên LNĐG sàn và tỷ lệ trích quỹ thưởng (Điều 5 Quy chế 05.1) - dùng ở giai đoạn sau
+  contributionFloor   Float?
+  bonusRate           Float?
+  note                String?
+
+  opportunities Opportunity[]
+  quotes        Quote[]
+  contracts     Contract[]
+}
+
+/// Danh mục hàng hóa - dịch vụ (theo file 04.3)
+model Product {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  /// CX cây xanh, CC cây chậu, CB cỏ - cây bụi, CH chậu, VT vật tư, DV dịch vụ
+  group     String
+  spec      String?
+  unit      String
+  costPrice Float    @default(0)
+  listPrice Float    @default(0)
+  /// Giá cho thuê theo tháng (nếu có)
+  rentPrice Float?
+  minStock  Float?
+  active    Boolean  @default(true)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quoteLines QuoteLine[]
+}
+
+enum CustomerType {
+  CA_NHAN
+  TO_CHUC
+}
+
+enum CustomerStatus {
+  TIEM_NANG
+  DANG_GIAO_DICH
+  NGUNG
+}
+
+model Customer {
+  id              String         @id @default(cuid())
+  code            String         @unique
+  name            String
+  type            CustomerType
+  status          CustomerStatus @default(TIEM_NANG)
+  /// Phân khúc: khách sạn, resort, tòa nhà văn phòng...
+  industry        String?
+  /// Kênh tiếp nhận: Zalo, fanpage, giới thiệu...
+  source          String?
+  area            String?
+  address         String?
+  taxCode         String?
+  legalRep        String?
+  contactName     String?
+  contactTitle    String?
+  contactPhone    String?
+  contactEmail    String?
+  /// Người nhận hóa đơn, email nhận hóa đơn điện tử
+  invoiceInfo     String?
+  ownerId         String?
+  owner           User?          @relation("CustomerOwner", fields: [ownerId], references: [id])
+  /// Hạn mức nợ (0 = không cho nợ). Khách lẻ thanh toán 100% khi giao (Điều 6 Quy chế tài chính)
+  creditLimit     Float          @default(0)
+  paymentTermDays Int            @default(0)
+  note            String?
+  createdById     String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  opportunities Opportunity[]
+  quotes        Quote[]
+  contracts     Contract[]
+  receivables   Receivable[]
+  payments      Payment[]
+  activities    Activity[]
+
+  @@index([ownerId])
+}
+
+enum OpportunityStage {
+  TIEP_NHAN
+  KHAO_SAT
+  BAO_GIA
+  DAM_PHAN
+  THANG
+  THUA
+}
+
+model Opportunity {
+  id                String           @id @default(cuid())
+  code              String           @unique
+  title             String
+  customerId        String
+  customer          Customer         @relation(fields: [customerId], references: [id])
+  segmentId         String
+  segment           Segment          @relation(fields: [segmentId], references: [id])
+  stage             OpportunityStage @default(TIEP_NHAN)
+  /// Bước 2 QT-KD-01: true = đơn lớn, cho thuê, chăm sóc, thi công cần khảo sát
+  needsSurvey       Boolean          @default(true)
+  expectedValue     Float            @default(0)
+  expectedCloseDate DateTime?
+  source            String?
+  ownerId           String?
+  owner             User?            @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  receivedAt        DateTime         @default(now())
+  /// Lần phản hồi đầu tiên (chuẩn 15 phút giờ hành chính)
+  firstContactAt    DateTime?
+  stageChangedAt    DateTime         @default(now())
+  closedAt          DateTime?
+  lostReason        String?
+  note              String?
+  createdById       String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  survey     Survey?
+  quotes     Quote[]
+  activities Activity[]
+
+  @@index([customerId])
+  @@index([ownerId])
+}
+
+/// BM-KD-01 Phiếu khảo sát hiện trạng
+model Survey {
+  id            String      @id @default(cuid())
+  opportunityId String      @unique
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  surveyDate    DateTime
+  surveyorId    String
+  surveyor      User        @relation(fields: [surveyorId], references: [id])
+  location      String?
+  needs         String[]
+  areaSize      String?
+  light         String?
+  soilDrainage  String?
+  waterPower    String?
+  underground   String?
+  access        String?
+  styleBudget   String?
+  deadline      String?
+  risks         String?
+  photosLink    String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum ActivityType {
+  GOI_DIEN
+  ZALO
+  GAP_MAT
+  EMAIL
+  KHAO_SAT
+  GUI_BAO_GIA
+  CHAM_SOC_SAU_BAN
+  NHAC_NO
+  KHIEU_NAI
+  GHI_CHU
+}
+
+/// Lịch sử chăm sóc và việc cần làm. Có dueAt mà chưa doneAt = việc chưa xong.
+model Activity {
+  id            String       @id @default(cuid())
+  type          ActivityType
+  subject       String
+  content       String?
+  customerId    String
+  customer      Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  quoteId       String?
+  contractId    String?
+  assigneeId    String?
+  assignee      User?        @relation("ActivityAssignee", fields: [assigneeId], references: [id])
+  dueAt         DateTime?
+  doneAt        DateTime?
+  result        String?
+  /// Do hệ thống tự tạo theo quy trình
+  auto          Boolean      @default(false)
+  createdById   String
+  createdAt     DateTime     @default(now())
+
+  @@index([assigneeId, doneAt])
+  @@index([customerId])
+}
+
+enum QuoteStatus {
+  NHAP
+  CHO_DUYET
+  DA_DUYET
+  TU_CHOI
+  DA_GUI
+  THANG
+  THUA
+  HUY
+}
+
+/// BM-KD-02 Báo giá
+model Quote {
+  id               String       @id @default(cuid())
+  number           String       @unique
+  year             Int
+  seq              Int
+  customerId       String
+  customer         Customer     @relation(fields: [customerId], references: [id])
+  opportunityId    String?
+  opportunity      Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  segmentId        String
+  segment          Segment      @relation(fields: [segmentId], references: [id])
+  title            String?
+  quoteDate        DateTime
+  validUntil       DateTime
+  status           QuoteStatus  @default(NHAP)
+  vatRate          Float
+  includesShipping Boolean      @default(false)
+  includesInstall  Boolean      @default(false)
+  warrantyDays     Int?
+  paymentTerms     String?
+  executionDays    Int?
+  contactName      String?
+  contactPhone     String?
+  note             String?
+  subtotal         Float        @default(0)
+  vatAmount        Float        @default(0)
+  total            Float        @default(0)
+  costTotal        Float        @default(0)
+  /// Biên LN gộp (%) = (tiền hàng - giá vốn) / tiền hàng
+  grossMargin      Float        @default(0)
+  /// Cấp phê duyệt tính theo QT-KD-01 bước 5
+  approvalLevel    Role?
+  approvalReasons  String[]
+  submittedAt      DateTime?
+  approvedById     String?
+  approvedBy       User?        @relation("QuoteApprover", fields: [approvedById], references: [id])
+  approvedAt       DateTime?
+  rejectedReason   String?
+  sentAt           DateTime?
+  closedAt         DateTime?
+  lostReason       String?
+  createdById      String
+  createdBy        User         @relation("QuoteCreator", fields: [createdById], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  lines    QuoteLine[]
+  contract Contract?
+
+  @@unique([year, seq])
+  @@index([customerId])
+  @@index([status])
+}
+
+model QuoteLine {
+  id         String   @id @default(cuid())
+  quoteId    String
+  quote      Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  sortOrder  Int
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id])
+  name       String
+  spec       String?
+  unit       String
+  quantity   Float
+  unitPrice  Float
+  unitCost   Float
+  amount     Float
+  costAmount Float
+}
+
+/// Loại hợp đồng bán ra theo bộ mẫu 03.x
+enum ContractType {
+  MUA_BAN
+  CHO_THUE
+  THI_CONG
+  CHAM_SOC
+  VSMT
+}
+
+enum ContractStatus {
+  SOAN_THAO
+  CHO_DUYET
+  DA_KY
+  HOAN_THANH
+  THANH_LY
+  HUY
+}
+
+/// Cấp ký/phê duyệt hợp đồng theo Điều 9 Quy chế tổ chức và hoạt động
+enum SignerLevel {
+  PGD_KINH_DOANH
+  GIAM_DOC
+  CHU_TICH
+}
+
+model Contract {
+  id               String         @id @default(cuid())
+  number           String         @unique
+  year             Int
+  seq              Int
+  type             ContractType
+  title            String
+  customerId       String
+  customer         Customer       @relation(fields: [customerId], references: [id])
+  quoteId          String?        @unique
+  quote            Quote?         @relation(fields: [quoteId], references: [id])
+  segmentId        String
+  segment          Segment        @relation(fields: [segmentId], references: [id])
+  /// Giá trị chưa VAT
+  value            Float
+  vatRate          Float
+  vatAmount        Float
+  total            Float
+  signDate         DateTime?
+  startDate        DateTime?
+  endDate          DateTime?
+  paymentTermDays  Int            @default(15)
+  advancePercent   Float          @default(0)
+  retentionPercent Float          @default(0)
+  warrantyDays     Int?
+  projectCode      String?        @unique
+  ownerId          String?
+  owner            User?          @relation("ContractOwner", fields: [ownerId], references: [id])
+  signerLevel      SignerLevel
+  status           ContractStatus @default(SOAN_THAO)
+  /// Phòng HCKT rà soát hình thức (KS)
+  reviewedById     String?
+  reviewedBy       User?          @relation("ContractReviewer", fields: [reviewedById], references: [id])
+  reviewedAt       DateTime?
+  /// Hợp đồng từ 500 triệu: Giám đốc đề xuất trước khi CT HĐTV phê duyệt
+  proposedById     String?
+  proposedBy       User?          @relation("ContractProposer", fields: [proposedById], references: [id])
+  proposedAt       DateTime?
+  approvedById     String?
+  approvedBy       User?          @relation("ContractApprover", fields: [approvedById], references: [id])
+  approvedAt       DateTime?
+  /// Giám đốc chấp thuận triển khai trước khi nhận tạm ứng (QT-KD-01 bước 8)
+  advanceWaived    Boolean        @default(false)
+  completedAt      DateTime?
+  liquidatedAt     DateTime?
+  note             String?
+  createdById      String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  receivables Receivable[]
+
+  @@unique([type, year, seq])
+  @@index([customerId])
+  @@index([status])
+}
+
+/// Công nợ phải thu: mỗi hóa đơn / đợt thanh toán một dòng (file 04.3, sheet Cong no)
+model Receivable {
+  id          String    @id @default(cuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  contractId  String?
+  contract    Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  ownerId     String?
+  owner       User?     @relation("ReceivableOwner", fields: [ownerId], references: [id])
+  docNo       String?
+  description String
+  issueDate   DateTime
+  termDays    Int
+  dueDate     DateTime
+  /// Giá trị gồm VAT
+  amount      Float
+  paidAmount  Float     @default(0)
+  note        String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  payments Payment[]
+
+  @@index([customerId])
+  @@index([dueDate])
+}
+
+enum PaymentMethod {
+  CHUYEN_KHOAN
+  TIEN_MAT
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  receivableId String
+  receivable   Receivable    @relation(fields: [receivableId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  date         DateTime
+  amount       Float
+  method       PaymentMethod
+  reference    String?
+  note         String?
+  createdById  String
+  createdAt    DateTime      @default(now())
+
+  @@index([date])
+}
+
+/// Bộ đếm số chứng từ theo năm (BG, HĐ, CT, KH...)
+model Counter {
+  key   String @id
+  value Int
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}
